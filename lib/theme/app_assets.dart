@@ -1,4 +1,6 @@
 abstract final class AppAssets {
+  static const networkErrorIllustration =
+      'assets/network_error_illustration@3x.png';
   static const homeBackground = 'assets/home/home_background.png';
   static const loanOfferCard = 'assets/home/loan_offer_card.png';
   static const instantFundsBanner = 'assets/home/instant_funds_banner.png';

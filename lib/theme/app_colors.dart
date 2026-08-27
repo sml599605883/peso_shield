@@ -4,7 +4,7 @@ abstract final class AppColors {
   static const white = Color.fromRGBO(255, 255, 255, 1);
   static const black = Color.fromRGBO(0, 0, 0, 1);
   static const darkNavy = Color.fromRGBO(19, 21, 96, 1);
-  static const coral = Color.fromRGBO(255, 113, 46, 1);
+  static const coral = Color.fromRGBO(106, 209, 255, 1);
   static const paleBlue = Color.fromRGBO(234, 246, 251, 1);
   static const dividerBlue = Color.fromRGBO(215, 247, 255, 1);
   static const mutedBlue = Color.fromRGBO(161, 181, 203, 1);

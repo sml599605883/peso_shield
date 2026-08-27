@@ -108,7 +108,7 @@ class _LoanOfferCard extends StatelessWidget {
     return AspectRatio(
       aspectRatio: 335 / 330,
       child: Container(
-        padding: layout.edgeInsets(left: 44, top: 24, right: 44, bottom: 25),
+        padding: layout.edgeInsets(left: 44, top: 23, right: 44, bottom: 24),
         decoration: const BoxDecoration(
           image: DecorationImage(
             image: AssetImage(AppAssets.loanOfferCard),
@@ -119,7 +119,7 @@ class _LoanOfferCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const _CardHeader(),
-            SizedBox(height: layout.px(10)),
+            SizedBox(height: layout.px(6)),
             Text(
               'Maximum Credit Amount',
               textAlign: TextAlign.center,
@@ -130,11 +130,11 @@ class _LoanOfferCard extends StatelessWidget {
                 height: 14 / 12,
               ),
             ),
-            SizedBox(height: layout.px(10)),
+            SizedBox(height: layout.px(6)),
             const _CreditDivider(),
             const _CreditAmount(),
             const _CreditDivider(),
-            SizedBox(height: layout.px(14)),
+            SizedBox(height: layout.px(8)),
             const _LoanTerms(),
             const Spacer(),
             Semantics(

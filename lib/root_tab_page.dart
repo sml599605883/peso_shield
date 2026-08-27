@@ -40,41 +40,71 @@ class _HomeTabBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final layout = AppLayout.of(context);
+    final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
     return SizedBox(
-      height: layout.px(70),
-      child: DecoratedBox(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage(AppAssets.tabBarBackground),
-            fit: BoxFit.fill,
+      key: const Key('home-tab-bar'),
+      height: layout.px(70) + bottomInset,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage(AppAssets.homeBackground),
+                fit: BoxFit.cover,
+                alignment: Alignment.bottomCenter,
+              ),
+            ),
           ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _TabItem(
-              label: 'Home',
-              activeIcon: AppAssets.homeActive,
-              inactiveIcon: AppAssets.homeInactive,
-              selected: currentIndex == 0,
-              onTap: () => onSelected(0),
+          if (bottomInset > 0)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: bottomInset,
+              child: const ColoredBox(color: AppColors.white),
             ),
-            _TabItem(
-              label: 'Credit',
-              activeIcon: AppAssets.creditActive,
-              inactiveIcon: AppAssets.creditInactive,
-              selected: currentIndex == 1,
-              onTap: () => onSelected(1),
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 0,
+            height: layout.px(70),
+            child: DecoratedBox(
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage(AppAssets.tabBarBackground),
+                  fit: BoxFit.fill,
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _TabItem(
+                    label: 'Home',
+                    activeIcon: AppAssets.homeActive,
+                    inactiveIcon: AppAssets.homeInactive,
+                    selected: currentIndex == 0,
+                    onTap: () => onSelected(0),
+                  ),
+                  _TabItem(
+                    label: 'Credit',
+                    activeIcon: AppAssets.creditActive,
+                    inactiveIcon: AppAssets.creditInactive,
+                    selected: currentIndex == 1,
+                    onTap: () => onSelected(1),
+                  ),
+                  _TabItem(
+                    label: 'Mine',
+                    activeIcon: AppAssets.mineActive,
+                    inactiveIcon: AppAssets.mineInactive,
+                    selected: currentIndex == 2,
+                    onTap: () => onSelected(2),
+                  ),
+                ],
+              ),
             ),
-            _TabItem(
-              label: 'Mine',
-              activeIcon: AppAssets.mineActive,
-              inactiveIcon: AppAssets.mineInactive,
-              selected: currentIndex == 2,
-              onTap: () => onSelected(2),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

@@ -48,7 +48,9 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     addTearDown(tester.view.resetViewPadding);
 
-    await tester.pumpWidget(const MaterialApp(home: RootTabPage()));
+    await tester.pumpWidget(
+      const ProviderScope(child: MaterialApp(home: RootTabPage())),
+    );
     await tester.pumpAndSettle();
 
     expect(

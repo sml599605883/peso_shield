@@ -13,6 +13,8 @@ abstract final class AppAssets {
   static const loginBack = 'assets/login/login_back.png';
   static const loginAgreementUnchecked =
       'assets/login/login_agreement_unchecked.png';
+  static const loginAgreementChecked =
+      'assets/login/login_agreement_checked.png';
   static const mineAvatar = 'assets/mine/mine_avatar.png';
   static const mineOrdersCard = 'assets/mine/orders_card.png';
   static const mineOrderAll = 'assets/mine/order_all.png';

@@ -27,7 +27,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   bool get _canSubmit =>
       _hasAcceptedAgreement &&
       _phoneController.text.trim().isNotEmpty &&
-      _codeController.text.trim().isNotEmpty;
+      _codeController.text.trim().length == 6;
 
   @override
   void initState() {
@@ -125,143 +125,209 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           child: LayoutBuilder(
             builder: (context, constraints) {
               final contentWidth = constraints.maxWidth - layout.px(40);
-              return Stack(
-                clipBehavior: Clip.none,
+              return Column(
                 children: [
-                  Align(
-                    alignment: Alignment.topCenter,
-                    child: Image.asset(
-                      AppAssets.loginIllustration,
-                      width: constraints.maxWidth,
-                      height: layout.px(209),
-                      fit: BoxFit.cover,
+                  SizedBox(
+                    height: layout.px(178),
+                    width: double.infinity,
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: Image.asset(
+                            AppAssets.loginIllustration,
+                            fit: BoxFit.fitWidth,
+                            alignment: Alignment.topCenter,
+                          ),
+                        ),
+                        Align(
+                          alignment: Alignment.topLeft,
+                          child: Padding(
+                            padding: layout.edgeInsets(left: 16, top: 21),
+                            child: IconButton(
+                              tooltip: 'Back',
+                              onPressed: () => Navigator.maybePop(context),
+                              iconSize: layout.px(24),
+                              padding: EdgeInsets.zero,
+                              constraints: BoxConstraints.tightFor(
+                                width: layout.px(24),
+                                height: layout.px(24),
+                              ),
+                              icon: Image.asset(AppAssets.loginBack),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  Positioned(
-                    top: layout.px(154),
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: AppColors.white,
-                        borderRadius: BorderRadius.vertical(
-                          top: Radius.circular(layout.px(27)),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.black.withValues(alpha: 0.18),
-                            offset: Offset(0, layout.px(-5)),
-                          ),
-                        ],
-                      ),
-                      child: SingleChildScrollView(
-                        padding: layout.edgeInsets(left: 20, right: 20),
-                        child: SizedBox(
-                          height: constraints.maxHeight - layout.px(154),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SizedBox(height: layout.px(108)),
-                              Padding(
-                                padding: layout.edgeInsets(left: 7),
-                                child: const _LoginHeadline(),
-                              ),
-                              SizedBox(height: layout.px(42)),
-                              const _FieldLabel(
-                                'Please fill in your phone number',
-                              ),
-                              SizedBox(height: layout.px(9)),
-                              Padding(
-                                padding: layout.edgeInsets(left: 12, right: 19),
-                                child: _PhoneField(
-                                  controller: _phoneController,
-                                ),
-                              ),
-                              SizedBox(height: layout.px(20)),
-                              const _FieldLabel('Send SMS verification code'),
-                              SizedBox(height: layout.px(9)),
-                              Padding(
-                                padding: layout.edgeInsets(left: 12, right: 19),
-                                child: _CodeField(
-                                  controller: _codeController,
-                                  requestingCode: _requestingCode,
-                                  onRequestCode: _requestCode,
-                                ),
-                              ),
-                              SizedBox(height: layout.px(42)),
-                              Center(
-                                child: SizedBox(
-                                  width: contentWidth - layout.px(72),
-                                  height: layout.px(50),
-                                  child: FilledButton(
-                                    onPressed: _canSubmit && !_signingIn
-                                        ? _submit
-                                        : null,
-                                    style: FilledButton.styleFrom(
-                                      backgroundColor: AppColors.loginDisabled,
-                                      disabledBackgroundColor:
-                                          AppColors.loginDisabled,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: layout.radius(25),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      'Sign up / Sign in',
-                                      style: TextStyle(
-                                        color: AppColors.white,
-                                        fontSize: layout.px(18),
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const Spacer(),
-                              Padding(
-                                padding: layout.edgeInsets(bottom: 22),
-                                child: _Agreement(
-                                  selected: _hasAcceptedAgreement,
-                                  onChanged: (selected) => setState(
-                                    () => _hasAcceptedAgreement = selected,
-                                  ),
-                                ),
+                  Expanded(
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: AppColors.white,
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(layout.px(27)),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.black.withValues(alpha: 0.18),
+                                offset: Offset(0, layout.px(-5)),
                               ),
                             ],
                           ),
+                          child: LayoutBuilder(
+                            builder: (context, panelConstraints) {
+                              return SingleChildScrollView(
+                                padding: layout.edgeInsets(left: 20, right: 20),
+                                child: ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    minHeight: panelConstraints.maxHeight,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      SizedBox(height: layout.px(63)),
+                                      Padding(
+                                        padding: layout.edgeInsets(left: 7),
+                                        child: const _LoginHeadline(),
+                                      ),
+                                      SizedBox(height: layout.px(42)),
+                                      const _FieldLabel(
+                                        'Please fill in your phone number',
+                                      ),
+                                      SizedBox(height: layout.px(9)),
+                                      Padding(
+                                        padding: layout.edgeInsets(
+                                          left: 12,
+                                          right: 19,
+                                        ),
+                                        child: _PhoneField(
+                                          controller: _phoneController,
+                                        ),
+                                      ),
+                                      SizedBox(height: layout.px(20)),
+                                      const _FieldLabel(
+                                        'Send SMS verification code',
+                                      ),
+                                      SizedBox(height: layout.px(9)),
+                                      Padding(
+                                        padding: layout.edgeInsets(
+                                          left: 12,
+                                          right: 19,
+                                        ),
+                                        child: _CodeField(
+                                          controller: _codeController,
+                                          requestingCode: _requestingCode,
+                                          onRequestCode: _requestCode,
+                                        ),
+                                      ),
+                                      SizedBox(height: layout.px(42)),
+                                      Center(
+                                        child: SizedBox(
+                                          width: contentWidth - layout.px(72),
+                                          height: layout.px(50),
+                                          child: Material(
+                                            color: Colors.transparent,
+                                            child: Ink(
+                                              decoration: BoxDecoration(
+                                                color: _canSubmit
+                                                    ? null
+                                                    : AppColors.loginDisabled,
+                                                gradient: _canSubmit
+                                                    ? const LinearGradient(
+                                                        colors: [
+                                                          AppColors
+                                                              .loginButtonStart,
+                                                          AppColors
+                                                              .loginButtonEnd,
+                                                        ],
+                                                      )
+                                                    : null,
+                                                borderRadius: layout.radius(25),
+                                                boxShadow: _canSubmit
+                                                    ? [
+                                                        const BoxShadow(
+                                                          color: AppColors
+                                                              .loginButtonShadow,
+                                                          offset: Offset(0, 1),
+                                                          blurRadius: 2,
+                                                        ),
+                                                      ]
+                                                    : null,
+                                              ),
+                                              child: InkWell(
+                                                onTap: _canSubmit && !_signingIn
+                                                    ? _submit
+                                                    : null,
+                                                borderRadius: layout.radius(25),
+                                                child: Center(
+                                                  child: _signingIn
+                                                      ? SizedBox.square(
+                                                          dimension: layout.px(
+                                                            18,
+                                                          ),
+                                                          child:
+                                                              const CircularProgressIndicator(
+                                                                color: AppColors
+                                                                    .white,
+                                                                strokeWidth: 2,
+                                                              ),
+                                                        )
+                                                      : Text(
+                                                          'Sign up / Sign in',
+                                                          style: TextStyle(
+                                                            color:
+                                                                AppColors.white,
+                                                            fontSize: layout.px(
+                                                              18,
+                                                            ),
+                                                            fontWeight:
+                                                                FontWeight.w700,
+                                                          ),
+                                                        ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
                         ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: layout.px(92),
-                    left: layout.px(16),
-                    child: IconButton(
-                      tooltip: 'Back',
-                      onPressed: () => Navigator.maybePop(context),
-                      iconSize: layout.px(24),
-                      padding: EdgeInsets.zero,
-                      constraints: BoxConstraints.tightFor(
-                        width: layout.px(24),
-                        height: layout.px(24),
-                      ),
-                      icon: Image.asset(AppAssets.loginBack),
-                    ),
-                  ),
-                  Positioned(
-                    top: layout.px(105),
-                    left: layout.px(16),
-                    child: IgnorePointer(
-                      child: Image.asset(
-                        AppAssets.loginAvatarPlaceholder,
-                        width: layout.px(104),
-                        height: layout.px(104),
-                      ),
+                        Positioned(
+                          top: layout.px(-49),
+                          left: layout.px(16),
+                          child: IgnorePointer(
+                            child: Image.asset(
+                              AppAssets.loginAvatarPlaceholder,
+                              width: layout.px(104),
+                              height: layout.px(104),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               );
             },
+          ),
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: layout.edgeInsets(left: 20, right: 20),
+          child: _Agreement(
+            selected: _hasAcceptedAgreement,
+            onChanged: (selected) =>
+                setState(() => _hasAcceptedAgreement = selected),
           ),
         ),
       ),
@@ -442,7 +508,7 @@ class _Agreement extends StatelessWidget {
             width: layout.px(16),
             height: layout.px(16),
             child: selected
-                ? const Icon(Icons.check_circle, color: AppColors.coral)
+                ? Image.asset(AppAssets.loginAgreementChecked)
                 : Image.asset(AppAssets.loginAgreementUnchecked),
           ),
           SizedBox(width: layout.px(16)),

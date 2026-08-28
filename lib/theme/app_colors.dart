@@ -15,6 +15,9 @@ abstract final class AppColors {
   static const loginField = Color.fromRGBO(240, 240, 240, 1);
   static const loginHint = Color.fromRGBO(205, 205, 205, 1);
   static const loginDisabled = Color.fromRGBO(203, 213, 218, 1);
+  static const loginButtonStart = Color.fromRGBO(39, 212, 167, 1);
+  static const loginButtonEnd = Color.fromRGBO(53, 192, 145, 1);
+  static const loginButtonShadow = Color.fromRGBO(171, 235, 214, 0.63);
   static const loginAgreementText = Color.fromRGBO(107, 107, 106, 1);
   static const loginAgreementLink = Color.fromRGBO(255, 208, 80, 1);
   static const selectedNavigation = Color.fromRGBO(71, 71, 71, 1);

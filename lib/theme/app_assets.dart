@@ -7,6 +7,12 @@ abstract final class AppAssets {
   static const loanProcessTitle = 'assets/home/loan_process_title.png';
   static const loanProcessSteps = 'assets/home/loan_process_steps.png';
   static const notification = 'assets/home/notification.png';
+  static const loginIllustration = 'assets/login/login_illustration.png';
+  static const loginAvatarPlaceholder =
+      'assets/login/login_avatar_placeholder.png';
+  static const loginBack = 'assets/login/login_back.png';
+  static const loginAgreementUnchecked =
+      'assets/login/login_agreement_unchecked.png';
   static const mineAvatar = 'assets/mine/mine_avatar.png';
   static const mineOrdersCard = 'assets/mine/orders_card.png';
   static const mineOrderAll = 'assets/mine/order_all.png';

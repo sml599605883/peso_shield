@@ -11,6 +11,12 @@ abstract final class AppColors {
   static const avatarGray = Color.fromRGBO(236, 236, 236, 1);
   static const mineServiceText = Color.fromRGBO(42, 42, 41, 1);
   static const mineServiceDivider = Color.fromRGBO(235, 235, 235, 1);
+  static const loginText = Color.fromRGBO(42, 41, 42, 1);
+  static const loginField = Color.fromRGBO(240, 240, 240, 1);
+  static const loginHint = Color.fromRGBO(205, 205, 205, 1);
+  static const loginDisabled = Color.fromRGBO(203, 213, 218, 1);
+  static const loginAgreementText = Color.fromRGBO(107, 107, 106, 1);
+  static const loginAgreementLink = Color.fromRGBO(255, 208, 80, 1);
   static const selectedNavigation = Color.fromRGBO(71, 71, 71, 1);
   static const unselectedNavigation = Color.fromRGBO(188, 188, 188, 1);
 }

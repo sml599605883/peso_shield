@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/navigation/app_navigator.dart';
 import '../theme/app_assets.dart';
 import '../theme/app_colors.dart';
 import '../theme/layout_adapter.dart';
@@ -34,7 +35,11 @@ class HomePage extends StatelessWidget {
                       SizedBox(height: layout.px(5)),
                       Padding(
                         padding: layout.edgeInsets(left: 10, right: 10),
-                        child: _LoanOfferCard(),
+                        child: _LoanOfferCard(
+                          onTap: () async {
+                            await AppNavigator.toLogin();
+                          },
+                        ),
                       ),
                       Padding(
                         padding: layout.edgeInsets(left: 20, right: 20),
@@ -100,64 +105,75 @@ class _HomeHeader extends StatelessWidget {
 }
 
 class _LoanOfferCard extends StatelessWidget {
-  const _LoanOfferCard();
+  const _LoanOfferCard({required this.onTap});
+
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final layout = AppLayout.of(context);
-    return AspectRatio(
-      aspectRatio: 335 / 330,
-      child: Container(
-        padding: layout.edgeInsets(left: 44, top: 23, right: 44, bottom: 24),
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage(AppAssets.loanOfferCard),
-            fit: BoxFit.fill,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const _CardHeader(),
-            SizedBox(height: layout.px(6)),
-            Text(
-              'Maximum Credit Amount',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: AppColors.black,
-                fontSize: layout.px(12),
-                fontWeight: FontWeight.w300,
-                height: 14 / 12,
+    return Semantics(
+      button: true,
+      label: 'Apply Now',
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: layout.radius(15),
+        child: AspectRatio(
+          aspectRatio: 335 / 330,
+          child: Container(
+            padding: layout.edgeInsets(
+              left: 44,
+              top: 23,
+              right: 44,
+              bottom: 24,
+            ),
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage(AppAssets.loanOfferCard),
+                fit: BoxFit.fill,
               ),
             ),
-            SizedBox(height: layout.px(6)),
-            const _CreditDivider(),
-            const _CreditAmount(),
-            const _CreditDivider(),
-            SizedBox(height: layout.px(8)),
-            const _LoanTerms(),
-            const Spacer(),
-            Semantics(
-              button: true,
-              label: 'Apply Now',
-              child: Center(
-                child: SizedBox(
-                  height: layout.px(33),
-                  child: Center(
-                    child: Text(
-                      'Apply Now',
-                      style: TextStyle(
-                        color: AppColors.black,
-                        fontSize: layout.px(18),
-                        fontWeight: FontWeight.w700,
-                        height: 22 / 18,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const _CardHeader(),
+                SizedBox(height: layout.px(6)),
+                Text(
+                  'Maximum Credit Amount',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.black,
+                    fontSize: layout.px(12),
+                    fontWeight: FontWeight.w300,
+                    height: 14 / 12,
+                  ),
+                ),
+                SizedBox(height: layout.px(6)),
+                const _CreditDivider(),
+                const _CreditAmount(),
+                const _CreditDivider(),
+                SizedBox(height: layout.px(8)),
+                const _LoanTerms(),
+                const Spacer(),
+                Center(
+                  child: SizedBox(
+                    height: layout.px(33),
+                    child: Center(
+                      child: Text(
+                        'Apply Now',
+                        style: TextStyle(
+                          color: AppColors.black,
+                          fontSize: layout.px(18),
+                          fontWeight: FontWeight.w700,
+                          height: 22 / 18,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

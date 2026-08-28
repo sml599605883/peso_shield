@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:peso_shield/main.dart';
 import 'package:peso_shield/root_tab_page.dart';
 import 'package:peso_shield/pages/mine_page.dart';
+import 'package:peso_shield/pages/login_page.dart';
 
 void main() {
   testWidgets('Home renders the Lanhu loan offer layout', (
@@ -71,5 +72,23 @@ void main() {
     expect(find.text('Online Services'), findsOneWidget);
     expect(find.text('Setting'), findsOneWidget);
     expect(find.text('Privacy Agreement'), findsOneWidget);
+  });
+
+  testWidgets('Login renders the Lanhu phone verification layout', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(375, 812);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      const ProviderScope(child: MaterialApp(home: LoginPage())),
+    );
+
+    expect(find.byType(RichText), findsAtLeastNWidgets(2));
+    expect(find.text('Please fill in your phone number'), findsOneWidget);
+    expect(find.text('Get Code'), findsOneWidget);
+    expect(find.text('Sign up / Sign in'), findsOneWidget);
   });
 }

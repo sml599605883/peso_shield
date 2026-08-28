@@ -37,5 +37,10 @@ class ResponseProtocol {
 
   bool get isSuccess => code == 0;
 
-  bool get isAuthError => code == 401 || code == 20000;
+  /// 会话过期错误码
+  /// 根据实际 API 约定，常见的会话过期码包括：
+  /// - `-2`: 业务层会话过期（fund_nexus 使用）
+  /// - `401`: HTTP 标准未授权状态码
+  /// - `20000`: 某些 API 的自定义会话过期码
+  bool get isAuthError => code == -2;
 }

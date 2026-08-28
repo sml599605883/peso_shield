@@ -2,10 +2,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/api_service.dart';
 import '../core/device/device_metadata_store.dart';
+import '../core/device/user_session.dart';
 import '../core/network/device_params.dart';
 import '../core/network/capture_proxy.dart';
 import '../core/network/http_client.dart';
 import '../core/network/network_config.dart';
+import '../core/session/session_expiry_coordinator.dart';
 
 final networkConfigProvider = Provider<NetworkConfig>((ref) {
   return NetworkConfig(
@@ -34,12 +36,23 @@ final systemProxyProvider = FutureProvider<CaptureProxySettings?>((ref) async {
   return CaptureProxyDiscovery.systemSettings();
 });
 
+final sessionExpiryCoordinatorProvider = Provider<SessionExpiryCoordinator>((
+  ref,
+) {
+  final coordinator = SessionExpiryCoordinator(ref: ref);
+  ref.onDispose(() {
+    coordinator.close();
+  });
+  return coordinator;
+});
+
 final httpClientProvider = FutureProvider<HttpClient>((ref) async {
   final config = ref.watch(networkConfigProvider);
 
   // 等待设备参数加载完成
   final deviceParams = await ref.watch(deviceParamsProvider.future);
   final systemProxy = await ref.watch(systemProxyProvider.future);
+  final coordinator = ref.watch(sessionExpiryCoordinatorProvider);
 
   return HttpClient(
     config: config,
@@ -49,9 +62,11 @@ final httpClientProvider = FutureProvider<HttpClient>((ref) async {
     getOsVersion: () => deviceParams.systemVersion,
     getGpsAdId: () => deviceParams.advertisingId,
     getUserToken: () {
-      return null;
+      return ref.read(userSessionProvider).accessToken;
     },
-    onAuthExpired: () {},
+    onAuthExpired: () {
+      coordinator.handleExpiredSession();
+    },
     systemProxy: systemProxy,
   );
 });

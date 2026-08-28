@@ -1,7 +1,6 @@
 import '../../core/network/api_response.dart';
 import '../../core/network/http_client.dart';
 import '../../core/network/obfuscation_helper.dart';
-import '../models/login_response.dart';
 
 class AuthRepository {
   const AuthRepository(this._client);

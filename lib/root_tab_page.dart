@@ -3,9 +3,7 @@ import 'package:flutter/material.dart';
 import 'pages/credit_page.dart';
 import 'pages/home_page.dart';
 import 'pages/mine_page.dart';
-import 'theme/app_assets.dart';
-import 'theme/app_colors.dart';
-import 'theme/layout_adapter.dart';
+import 'widgets/tab_bar/home_tab_bar.dart';
 
 class RootTabPage extends StatefulWidget {
   const RootTabPage({super.key});
@@ -23,141 +21,9 @@ class _RootTabPageState extends State<RootTabPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(index: _currentIndex, children: _pages),
-      bottomNavigationBar: _HomeTabBar(
+      bottomNavigationBar: HomeTabBar(
         currentIndex: _currentIndex,
         onSelected: (index) => setState(() => _currentIndex = index),
-      ),
-    );
-  }
-}
-
-class _HomeTabBar extends StatelessWidget {
-  const _HomeTabBar({required this.currentIndex, required this.onSelected});
-
-  final int currentIndex;
-  final ValueChanged<int> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final layout = AppLayout.of(context);
-    final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
-    return SizedBox(
-      key: const Key('home-tab-bar'),
-      height: layout.px(70) + bottomInset,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          const DecoratedBox(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage(AppAssets.homeBackground),
-                fit: BoxFit.cover,
-                alignment: Alignment.bottomCenter,
-              ),
-            ),
-          ),
-          if (bottomInset > 0)
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              height: bottomInset,
-              child: const ColoredBox(color: AppColors.white),
-            ),
-          Positioned(
-            left: 0,
-            right: 0,
-            top: 0,
-            height: layout.px(70),
-            child: DecoratedBox(
-              decoration: const BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage(AppAssets.tabBarBackground),
-                  fit: BoxFit.fill,
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _TabItem(
-                    label: 'Home',
-                    activeIcon: AppAssets.homeActive,
-                    inactiveIcon: AppAssets.homeInactive,
-                    selected: currentIndex == 0,
-                    onTap: () => onSelected(0),
-                  ),
-                  _TabItem(
-                    label: 'Credit',
-                    activeIcon: AppAssets.creditActive,
-                    inactiveIcon: AppAssets.creditInactive,
-                    selected: currentIndex == 1,
-                    onTap: () => onSelected(1),
-                  ),
-                  _TabItem(
-                    label: 'Mine',
-                    activeIcon: AppAssets.mineActive,
-                    inactiveIcon: AppAssets.mineInactive,
-                    selected: currentIndex == 2,
-                    onTap: () => onSelected(2),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TabItem extends StatelessWidget {
-  const _TabItem({
-    required this.label,
-    required this.activeIcon,
-    required this.inactiveIcon,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final String activeIcon;
-  final String inactiveIcon;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final layout = AppLayout.of(context);
-    return Semantics(
-      button: true,
-      selected: selected,
-      label: label,
-      child: InkWell(
-        onTap: onTap,
-        child: SizedBox(
-          width: layout.px(75),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset(
-                selected ? activeIcon : inactiveIcon,
-                width: layout.px(34),
-                height: layout.px(34),
-              ),
-              SizedBox(height: layout.px(2)),
-              Text(
-                label,
-                style: TextStyle(
-                  color: selected
-                      ? AppColors.selectedNavigation
-                      : AppColors.unselectedNavigation,
-                  fontSize: layout.px(12),
-                  height: 14 / 12,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

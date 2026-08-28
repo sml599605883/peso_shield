@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:peso_shield/main.dart';
 import 'package:peso_shield/root_tab_page.dart';
+import 'package:peso_shield/pages/mine_page.dart';
 
 void main() {
   testWidgets('Home renders the Lanhu loan offer layout', (
@@ -53,5 +54,22 @@ void main() {
       tester.getSize(find.byKey(const Key('home-tab-bar'))),
       const Size(375, 104),
     );
+  });
+
+  testWidgets('Mine tab renders the personal center layout', (tester) async {
+    tester.view.physicalSize = const Size(375, 812);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      const MaterialApp(home: Scaffold(body: MinePage())),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('960 **** 5854'), findsOneWidget);
+    expect(find.text('Online Services'), findsOneWidget);
+    expect(find.text('Setting'), findsOneWidget);
+    expect(find.text('Privacy Agreement'), findsOneWidget);
   });
 }

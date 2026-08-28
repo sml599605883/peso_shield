@@ -9,6 +9,8 @@ abstract final class AppColors {
   static const dividerBlue = Color.fromRGBO(215, 247, 255, 1);
   static const mutedBlue = Color.fromRGBO(161, 181, 203, 1);
   static const avatarGray = Color.fromRGBO(236, 236, 236, 1);
+  static const mineServiceText = Color.fromRGBO(42, 42, 41, 1);
+  static const mineServiceDivider = Color.fromRGBO(235, 235, 235, 1);
   static const selectedNavigation = Color.fromRGBO(71, 71, 71, 1);
   static const unselectedNavigation = Color.fromRGBO(188, 188, 188, 1);
 }

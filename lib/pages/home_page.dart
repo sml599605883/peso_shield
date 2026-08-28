@@ -197,7 +197,7 @@ class _AppIdentity extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: layout.px(11),
-            backgroundImage: AssetImage(AppAssets.appIdentityAvatar),
+            backgroundColor: AppColors.avatarGray,
           ),
           SizedBox(width: layout.px(6)),
           Text(

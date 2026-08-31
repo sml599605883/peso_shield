@@ -20,6 +20,10 @@ abstract final class AppColors {
   static const loginButtonShadow = Color.fromRGBO(171, 235, 214, 0.63);
   static const loginAgreementText = Color.fromRGBO(107, 107, 106, 1);
   static const loginAgreementLink = Color.fromRGBO(255, 208, 80, 1);
+  static const settingsInfoLabel = Color.fromRGBO(188, 188, 188, 1);
+  static const settingsInfoValue = Color.fromRGBO(51, 51, 51, 1);
+  static const settingsDeactivate = Color.fromRGBO(238, 238, 238, 1);
+  static const settingsDeactivateText = Color.fromRGBO(161, 161, 161, 1);
   static const selectedNavigation = Color.fromRGBO(71, 71, 71, 1);
   static const unselectedNavigation = Color.fromRGBO(188, 188, 188, 1);
 }

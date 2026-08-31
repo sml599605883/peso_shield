@@ -140,12 +140,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         return false;
       }
 
-      ref
+      await ref
           .read(userSessionProvider.notifier)
           .setSession(
             token: response.data.accessToken,
             userId: response.data.userId,
+            phone: _phoneController.text.trim(),
           );
+      if (!mounted) return true;
 
       if (widget.onLoginSuccess != null) {
         await widget.onLoginSuccess!();

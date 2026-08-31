@@ -9,12 +9,14 @@ class MineServiceRow extends StatelessWidget {
     this.label,
     this.asset, {
     this.hasDivider = false,
+    this.onTap,
     super.key,
   });
 
   final String label;
   final String asset;
   final bool hasDivider;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +25,7 @@ class MineServiceRow extends StatelessWidget {
       button: true,
       label: label,
       child: GestureDetector(
-        onTap: () {},
+        onTap: onTap,
         child: DecoratedBox(
           decoration: BoxDecoration(
             border: hasDivider

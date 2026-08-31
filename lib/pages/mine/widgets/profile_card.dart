@@ -6,7 +6,15 @@ import '../../../theme/layout_adapter.dart';
 import 'order_item.dart';
 
 class MineProfileCard extends StatelessWidget {
-  const MineProfileCard({super.key});
+  const MineProfileCard({this.phone, super.key});
+
+  final String? phone;
+
+  String get _displayPhone {
+    final value = phone?.trim() ?? '';
+    if (value.length <= 7) return value.isEmpty ? '960 **** 5854' : value;
+    return '${value.substring(0, 3)} **** ${value.substring(value.length - 4)}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +31,7 @@ class MineProfileCard extends StatelessWidget {
         child: Column(
           children: [
             Text(
-              '960 **** 5854',
+              _displayPhone,
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: AppColors.black,

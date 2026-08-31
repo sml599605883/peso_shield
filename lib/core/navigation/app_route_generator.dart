@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../pages/home_page.dart';
 import '../../pages/login_page.dart';
 import '../../root_tab_page.dart';
+import '../../pages/settings_page.dart';
 import 'app_routes.dart';
 
 /// 路由参数类型定义
@@ -31,15 +32,19 @@ class AppRouteGenerator {
       case AppRoutes.login:
         final args = settings.arguments as LoginPageArguments?;
         return MaterialPageRoute<bool>(
-          builder: (_) => LoginPage(
-            onLoginSuccess: args?.onLoginSuccess,
-          ),
+          builder: (_) => LoginPage(onLoginSuccess: args?.onLoginSuccess),
           settings: settings,
         );
 
       case AppRoutes.home:
         return MaterialPageRoute<void>(
           builder: (_) => const HomePage(),
+          settings: settings,
+        );
+
+      case AppRoutes.settings:
+        return MaterialPageRoute<void>(
+          builder: (_) => const SettingsPage(),
           settings: settings,
         );
 
@@ -66,9 +71,9 @@ class AppRouteGenerator {
               const SizedBox(height: 8),
               Text(
                 routeName ?? '(null)',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: Colors.grey),
               ),
             ],
           ),

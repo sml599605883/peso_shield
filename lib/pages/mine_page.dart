@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_assets.dart';
 import '../theme/layout_adapter.dart';
+import '../core/navigation/app_routes.dart';
 import 'mine/widgets/widgets.dart';
 
 class MinePage extends StatelessWidget {
-  const MinePage({super.key});
+  const MinePage({this.phone, super.key});
+
+  final String? phone;
 
   @override
   Widget build(BuildContext context) {
@@ -19,18 +22,28 @@ class MinePage extends StatelessWidget {
       ),
       child: SafeArea(
         bottom: false,
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              MineProfileHeader(layout: layout),
-              const MineServiceTitle(),
-              SizedBox(height: layout.px(11)),
-              Padding(
-                padding: layout.edgeInsets(left: 20, right: 20),
-                child: const MineServiceList(),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Column(
+                  children: [
+                    MineProfileHeader(layout: layout, phone: phone),
+                    const MineServiceTitle(),
+                    SizedBox(height: layout.px(11)),
+                    Padding(
+                      padding: layout.edgeInsets(left: 20, right: 20),
+                      child: MineServiceList(
+                        onSettingTap: () =>
+                            Navigator.of(context).pushNamed(AppRoutes.settings),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );

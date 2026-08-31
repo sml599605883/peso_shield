@@ -32,7 +32,7 @@ class SessionExpiryCoordinator {
   }
 
   Future<void> _clearAndNotify() async {
-    ref.read(userSessionProvider.notifier).clearSession();
+    await ref.read(userSessionProvider.notifier).clearSession();
     _events.add(null);
   }
 

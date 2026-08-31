@@ -5,9 +5,10 @@ import '../../../theme/layout_adapter.dart';
 import 'profile_card.dart';
 
 class MineProfileHeader extends StatelessWidget {
-  const MineProfileHeader({required this.layout, super.key});
+  const MineProfileHeader({required this.layout, this.phone, super.key});
 
   final AppLayout layout;
+  final String? phone;
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +25,7 @@ class MineProfileHeader extends StatelessWidget {
                 left: layout.px(10),
                 width: cardWidth,
                 height: cardHeight,
-                child: const MineProfileCard(),
+                child: MineProfileCard(phone: phone),
               ),
               Positioned(
                 top: layout.px(49),

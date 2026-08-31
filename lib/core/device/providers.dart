@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../network/capture_proxy.dart';
@@ -51,7 +53,7 @@ final httpClientProvider = FutureProvider<HttpClient>((ref) async {
     getGpsAdId: () => deviceParams?.advertisingId ?? '',
     getUserToken: () => ref.read(userSessionProvider).accessToken,
     onAuthExpired: () {
-      ref.read(userSessionProvider.notifier).clearSession();
+      unawaited(ref.read(userSessionProvider.notifier).clearSession());
     },
     systemProxy: systemProxy,
   );

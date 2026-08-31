@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/api_service.dart';
@@ -65,7 +67,7 @@ final httpClientProvider = FutureProvider<HttpClient>((ref) async {
       return ref.read(userSessionProvider).accessToken;
     },
     onAuthExpired: () {
-      coordinator.handleExpiredSession();
+      unawaited(coordinator.handleExpiredSession());
     },
     systemProxy: systemProxy,
   );

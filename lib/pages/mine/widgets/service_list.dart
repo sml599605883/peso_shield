@@ -6,7 +6,9 @@ import '../../../theme/layout_adapter.dart';
 import 'service_row.dart';
 
 class MineServiceList extends StatelessWidget {
-  const MineServiceList({super.key});
+  const MineServiceList({this.onSettingTap, super.key});
+
+  final VoidCallback? onSettingTap;
 
   @override
   Widget build(BuildContext context) {
@@ -25,15 +27,16 @@ class MineServiceList extends StatelessWidget {
       ),
       child: Column(
         children: [
-          const MineServiceRow(
+          MineServiceRow(
             'Online Services',
             AppAssets.mineOnlineService,
             hasDivider: true,
           ),
-          const MineServiceRow(
+          MineServiceRow(
             'Setting',
             AppAssets.mineSetting,
             hasDivider: true,
+            onTap: onSettingTap,
           ),
           const MineServiceRow('Privacy Agreement', AppAssets.minePrivacy),
         ],

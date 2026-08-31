@@ -17,14 +17,10 @@ class AppRoutes {
   /// 我的页面
   static const String mine = '/mine';
 
+  static const String settings = '/settings';
+
   /// 所有路由名称列表（用于调试和验证）
-  static const List<String> all = [
-    root,
-    home,
-    login,
-    credit,
-    mine,
-  ];
+  static const List<String> all = [root, home, login, credit, mine, settings];
 
   /// 验证路由名称是否有效
   static bool isValid(String? route) {

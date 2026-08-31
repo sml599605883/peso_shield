@@ -26,8 +26,6 @@ class _RootTabPageState extends ConsumerState<RootTabPage> {
 
   StreamSubscription<void>? _sessionExpirySubscription;
 
-  static const _pages = [HomePage(), CreditPage(), MinePage()];
-
   /// 首页可游客浏览，其余 Tab 需要登录
   static bool _requiresLogin(int index) => index != 0;
 
@@ -89,8 +87,16 @@ class _RootTabPageState extends ConsumerState<RootTabPage> {
 
   @override
   Widget build(BuildContext context) {
+    final session = ref.watch(userSessionProvider);
     return Scaffold(
-      body: IndexedStack(index: _currentIndex, children: _pages),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          const HomePage(),
+          const CreditPage(),
+          MinePage(phone: session.phone),
+        ],
+      ),
       bottomNavigationBar: HomeTabBar(
         currentIndex: _currentIndex,
         onSelected: _selectTab,

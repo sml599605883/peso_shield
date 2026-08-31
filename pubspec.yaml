@@ -42,7 +42,6 @@ dependencies:
   package_info_plus: ^8.1.2
   flutter_secure_storage: ^9.2.2
   shared_preferences: ^2.3.3
-  fluttertoast: ^9.1.0
   flutter_easyloading: ^4.0.2
 
 dev_dependencies:

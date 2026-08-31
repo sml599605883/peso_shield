@@ -1,8 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 
-/// Toast 提示工具类
+/// Toast 和 Loading 提示工具类
 class ToastHelper {
   ToastHelper._();
 
@@ -22,47 +20,35 @@ class ToastHelper {
   /// 显示普通提示
   static void showMessage(String message) {
     if (message.isEmpty) return;
-
-    Fluttertoast.showToast(
-      msg: message,
-      toastLength: Toast.LENGTH_SHORT,
-      gravity: ToastGravity.CENTER,
-      backgroundColor: Colors.black.withOpacity(0.8),
-      textColor: Colors.white,
-      fontSize: 14.0,
+    EasyLoading.showToast(
+      message,
+      duration: const Duration(seconds: 2),
+      toastPosition: EasyLoadingToastPosition.center,
     );
   }
 
   /// 显示成功提示
   static void showSuccess(String message) {
     if (message.isEmpty) return;
-
-    Fluttertoast.showToast(
-      msg: message,
-      toastLength: Toast.LENGTH_SHORT,
-      gravity: ToastGravity.CENTER,
-      backgroundColor: Colors.green.withOpacity(0.8),
-      textColor: Colors.white,
-      fontSize: 14.0,
+    EasyLoading.showSuccess(
+      message,
+      duration: const Duration(seconds: 2),
+      maskType: EasyLoadingMaskType.clear,
     );
   }
 
   /// 显示错误提示
   static void showError(String message) {
     if (message.isEmpty) return;
-
-    Fluttertoast.showToast(
-      msg: message,
-      toastLength: Toast.LENGTH_SHORT,
-      gravity: ToastGravity.CENTER,
-      backgroundColor: Colors.red.withOpacity(0.8),
-      textColor: Colors.white,
-      fontSize: 14.0,
+    EasyLoading.showError(
+      message,
+      duration: const Duration(seconds: 2),
+      maskType: EasyLoadingMaskType.clear,
     );
   }
 
-  /// 取消当前显示的 Toast
+  /// 取消当前显示的提示
   static void cancel() {
-    Fluttertoast.cancel();
+    EasyLoading.dismiss();
   }
 }

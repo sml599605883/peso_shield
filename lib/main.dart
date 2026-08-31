@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/navigation/app_navigator.dart';
@@ -9,11 +10,7 @@ import 'core/startup/startup_network_gate.dart';
 import 'theme/app_theme.dart';
 
 void main() {
-  runApp(
-    const ProviderScope(
-      child: PesoShieldApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: PesoShieldApp()));
 }
 
 class PesoShieldApp extends ConsumerWidget {
@@ -35,6 +32,8 @@ class PesoShieldApp extends ConsumerWidget {
         initialRoute: AppRoutes.root,
         // 配置路由生成器
         onGenerateRoute: AppRouteGenerator.onGenerateRoute,
+        // 配置 EasyLoading
+        builder: EasyLoading.init(),
       ),
     );
   }

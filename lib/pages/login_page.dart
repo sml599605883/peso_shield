@@ -71,6 +71,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       return;
     }
 
+    ToastHelper.showLoading();
     ref.read(loginStateProvider.notifier).setRequestingCode(true);
     try {
       final repository = await ref.read(authRepositoryProvider.future);
@@ -79,6 +80,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         channel: 'sms',
       );
       if (mounted) {
+        ToastHelper.hideLoading();
         if (response.isSuccess) {
           ToastHelper.showSuccess('Verification code sent.');
           ref.read(loginStateProvider.notifier).startCountdown();
@@ -89,6 +91,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       }
     } catch (e) {
       if (mounted) {
+        ToastHelper.hideLoading();
         final message = _extractErrorMessage(e);
         if (message.isNotEmpty) {
           ToastHelper.showError(message);
@@ -122,6 +125,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     }
 
     ref.read(loginStateProvider.notifier).setLoggingIn(true);
+    ToastHelper.showLoading();
     try {
       final repository = await ref.read(authRepositoryProvider.future);
       final response = await repository.login(
@@ -130,6 +134,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       );
       if (!mounted) return false;
 
+      ToastHelper.hideLoading();
       if (!response.isSuccess) {
         ToastHelper.showError(response.message);
         return false;
@@ -150,6 +155,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       return true;
     } catch (e) {
       if (mounted) {
+        ToastHelper.hideLoading();
         final message = _extractErrorMessage(e);
         if (message.isNotEmpty) {
           ToastHelper.showError(message);

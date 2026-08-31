@@ -1,9 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 /// Toast 提示工具类
 class ToastHelper {
   ToastHelper._();
+
+  /// 显示 Loading
+  static void showLoading({String? message}) {
+    EasyLoading.show(
+      status: message ?? 'Loading...',
+      maskType: EasyLoadingMaskType.clear,
+    );
+  }
+
+  /// 隐藏 Loading
+  static void hideLoading() {
+    EasyLoading.dismiss();
+  }
 
   /// 显示普通提示
   static void showMessage(String message) {

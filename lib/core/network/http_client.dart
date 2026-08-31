@@ -180,27 +180,14 @@ class HttpClient {
   ) {
     final protocol = ResponseProtocol.parse(response.data);
 
-    if (!protocol.isSuccess) {
-      if (protocol.isAuthError) {
-        _onAuthExpired();
-        handler.reject(
-          DioException(
-            requestOptions: response.requestOptions,
-            error: HttpException(
-              type: HttpFailureType.authentication,
-              message: protocol.message,
-              code: protocol.code,
-            ),
-          ),
-        );
-        return;
-      }
-
+    // 会话过期：触发协调器清理，同时让请求失败以便 UI 可以处理
+    if (protocol.isAuthError) {
+      _onAuthExpired();
       handler.reject(
         DioException(
           requestOptions: response.requestOptions,
           error: HttpException(
-            type: HttpFailureType.businessLogic,
+            type: HttpFailureType.authentication,
             message: protocol.message,
             code: protocol.code,
           ),
@@ -209,6 +196,7 @@ class HttpClient {
       return;
     }
 
+    // 其他业务错误（包括成功）都正常返回，由 UI 层检查 isSuccess
     handler.next(response);
   }
 

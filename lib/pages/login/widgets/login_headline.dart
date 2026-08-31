@@ -20,7 +20,7 @@ class LoginHeadline extends StatelessWidget {
         children: const [
           TextSpan(text: 'Welcome to '),
           TextSpan(
-            text: 'App Name',
+            text: 'Peso Shield',
             style: TextStyle(color: AppColors.coral),
           ),
         ],

@@ -9,5 +9,6 @@ class ApiResponse<T> {
   final String message;
   final T data;
 
-  bool get isSuccess => code == 200 || code == 0;
+  /// 成功码：0（正常成功）或 20000（特殊成功状态）
+  bool get isSuccess => code == 0 || code == 20000;
 }

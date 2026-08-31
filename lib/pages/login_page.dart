@@ -1,10 +1,12 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/device/user_session.dart';
 import '../core/navigation/app_navigator.dart';
+import '../core/network/http_exception.dart';
 import '../providers/repository_provider.dart';
 import '../theme/app_assets.dart';
 import '../theme/layout_adapter.dart';
@@ -76,16 +78,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         channel: 'sms',
       );
       if (mounted) {
-        _showMessage(
-          response.isSuccess ? 'Verification code sent.' : response.message,
-        );
         if (response.isSuccess) {
+          _showMessage('Verification code sent.');
           ref.read(loginStateProvider.notifier).startCountdown();
           _codeFocusNode.requestFocus();
+        } else {
+          _showMessage(response.message);
         }
       }
-    } catch (_) {
-      if (mounted) _showMessage('Unable to send the verification code.');
+    } catch (e) {
+      if (mounted) {
+        _showMessage(_extractErrorMessage(e));
+      }
     } finally {
       if (mounted) {
         ref.read(loginStateProvider.notifier).setRequestingCode(false);
@@ -138,8 +142,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         AppNavigator.pop(true);
       }
       return true;
-    } catch (_) {
-      if (mounted) _showMessage('Unable to sign in. Please try again.');
+    } catch (e) {
+      if (mounted) {
+        _showMessage(_extractErrorMessage(e));
+      }
       return false;
     } finally {
       if (mounted) {
@@ -148,7 +154,25 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     }
   }
 
+  String _extractErrorMessage(Object error) {
+    // 会话过期时不显示错误消息，因为 SessionExpiryCoordinator 会处理
+    if (error is DioException &&
+        error.error is HttpException &&
+        (error.error as HttpException).type == HttpFailureType.authentication) {
+      return ''; // 返回空字符串，_showMessage 会忽略
+    }
+
+    // 其他错误显示具体消息或通用提示
+    if (error is HttpException) {
+      return error.message.isNotEmpty
+          ? error.message
+          : 'Unable to complete the request.';
+    }
+    return 'Unable to complete the request.';
+  }
+
   void _showMessage(String message) {
+    if (message.isEmpty) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(message)));

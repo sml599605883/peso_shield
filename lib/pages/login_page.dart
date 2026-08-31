@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/device/user_session.dart';
 import '../core/navigation/app_navigator.dart';
 import '../core/network/http_exception.dart';
+import '../core/ui/toast_helper.dart';
 import '../providers/repository_provider.dart';
 import '../theme/app_assets.dart';
 import '../theme/layout_adapter.dart';
@@ -61,7 +62,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Future<void> _requestCode() async {
     final phone = _phoneController.text.trim();
     if (phone.isEmpty) {
-      _showMessage('Please enter your cellphone number.');
+      ToastHelper.showMessage('Please enter your cellphone number.');
       return;
     }
 
@@ -79,16 +80,19 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       );
       if (mounted) {
         if (response.isSuccess) {
-          _showMessage('Verification code sent.');
+          ToastHelper.showSuccess('Verification code sent.');
           ref.read(loginStateProvider.notifier).startCountdown();
           _codeFocusNode.requestFocus();
         } else {
-          _showMessage(response.message);
+          ToastHelper.showError(response.message);
         }
       }
     } catch (e) {
       if (mounted) {
-        _showMessage(_extractErrorMessage(e));
+        final message = _extractErrorMessage(e);
+        if (message.isNotEmpty) {
+          ToastHelper.showError(message);
+        }
       }
     } finally {
       if (mounted) {
@@ -106,7 +110,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     if (!loginState.agreementAccepted) {
       if (showAgreementError) {
-        _showMessage('Please agree to the Privacy Policy and Terms of Service');
+        ToastHelper.showMessage(
+          'Please agree to the Privacy Policy and Terms of Service',
+        );
       }
       return false;
     }
@@ -125,7 +131,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       if (!mounted) return false;
 
       if (!response.isSuccess) {
-        _showMessage(response.message);
+        ToastHelper.showError(response.message);
         return false;
       }
 
@@ -144,7 +150,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       return true;
     } catch (e) {
       if (mounted) {
-        _showMessage(_extractErrorMessage(e));
+        final message = _extractErrorMessage(e);
+        if (message.isNotEmpty) {
+          ToastHelper.showError(message);
+        }
       }
       return false;
     } finally {
@@ -159,7 +168,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     if (error is DioException &&
         error.error is HttpException &&
         (error.error as HttpException).type == HttpFailureType.authentication) {
-      return ''; // 返回空字符串，_showMessage 会忽略
+      return ''; // 返回空字符串，调用方会检查并跳过 toast
     }
 
     // 其他错误显示具体消息或通用提示
@@ -169,13 +178,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           : 'Unable to complete the request.';
     }
     return 'Unable to complete the request.';
-  }
-
-  void _showMessage(String message) {
-    if (message.isEmpty) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override

@@ -66,21 +66,25 @@ class SettingsPage extends StatelessWidget {
                   ],
                 ),
               ),
-              SizedBox(height: layout.px(157)),
-              _SettingsButton(
-                label: 'Deactivate Account',
-                backgroundColor: AppColors.settingsDeactivate,
-                foregroundColor: AppColors.settingsDeactivateText,
-              ),
-              SizedBox(height: layout.px(10)),
-              const _SettingsButton(
-                label: 'Logout',
-                backgroundColor: AppColors.coral,
-                foregroundColor: AppColors.white,
-              ),
             ],
           ),
         ),
+      ),
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _SettingsButton(
+            label: 'Deactivate Account',
+            backgroundColor: AppColors.settingsDeactivate,
+            foregroundColor: AppColors.settingsDeactivateText,
+          ),
+          SizedBox(height: layout.px(10)),
+          const _SettingsButton(
+            label: 'Logout',
+            backgroundColor: AppColors.coral,
+            foregroundColor: AppColors.white,
+          ),
+        ],
       ),
     );
   }

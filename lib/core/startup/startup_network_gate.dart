@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:peso_shield/core/device/device_name_sync.dart';
+import 'package:peso_shield/core/device/user_session.dart';
 import 'package:peso_shield/core/network/device_params.dart';
 import 'package:peso_shield/pages/network_error_page.dart';
 import 'package:peso_shield/providers/network_provider.dart';
@@ -56,6 +57,10 @@ class _StartupNetworkGateState extends State<StartupNetworkGate>
       _failed = false;
     });
     try {
+      // 先恢复本地会话，保证首帧渲染时登录态已就绪，
+      // 且随后创建的 HttpClient 能立即读到 token。
+      await widget.ref.read(userSessionProvider.notifier).restore();
+
       final httpClient = await widget.ref.read(httpClientProvider.future);
       final available = await httpClient.probeTransport();
 

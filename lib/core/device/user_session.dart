@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'session_store.dart';
@@ -49,8 +47,7 @@ class UserSessionNotifier extends Notifier<UserSession> {
 
   @override
   UserSession build() {
-    // 立即触发恢复，保证即使没人显式 await restore()，登录态最终也会补齐
-    unawaited(restore());
+    // 返回未恢复的初始状态。restore() 会在 StartupNetworkGate 中被调用。
     return const UserSession();
   }
 

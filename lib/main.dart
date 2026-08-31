@@ -1,10 +1,7 @@
-import 'dart:async';
-
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'core/device/session_store.dart';
 import 'core/navigation/app_navigator.dart';
 import 'core/navigation/app_route_generator.dart';
 import 'core/navigation/app_route_observer.dart';
@@ -14,10 +11,6 @@ import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // 在启动前恢复会话，避免阻塞网络检查
-  final sessionStore = SessionStore.persistent();
-  await sessionStore.restore();
   
   runApp(const ProviderScope(child: PesoShieldApp()));
 }

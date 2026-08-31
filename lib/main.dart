@@ -1,5 +1,5 @@
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/navigation/app_navigator.dart';
@@ -27,13 +27,13 @@ class PesoShieldApp extends ConsumerWidget {
         // 配置全局导航键
         navigatorKey: AppNavigator.navigatorKey,
         // 配置路由观察者
-        navigatorObservers: [AppRouteObserver()],
+        navigatorObservers: [AppRouteObserver(), BotToastNavigatorObserver()],
         // 配置初始路由
         initialRoute: AppRoutes.root,
         // 配置路由生成器
         onGenerateRoute: AppRouteGenerator.onGenerateRoute,
-        // 配置 EasyLoading
-        builder: EasyLoading.init(),
+        // 配置 BotToast
+        builder: BotToastInit(),
       ),
     );
   }

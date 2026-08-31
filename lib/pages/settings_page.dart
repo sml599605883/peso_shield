@@ -59,9 +59,9 @@ class SettingsPage extends StatelessWidget {
                 child: const Column(
                   children: [
                     _InfoRow('Website', 'xxxxxxxxxxxxxxxx'),
-                    SizedBox(height: 37),
+                    _InfoDivider(),
                     _InfoRow('E-mail', 'xxxxxxxxx'),
-                    SizedBox(height: 37),
+                    _InfoDivider(),
                     _InfoRow('Version', 'V1.1.1'),
                   ],
                 ),
@@ -70,21 +70,27 @@ class SettingsPage extends StatelessWidget {
           ),
         ),
       ),
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _SettingsButton(
-            label: 'Deactivate Account',
-            backgroundColor: AppColors.settingsDeactivate,
-            foregroundColor: AppColors.settingsDeactivateText,
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: layout.edgeInsets(left: 56, right: 56, bottom: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _SettingsButton(
+                label: 'Deactivate Account',
+                backgroundColor: AppColors.settingsDeactivate,
+                foregroundColor: AppColors.settingsDeactivateText,
+              ),
+              SizedBox(height: layout.px(10)),
+              const _SettingsButton(
+                label: 'Logout',
+                backgroundColor: AppColors.coral,
+                foregroundColor: AppColors.white,
+              ),
+            ],
           ),
-          SizedBox(height: layout.px(10)),
-          const _SettingsButton(
-            label: 'Logout',
-            backgroundColor: AppColors.coral,
-            foregroundColor: AppColors.white,
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -117,6 +123,18 @@ class _InfoRow extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _InfoDivider extends StatelessWidget {
+  const _InfoDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 18),
+      child: Divider(height: 1, thickness: 1, color: AppColors.avatarGray),
     );
   }
 }

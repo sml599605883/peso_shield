@@ -225,15 +225,46 @@ class ProductApplicationFlow {
     if (detail.nextStep.type.isNotEmpty) {
       // 有未完成的认证项，跳转到对应认证页
       debugPrint('Navigate to certification: ${detail.nextStep.type} - ${detail.nextStep.title}');
-      // TODO: 根据 nextStep.type 跳转到对应认证页
-      // 例如：
-      // - 'public' → 身份认证页
-      // - 'face' → 活体认证页
-      // - 'personal' → 个人信息页
-      // - 'job' → 工作信息页
-      // - 'ext' → 紧急联系人页
-      // - 'bank' → 绑卡页
-      ToastHelper.showMessage('Please complete ${detail.nextStep.title}');
+      
+      switch (detail.nextStep.type) {
+        case 'public':
+          // 身份认证 - 选择证件类型
+          final identityType = await AppNavigator.toIdentityType();
+          if (identityType != null) {
+            debugPrint('Selected identity type: $identityType');
+            // TODO: 跳转到证件拍照/上传页面
+            ToastHelper.showMessage('Please upload your $identityType');
+          }
+          break;
+        
+        case 'face':
+          // TODO: 活体认证页
+          ToastHelper.showMessage('Please complete ${detail.nextStep.title}');
+          break;
+        
+        case 'personal':
+          // TODO: 个人信息页
+          ToastHelper.showMessage('Please complete ${detail.nextStep.title}');
+          break;
+        
+        case 'job':
+          // TODO: 工作信息页
+          ToastHelper.showMessage('Please complete ${detail.nextStep.title}');
+          break;
+        
+        case 'ext':
+          // TODO: 紧急联系人页
+          ToastHelper.showMessage('Please complete ${detail.nextStep.title}');
+          break;
+        
+        case 'bank':
+          // TODO: 绑卡页
+          ToastHelper.showMessage('Please complete ${detail.nextStep.title}');
+          break;
+        
+        default:
+          ToastHelper.showMessage('Please complete ${detail.nextStep.title}');
+      }
       return;
     }
 

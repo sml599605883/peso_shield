@@ -226,6 +226,10 @@ class ProductApplicationFlow {
       // 有未完成的认证项，跳转到对应认证页
       debugPrint('Navigate to certification: ${detail.nextStep.type} - ${detail.nextStep.title}');
       
+      // 注意：接口返回的是混淆后的值（histolyses 字段）
+      // public -> public, face -> face, personal -> personal, 
+      // job -> job, ext -> ext, bank -> bank
+      // 这些值在混淆后保持不变
       switch (detail.nextStep.type) {
         case 'public':
           // 身份认证 - 选择证件类型

@@ -7,6 +7,7 @@ import '../theme/app_colors.dart';
 import '../theme/layout_adapter.dart';
 import '../widgets/app_back_button.dart';
 import 'widgets/identity_upload_prompt.dart';
+import 'widgets/identity_upload_method_dialog.dart';
 
 /// Static ID upload guidance page. Upload service integration is pending.
 class IdentityUploadPage extends ConsumerWidget {
@@ -26,11 +27,11 @@ class IdentityUploadPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final layout = AppLayout.of(context);
-    
+
     // 优先使用产品详情缓存的 linocut 文案，为空时兜底
     final cachedPrompt = ref.watch(sessionStoreProvider).productDetailPrompt;
     final prompt = cachedPrompt.isNotEmpty ? cachedPrompt : defaultPrompt;
-    
+
     return Scaffold(
       extendBody: true,
       backgroundColor: Colors.transparent,
@@ -98,7 +99,7 @@ class IdentityUploadPage extends ConsumerWidget {
               height: layout.px(50),
               child: ElevatedButton(
                 key: const Key('identity-upload-submit'),
-                onPressed: () {},
+                onPressed: () => _showIdentityUploadMethodDialog(context),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.coral,
                   foregroundColor: AppColors.white,
@@ -124,4 +125,27 @@ class IdentityUploadPage extends ConsumerWidget {
       ),
     );
   }
+}
+
+Future<IdentityUploadMethod?> _showIdentityUploadMethodDialog(
+  BuildContext context,
+) {
+  return showGeneralDialog<IdentityUploadMethod>(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: 'Close upload method selector',
+    barrierColor: const Color.fromRGBO(0, 0, 0, 0.6),
+    transitionDuration: const Duration(milliseconds: 200),
+    pageBuilder: (context, animation, secondaryAnimation) => const Align(
+      alignment: Alignment.bottomCenter,
+      child: IdentityUploadMethodDialog(),
+    ),
+    transitionBuilder: (context, animation, secondaryAnimation, child) {
+      final position = Tween<Offset>(
+        begin: const Offset(0, 1),
+        end: Offset.zero,
+      ).chain(CurveTween(curve: Curves.easeOutCubic)).animate(animation);
+      return SlideTransition(position: position, child: child);
+    },
+  );
 }

@@ -34,6 +34,9 @@ abstract final class AppAssets {
       'assets/identity_upload_illustration.png';
   static const identityUploadIllustrationAlt =
       'assets/identity_upload_illustration_alt.png';
+  static const identityUploadCheckmark = 'assets/identity_upload_checkmark.png';
+  static const identityUploadAlbum = 'assets/identity_upload_album.png';
+  static const identityUploadCamera = 'assets/identity_upload_camera.png';
 
   static const tabBarBackground = 'assets/navigation/tab_bar_background.png';
   static const homeActive = 'assets/navigation/home_active.png';

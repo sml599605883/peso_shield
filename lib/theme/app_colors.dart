@@ -31,4 +31,5 @@ abstract final class AppColors {
   static const identityPanelEnd = Color.fromRGBO(191, 249, 247, 1);
   static const identityText = Color.fromRGBO(51, 51, 51, 1);
   static const identityUnselected = Color.fromRGBO(197, 197, 197, 1);
+  static const identityUploadDivider = Color.fromRGBO(231, 231, 231, 1);
 }

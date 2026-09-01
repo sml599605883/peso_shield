@@ -1,32 +1,4 @@
-class IdentityData {
-  const IdentityData({
-    required this.faceInfo,
-    required this.idCardInfo,
-    required this.idTypes,
-    required this.tips,
-  });
-
-  factory IdentityData.fromJson(Map<String, dynamic> json) {
-    final mugg = json['mugg'] as Map<String, dynamic>? ?? {};
-    return IdentityData(
-      faceInfo: mugg['fastball'] as Map<String, dynamic>? ?? {},
-      idCardInfo: mugg['enosises'] != null
-          ? IdCardInfo.fromJson(mugg['enosises'] as Map<String, dynamic>)
-          : const IdCardInfo(status: 0, imageUrl: '', info: {}),
-      idTypes: (mugg['deportment'] as List<dynamic>? ?? [])
-          .map((e) => IdType.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      tips: mugg['properdins'] as String? ?? '',
-    );
-  }
-
-  final Map<String, dynamic> faceInfo;
-  final IdCardInfo idCardInfo;
-  final List<IdType> idTypes;
-  final String tips;
-}
-
-/// 证件类型列表数据（仅用于证件选择页面）
+/// 证件类型列表数据（用于证件选择页面）
 class IdentityTypeList {
   const IdentityTypeList({
     this.recommendedIdTypes = const [],

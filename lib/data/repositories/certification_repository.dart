@@ -9,16 +9,7 @@ class CertificationRepository {
 
   final HttpClient _client;
 
-  Future<ApiResponse<IdentityData>> getIdentityInfo({
-    required String productId,
-  }) async {
-    return _client.get(
-      '/outsmelled/bale?bombarder=$productId&soccers=${ObfuscationHelper.randomParam()}',
-      parse: (json) => IdentityData.fromJson(json as Map<String, dynamic>),
-    );
-  }
-
-  /// 获取证件类型列表（仅用于证件选择页面）
+  /// 获取证件类型列表（用于证件选择页面）
   Future<ApiResponse<IdentityTypeList>> getIdentityTypeList({
     required String productId,
   }) async {

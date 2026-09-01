@@ -10,10 +10,7 @@ import '../widgets/app_back_button.dart';
 
 /// Static identity document selection shown before document capture.
 class IdentityTypePage extends ConsumerStatefulWidget {
-  const IdentityTypePage({
-    required this.productId,
-    super.key,
-  });
+  const IdentityTypePage({required this.productId, super.key});
 
   final String productId;
 
@@ -36,7 +33,7 @@ class _IdentityTypePageState extends ConsumerState<IdentityTypePage> {
     final response = await repository.getIdentityInfo(
       productId: widget.productId,
     );
-    
+
     if (response.isSuccess && mounted) {
       setState(() {
         _identityData = response.data;
@@ -44,34 +41,15 @@ class _IdentityTypePageState extends ConsumerState<IdentityTypePage> {
     }
   }
 
-  static const _recommended = [
-    'PRC ID',
-    'SSS ID',
-    'PHILIPPINE PASSPORT',
-    'POSTAL ID',
-    'UMID(Unified Multi-Purpose ID)',
-  ];
-  static const _other = [
-    "DRIVER'S LICENSE",
-    'STUDENT CARD',
-    'TIN ID',
-    "Voter's ID",
-    'PhilHealth ID',
-  ];
-
   @override
   Widget build(BuildContext context) {
     final layout = AppLayout.of(context);
-    
-    // 使用接口数据，如果没有则使用默认数据
+
+    // 完全使用接口数据，没有则为空
     final options = _showOtherOptions
-        ? (_identityData?.otherIdTypes.isNotEmpty == true
-            ? _identityData!.otherIdTypes
-            : _other)
-        : (_identityData?.recommendedIdTypes.isNotEmpty == true
-            ? _identityData!.recommendedIdTypes
-            : _recommended);
-    
+        ? (_identityData?.otherIdTypes ?? [])
+        : (_identityData?.recommendedIdTypes ?? []);
+
     return Scaffold(
       body: SizedBox.expand(
         child: DecoratedBox(

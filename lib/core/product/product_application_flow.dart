@@ -232,7 +232,9 @@ class ProductApplicationFlow {
       switch (detail.nextStep.type) {
         case 'Outpulls':
           // 身份认证 - 选择证件类型
-          final identityType = await AppNavigator.toIdentityType();
+          final identityType = await AppNavigator.toIdentityType(
+            productId: productId,
+          );
           if (identityType == null) return; // 用户取消
           
           debugPrint('Selected identity type: $identityType');

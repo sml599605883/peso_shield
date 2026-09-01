@@ -1,20 +1,48 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../providers/repository_provider.dart';
+import '../data/models/certification_data.dart';
 import '../theme/app_assets.dart';
 import '../theme/app_colors.dart';
 import '../theme/layout_adapter.dart';
 import '../widgets/app_back_button.dart';
 
 /// Static identity document selection shown before document capture.
-class IdentityTypePage extends StatefulWidget {
-  const IdentityTypePage({super.key});
+class IdentityTypePage extends ConsumerStatefulWidget {
+  const IdentityTypePage({
+    required this.productId,
+    super.key,
+  });
+
+  final String productId;
 
   @override
-  State<IdentityTypePage> createState() => _IdentityTypePageState();
+  ConsumerState<IdentityTypePage> createState() => _IdentityTypePageState();
 }
 
-class _IdentityTypePageState extends State<IdentityTypePage> {
+class _IdentityTypePageState extends ConsumerState<IdentityTypePage> {
   bool _showOtherOptions = false;
+  IdentityData? _identityData;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadIdentityData();
+  }
+
+  Future<void> _loadIdentityData() async {
+    final repository = await ref.read(certificationRepositoryProvider.future);
+    final response = await repository.getIdentityInfo(
+      productId: widget.productId,
+    );
+    
+    if (response.isSuccess && mounted) {
+      setState(() {
+        _identityData = response.data;
+      });
+    }
+  }
 
   static const _recommended = [
     'PRC ID',
@@ -34,144 +62,139 @@ class _IdentityTypePageState extends State<IdentityTypePage> {
   @override
   Widget build(BuildContext context) {
     final layout = AppLayout.of(context);
-    final options = _showOtherOptions ? _other : _recommended;
+    
+    // 使用接口数据，如果没有则使用默认数据
+    final options = _showOtherOptions
+        ? (_identityData?.otherIdTypes.isNotEmpty == true
+            ? _identityData!.otherIdTypes
+            : _other)
+        : (_identityData?.recommendedIdTypes.isNotEmpty == true
+            ? _identityData!.recommendedIdTypes
+            : _recommended);
+    
     return Scaffold(
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage(AppAssets.homeBackground),
-            fit: BoxFit.cover,
+      body: SizedBox.expand(
+        child: DecoratedBox(
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage(AppAssets.homeBackground),
+              fit: BoxFit.fill,
+            ),
           ),
-        ),
-        child: SafeArea(
-          bottom: false,
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                SizedBox(height: layout.px(21)),
-                SizedBox(
-                  height: layout.px(24),
-                  child: Stack(
-                    children: [
-                      Positioned(
-                        left: layout.px(20),
-                        child: const AppBackButton(),
-                      ),
-                      Center(
-                        child: Text(
-                          'Identity verification',
-                          style: TextStyle(
-                            color: AppColors.black,
-                            fontFamily: 'Helvetica',
-                            fontSize: layout.px(20),
-                            fontWeight: FontWeight.w700,
-                            height: 24 / 20,
+          child: SafeArea(
+            bottom: false,
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  SizedBox(height: layout.px(21)),
+                  SizedBox(
+                    height: layout.px(24),
+                    child: Stack(
+                      children: [
+                        Positioned(
+                          left: layout.px(20),
+                          child: const AppBackButton(),
+                        ),
+                        Center(
+                          child: Text(
+                            'Identity verification',
+                            style: TextStyle(
+                              color: AppColors.black,
+                              fontFamily: 'Helvetica',
+                              fontSize: layout.px(20),
+                              fontWeight: FontWeight.w700,
+                              height: 24 / 20,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                SizedBox(height: layout.px(29)),
-                SizedBox(
-                  height: layout.px(117),
-                  child: Stack(
-                    children: [
-                      Positioned(
-                        left: 0,
-                        right: layout.px(113),
-                        child: SizedBox(
-                          height: layout.px(117),
-                          child: Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              Positioned(
-                                top: layout.px(14),
-                                left: 0,
-                                child: DecoratedBox(
-                                  decoration: const BoxDecoration(
-                                    color: AppColors.white,
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(15),
-                                    ),
-                                  ),
-                                  child: Padding(
-                                    padding: EdgeInsets.fromLTRB(
-                                      layout.px(9),
-                                      layout.px(5),
-                                      layout.px(10),
-                                      layout.px(6),
-                                    ),
-                                    child: Text(
-                                      'Maximum Credit Amount',
-                                      style: TextStyle(
-                                        color: AppColors.black,
-                                        fontFamily: 'Helvetica',
-                                        fontSize: layout.px(12),
-                                        fontWeight: FontWeight.w300,
-                                        height: 14 / 12,
-                                      ),
-                                    ),
-                                  ),
+                  SizedBox(height: layout.px(29)),
+                  SizedBox(
+                    height: layout.px(117),
+                    child: Stack(
+                      children: [
+                        Positioned(
+                          top: layout.px(14),
+                          left: layout.px(20),
+                          child: DecoratedBox(
+                            decoration: const BoxDecoration(
+                              color: AppColors.white,
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(15),
+                              ),
+                            ),
+                            child: Padding(
+                              padding: EdgeInsets.fromLTRB(
+                                layout.px(9),
+                                layout.px(5),
+                                layout.px(10),
+                                layout.px(6),
+                              ),
+                              child: Text(
+                                'Maximum Credit Amount',
+                                style: TextStyle(
+                                  color: AppColors.black,
+                                  fontFamily: 'Helvetica',
+                                  fontSize: layout.px(12),
+                                  fontWeight: FontWeight.w300,
+                                  height: 14 / 12,
                                 ),
                               ),
-                              Positioned(
-                                top: layout.px(76),
-                                left: 0,
-                                child: Container(
-                                  width: layout.px(226),
-                                  height: layout.px(24),
-                                  color: AppColors.identityHighlight,
-                                ),
-                              ),
-                              Positioned(
-                                top: layout.px(39),
-                                left: 0,
-                                child: RichText(
-                                  text: TextSpan(
-                                    style: TextStyle(
-                                      color: AppColors.black,
-                                      fontFamily: 'Helvetica',
-                                      fontWeight: FontWeight.w700,
-                                      height: 43 / 36,
-                                    ),
-                                    children: [
-                                      TextSpan(
-                                        text: '₱',
-                                        style: TextStyle(
-                                          fontSize: layout.px(36),
-                                        ),
-                                      ),
-                                      TextSpan(
-                                        text: ' 60,000',
-                                        style: TextStyle(
-                                          fontSize: layout.px(50),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
                         ),
-                      ),
-                      Positioned(
-                        right: 0,
-                        child: Image.asset(
-                          AppAssets.identityShieldIllustration,
-                          width: layout.px(113),
-                          height: layout.px(117),
+                        Positioned(
+                          top: layout.px(76),
+                          left: 0,
+                          child: Container(
+                            width: layout.px(226),
+                            height: layout.px(24),
+                            color: AppColors.identityHighlight,
+                          ),
                         ),
-                      ),
-                    ],
+                        Positioned(
+                          top: layout.px(39),
+                          left: layout.px(20),
+                          child: RichText(
+                            text: TextSpan(
+                              style: TextStyle(
+                                color: AppColors.black,
+                                fontFamily: 'Helvetica',
+                                fontWeight: FontWeight.w700,
+                                height: 43 / 36,
+                              ),
+                              children: [
+                                TextSpan(
+                                  text: '₱',
+                                  style: TextStyle(fontSize: layout.px(36)),
+                                ),
+                                TextSpan(
+                                  text: ' 60,000',
+                                  style: TextStyle(fontSize: layout.px(50)),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          right: layout.px(20),
+                          child: Image.asset(
+                            AppAssets.identityShieldIllustration,
+                            width: layout.px(113),
+                            height: layout.px(117),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                SizedBox(height: layout.px(7)),
-                _buildTabs(layout),
-                SizedBox(height: layout.px(7)),
-                _buildOptions(layout, options),
-              ],
+                  SizedBox(height: layout.px(7)),
+                  _buildTabs(layout),
+                  SizedBox(height: layout.px(7)),
+                  _buildOptions(layout, options),
+                ],
+              ),
             ),
           ),
         ),
@@ -226,15 +249,8 @@ class _IdentityTypePageState extends State<IdentityTypePage> {
 
   Widget _buildOptions(AppLayout layout, List<String> options) {
     return Container(
-      key: const Key('identity-options-panel'),
-      width: layout.px(355),
-      height: layout.px(332),
-      padding: EdgeInsets.fromLTRB(
-        layout.px(27),
-        layout.px(22),
-        layout.px(27),
-        layout.px(32),
-      ),
+      margin: layout.edgeInsets(left: 20, right: 20),
+      padding: EdgeInsets.all(layout.px(15)),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.bottomCenter,
@@ -242,6 +258,14 @@ class _IdentityTypePageState extends State<IdentityTypePage> {
           colors: [AppColors.identityPanelEnd, AppColors.identityPanelStart],
         ),
         borderRadius: layout.radius(30),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.identityPanelStart.withValues(alpha: 0.45),
+            blurRadius: layout.px(12),
+            spreadRadius: layout.px(1),
+            offset: Offset(0, layout.px(6)),
+          ),
+        ],
       ),
       child: Column(
         children: [

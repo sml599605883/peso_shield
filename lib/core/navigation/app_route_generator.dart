@@ -14,6 +14,12 @@ class LoginPageArguments {
   final Future<void> Function()? onLoginSuccess;
 }
 
+class IdentityTypePageArguments {
+  const IdentityTypePageArguments({required this.productId});
+
+  final String productId;
+}
+
 /// 应用路由生成器
 class AppRouteGenerator {
   AppRouteGenerator._();
@@ -50,8 +56,12 @@ class AppRouteGenerator {
         );
 
       case AppRoutes.identityType:
+        final args = settings.arguments as IdentityTypePageArguments?;
+        if (args == null) {
+          return _errorRoute(settings.name);
+        }
         return MaterialPageRoute<String>(
-          builder: (_) => const IdentityTypePage(),
+          builder: (_) => IdentityTypePage(productId: args.productId),
           settings: settings,
         );
 

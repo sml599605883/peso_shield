@@ -162,8 +162,11 @@ class AppNavigator {
   /// 跳转到证件类型选择页
   /// 
   /// 返回用户选择的证件类型字符串，用户点击返回按钮则返回 null
-  static Future<String?> toIdentityType() async {
-    return toNamed<String>(AppRoutes.identityType);
+  static Future<String?> toIdentityType({required String productId}) async {
+    return toNamed<String>(
+      AppRoutes.identityType,
+      arguments: IdentityTypePageArguments(productId: productId),
+    );
   }
 
   // ==================== 产品申请相关 ====================

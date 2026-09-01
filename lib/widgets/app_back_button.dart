@@ -9,16 +9,23 @@ class AppBackButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final layout = AppLayout.of(context);
-    return IconButton(
-      tooltip: 'Back',
-      onPressed: () => Navigator.maybePop(context),
-      iconSize: layout.px(24),
-      padding: EdgeInsets.zero,
-      constraints: BoxConstraints.tightFor(
-        width: layout.px(24),
-        height: layout.px(24),
+    return Semantics(
+      button: true,
+      label: 'Back',
+      child: InkResponse(
+        onTap: () => Navigator.maybePop(context),
+        radius: layout.px(20),
+        child: SizedBox(
+          width: layout.px(24),
+          height: layout.px(24),
+          child: Image.asset(
+            AppAssets.loginBack,
+            width: layout.px(24),
+            height: layout.px(24),
+            fit: BoxFit.contain,
+          ),
+        ),
       ),
-      icon: Image.asset(AppAssets.loginBack),
     );
   }
 }

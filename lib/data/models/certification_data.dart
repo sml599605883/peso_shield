@@ -4,10 +4,29 @@ class IdentityData {
     required this.idCardInfo,
     required this.idTypes,
     required this.tips,
+    this.recommendedIdTypes = const [],
+    this.otherIdTypes = const [],
   });
 
   factory IdentityData.fromJson(Map<String, dynamic> json) {
     final mugg = json['mugg'] as Map<String, dynamic>? ?? {};
+    
+    // cerises 包含两组数据：[0] 推荐证件类型，[1] 其他选项
+    final cerises = mugg['cerises'] as List<dynamic>? ?? [];
+    final List<String> recommendedIds = [];
+    final List<String> otherIds = [];
+    
+    if (cerises.isNotEmpty) {
+      recommendedIds.addAll(
+        (cerises[0] as List<dynamic>? ?? []).map((e) => e.toString()),
+      );
+    }
+    if (cerises.length > 1) {
+      otherIds.addAll(
+        (cerises[1] as List<dynamic>? ?? []).map((e) => e.toString()),
+      );
+    }
+    
     return IdentityData(
       faceInfo: mugg['fastball'] as Map<String, dynamic>? ?? {},
       idCardInfo: mugg['enosises'] != null
@@ -17,6 +36,8 @@ class IdentityData {
           .map((e) => IdType.fromJson(e as Map<String, dynamic>))
           .toList(),
       tips: mugg['properdins'] as String? ?? '',
+      recommendedIdTypes: recommendedIds,
+      otherIdTypes: otherIds,
     );
   }
 
@@ -24,6 +45,8 @@ class IdentityData {
   final IdCardInfo idCardInfo;
   final List<IdType> idTypes;
   final String tips;
+  final List<String> recommendedIdTypes;
+  final List<String> otherIdTypes;
 }
 
 class IdCardInfo {

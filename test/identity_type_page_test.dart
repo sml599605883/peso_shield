@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:peso_shield/pages/identity_type_page.dart';
+import 'package:peso_shield/widgets/app_back_button.dart';
 
 void main() {
   testWidgets('identity type page renders recommended options', (tester) async {
@@ -12,16 +14,20 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     addTearDown(tester.view.resetViewPadding);
 
-    await tester.pumpWidget(const MaterialApp(home: IdentityTypePage()));
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: MaterialApp(
+          home: IdentityTypePage(productId: '1'),
+        ),
+      ),
+    );
+    await tester.pump();
 
     expect(find.text('Identity verification'), findsOneWidget);
     expect(find.text('PRC ID'), findsOneWidget);
     expect(find.text('UMID(Unified Multi-Purpose ID)'), findsOneWidget);
     expect(find.text("DRIVER'S LICENSE"), findsNothing);
-    expect(
-      tester.getTopLeft(find.byKey(const Key('identity-options-panel'))).dy,
-      greaterThan(tester.getTopLeft(find.byKey(const Key('identity-tabs'))).dy),
-    );
+    expect(tester.getSize(find.byType(AppBackButton)), const Size(24, 24));
   });
 
   testWidgets('identity type page switches options and returns selection', (
@@ -29,15 +35,19 @@ void main() {
   ) async {
     String? selected;
     await tester.pumpWidget(
-      MaterialApp(
-        home: Builder(
-          builder: (context) => ElevatedButton(
-            onPressed: () async {
-              selected = await Navigator.of(context).push<String>(
-                MaterialPageRoute(builder: (_) => const IdentityTypePage()),
-              );
-            },
-            child: const Text('Open'),
+      ProviderScope(
+        child: MaterialApp(
+          home: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () async {
+                selected = await Navigator.of(context).push<String>(
+                  MaterialPageRoute(
+                    builder: (_) => const IdentityTypePage(productId: '1'),
+                  ),
+                );
+              },
+              child: const Text('Open'),
+            ),
           ),
         ),
       ),

@@ -24,6 +24,7 @@ abstract final class AppAssets {
   static const mineSetting = 'assets/mine/service_setting.png';
   static const minePrivacy = 'assets/mine/service_privacy.png';
   static const mineChevron = 'assets/mine/service_chevron.png';
+  static const accountDialogPanel = 'assets/settings/account_dialog_panel.png';
 
   static const tabBarBackground = 'assets/navigation/tab_bar_background.png';
   static const homeActive = 'assets/navigation/home_active.png';

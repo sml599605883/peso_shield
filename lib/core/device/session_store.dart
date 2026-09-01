@@ -84,7 +84,9 @@ class SessionStore {
 
   final SessionPersistence _persistence;
 
-  /// 读取已保存的会话。没有 token 时返回未登录状态。
+  /// 读取已保存的会话。
+  ///
+  /// 手机号独立于 token 恢复：未登录状态下也要带上，登录页才能跨启动预填。
   Future<UserSession> restore() async {
     try {
       final values = await Future.wait([
@@ -93,13 +95,14 @@ class SessionStore {
         _persistence.readPhone(),
       ]);
       final token = _normalize(values[0]);
+      final phone = _normalize(values[2]);
       if (token == null) {
-        return const UserSession(isRestored: true);
+        return UserSession(phone: phone, isRestored: true);
       }
       return UserSession(
         accessToken: token,
         userId: _normalize(values[1]),
-        phone: _normalize(values[2]),
+        phone: phone,
         isLoggedIn: true,
         isRestored: true,
       );
@@ -124,13 +127,12 @@ class SessionStore {
     }
   }
 
-  /// 清除会话。默认保留手机号，方便下次登录预填。
-  Future<void> clear({bool keepPhone = true}) async {
+  /// 清除会话。手机号始终保留，方便下次登录预填。
+  Future<void> clear() async {
     try {
       await Future.wait([
         _persistence.writeToken(null),
         _persistence.writeUserId(null),
-        if (!keepPhone) _persistence.writePhone(null),
       ]);
     } catch (_) {
       // 忽略清除失败

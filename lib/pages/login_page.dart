@@ -38,6 +38,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     super.initState();
     _phoneController.addListener(_onFormChanged);
     _codeController.addListener(_onCodeChanged);
+    _loadRememberedPhone();
   }
 
   void _onFormChanged() => setState(() {});
@@ -47,6 +48,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     if (_codeController.text.length == 6) {
       unawaited(_submitAutomatically());
     }
+  }
+
+  /// 从 userSession 加载上次登录的手机号
+  Future<void> _loadRememberedPhone() async {
+    final session = ref.read(userSessionProvider);
+    final phone = session.phone;
+    if (phone == null || phone.isEmpty || _phoneController.text.isNotEmpty) {
+      return;
+    }
+    _phoneController.text = phone;
   }
 
   Future<void> _submitAutomatically() async {

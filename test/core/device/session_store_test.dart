@@ -69,7 +69,7 @@ void main() {
     expect(session.accessToken, isNull);
   });
 
-  test('clear drops the token but keeps the phone by default', () async {
+  test('clear drops the token but keeps the phone', () async {
     await store.save(token: 'token-1', userId: 'user-1', phone: '09171234567');
 
     await store.clear();
@@ -77,17 +77,18 @@ void main() {
     expect(persistence.token, isNull);
     expect(persistence.userId, isNull);
     expect(persistence.phone, '09171234567');
-
-    final session = await store.restore();
-    expect(session.isLoggedIn, isFalse);
   });
 
-  test('clear with keepPhone false removes the phone too', () async {
+  test('restore after clear keeps the phone for prefill', () async {
     await store.save(token: 'token-1', userId: 'user-1', phone: '09171234567');
+    await store.clear();
 
-    await store.clear(keepPhone: false);
+    final session = await store.restore();
 
-    expect(persistence.phone, isNull);
+    expect(session.isLoggedIn, isFalse);
+    expect(session.accessToken, isNull);
+    expect(session.phone, '09171234567');
+    expect(session.isRestored, isTrue);
   });
 
   test('restore degrades to logged out when storage throws', () async {

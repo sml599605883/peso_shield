@@ -7,14 +7,13 @@ class ProductDetail {
   });
 
   factory ProductDetail.fromJson(Map<String, dynamic> json) {
-    final mugg = json['mugg'] as Map<String, dynamic>? ?? {};
-    final certifications =
-        mugg['reenters'] as List<dynamic>? ?? [];
-    final agreements = mugg['assertively'] as List<dynamic>? ?? [];
+    // ResponseProtocol 已经提取了 mugg 字段，这里直接从 json 读取
+    final certifications = json['redialling'] as List<dynamic>? ?? [];
+    final agreements = json['assertively'] as List<dynamic>? ?? [];
 
     return ProductDetail(
-      basicInfo: mugg['fastball'] != null
-          ? ProductBasicInfo.fromJson(mugg['fastball'] as Map<String, dynamic>)
+      basicInfo: json['fastball'] != null
+          ? ProductBasicInfo.fromJson(json['fastball'] as Map<String, dynamic>)
           : const ProductBasicInfo(
               maxAmount: '',
               loanTerm: '',
@@ -30,8 +29,8 @@ class ProductDetail {
       certifications: certifications
           .map((e) => CertificationItem.fromJson(e as Map<String, dynamic>))
           .toList(),
-      nextStep: mugg['laminarias'] != null
-          ? NextStep.fromJson(mugg['laminarias'] as Map<String, dynamic>)
+      nextStep: json['laminarias'] != null
+          ? NextStep.fromJson(json['laminarias'] as Map<String, dynamic>)
           : const NextStep(type: '', url: '', status: 0, title: ''),
       agreements: agreements
           .map((e) => Agreement.fromJson(e as Map<String, dynamic>))

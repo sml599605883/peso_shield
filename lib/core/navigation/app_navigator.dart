@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../product/product_providers.dart';
 import 'app_route_generator.dart';
 import 'app_routes.dart';
 
@@ -155,6 +157,37 @@ class AppNavigator {
   /// 跳转到首页 Tab
   static Future<void> toHome() async {
     return toNamed(AppRoutes.home);
+  }
+
+  // ==================== 产品申请相关 ====================
+
+  /// 执行产品申请流程（统一入口）
+  /// 
+  /// 所有页面调用产品申请都应该使用这个方法
+  /// 
+  /// 使用示例：
+  /// ```dart
+  /// await AppNavigator.applyProduct(
+  ///   context: context,
+  ///   ref: ref,
+  ///   productId: '1',
+  /// );
+  /// ```
+  static Future<void> applyProduct({
+    required BuildContext context,
+    required WidgetRef ref,
+    required String productId,
+    int apiRemind = 0,
+  }) async {
+    final flow = await ref.read(productApplicationFlowProvider.future);
+    
+    if (!context.mounted) return;
+    
+    await flow.applyProduct(
+      context: context,
+      productId: productId,
+      apiRemind: apiRemind,
+    );
   }
 
   // ==================== 工具方法 ====================

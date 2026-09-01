@@ -1,20 +1,46 @@
 class ProductApplyResult {
   const ProductApplyResult({
+    required this.statusCode,
     required this.jumpUrl,
-    required this.dialog,
+    required this.jumpType,
+    required this.message,
+    this.dialog,
+    this.accessKey,
+    this.secretKey,
   });
 
   factory ProductApplyResult.fromJson(Map<String, dynamic> json) {
     return ProductApplyResult(
+      statusCode: json['recklessly'] as int? ?? 0,
       jumpUrl: json['mycelia'] as String? ?? '',
-      dialog: json['toper'] != null
-          ? ApplyDialog.fromJson(json['toper'] as Map<String, dynamic>)
+      jumpType: json['bellings'] as int? ?? 0,
+      message: json['decoct'] as String? ?? '',
+      dialog: json['abysmal'] != null
+          ? ApplyDialog.fromJson(json['abysmal'] as Map<String, dynamic>)
           : null,
+      accessKey: json['unroped'] as String?,
+      secretKey: json['gazania'] as String?,
     );
   }
 
+  final int statusCode;
   final String jumpUrl;
+  final int jumpType; // 0: 原生, 1: H5
+  final String message;
   final ApplyDialog? dialog;
+  final String? accessKey; // advance accessKey
+  final String? secretKey; // advance secretKey
+
+  /// 是否准入成功（statusCode == 200）
+  bool get isAdmitted => statusCode == 200;
+
+  /// 是否需要跳转 H5
+  bool get needsWebJump => jumpType == 1 && jumpUrl.isNotEmpty;
+
+  /// 是否是授信页（gold://pocket/recredit）
+  bool get isCreditReview => 
+      jumpUrl == 'gold://pocket/recredit' || 
+      (jumpUrl.startsWith('gold://') && jumpUrl.contains('recredit'));
 }
 
 class ApplyDialog {
@@ -26,15 +52,15 @@ class ApplyDialog {
   });
 
   factory ApplyDialog.fromJson(Map<String, dynamic> json) {
+    final buttons = json['birls'] as List<dynamic>? ?? [];
     return ApplyDialog(
       title: json['stalagmitic'] as String? ?? '',
-      content: json['subtrahend'] as String? ?? '',
-      leftButton: json['desalting'] != null
-          ? DialogButton.fromJson(json['desalting'] as Map<String, dynamic>)
+      content: json['closets'] as String? ?? '',
+      leftButton: buttons.isNotEmpty
+          ? DialogButton.fromJson(buttons[0] as Map<String, dynamic>)
           : null,
-      rightButton: json['chromosphere'] != null
-          ? DialogButton.fromJson(
-              json['chromosphere'] as Map<String, dynamic>)
+      rightButton: buttons.length > 1
+          ? DialogButton.fromJson(buttons[1] as Map<String, dynamic>)
           : null,
     );
   }
@@ -53,7 +79,7 @@ class DialogButton {
 
   factory DialogButton.fromJson(Map<String, dynamic> json) {
     return DialogButton(
-      text: json['stalagmitic'] as String? ?? '',
+      text: json['lookalike'] as String? ?? '',
       url: json['mycelia'] as String? ?? '',
     );
   }

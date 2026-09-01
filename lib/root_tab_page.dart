@@ -88,6 +88,16 @@ class _RootTabPageState extends ConsumerState<RootTabPage> {
   @override
   Widget build(BuildContext context) {
     final session = ref.watch(userSessionProvider);
+
+    // 退出登录后需要登录的 Tab 不再可见，回落到首页
+    if (!session.isLoggedIn && _requiresLogin(_currentIndex)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _requiresLogin(_currentIndex)) {
+          setState(() => _currentIndex = 0);
+        }
+      });
+    }
+
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,

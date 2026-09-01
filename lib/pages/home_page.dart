@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../core/device/user_session.dart';
 import '../core/navigation/app_navigator.dart';
-import '../core/ui/toast_helper.dart';
 import '../theme/app_assets.dart';
 import '../theme/layout_adapter.dart';
 import 'home/widgets/widgets.dart';
@@ -11,19 +9,13 @@ import 'home/widgets/widgets.dart';
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
-  Future<void> _handleApply(WidgetRef ref) async {
-    final session = ref.read(userSessionProvider);
-
-    // 未登录时先跳转登录页
-    if (!session.isLoggedIn) {
-      final result = await AppNavigator.toLogin();
-      // 登录取消或失败，不继续
-      if (result != true) return;
-    }
-
-    // 已登录，继续申请流程
-    // TODO: 跳转到产品详情页或授信申请页
-    ToastHelper.showMessage('Apply flow coming soon...');
+  Future<void> _handleApply(BuildContext context, WidgetRef ref) async {
+    await AppNavigator.applyProduct(
+      context: context,
+      ref: ref,
+      productId: '1', // TODO: 从服务端获取产品ID
+      apiRemind: 0, // 0: 默认
+    );
   }
 
   @override
@@ -53,7 +45,9 @@ class HomePage extends ConsumerWidget {
                       SizedBox(height: layout.px(5)),
                       Padding(
                         padding: layout.edgeInsets(left: 10, right: 10),
-                        child: LoanOfferCard(onTap: () => _handleApply(ref)),
+                        child: LoanOfferCard(
+                          onTap: () => _handleApply(context, ref),
+                        ),
                       ),
                       Padding(
                         padding: layout.edgeInsets(left: 20, right: 20),

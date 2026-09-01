@@ -226,12 +226,11 @@ class ProductApplicationFlow {
       // 有未完成的认证项，跳转到对应认证页
       debugPrint('Navigate to certification: ${detail.nextStep.type} - ${detail.nextStep.title}');
       
-      // 注意：接口返回的是混淆后的值（histolyses 字段）
-      // public -> public, face -> face, personal -> personal, 
-      // job -> job, ext -> ext, bank -> bank
-      // 这些值在混淆后保持不变
+      // 接口返回的是混淆后的值（histolyses 字段）
+      // public -> Outpulls, face -> ViscosimeterDollop, personal -> Unconcernedness
+      // work -> Jammable, ext -> Pip, bank -> Reentrance
       switch (detail.nextStep.type) {
-        case 'public':
+        case 'Outpulls':
           // 身份认证 - 选择证件类型
           final identityType = await AppNavigator.toIdentityType();
           if (identityType != null) {
@@ -241,27 +240,27 @@ class ProductApplicationFlow {
           }
           break;
         
-        case 'face':
+        case 'ViscosimeterDollop':
           // TODO: 活体认证页
           ToastHelper.showMessage('Please complete ${detail.nextStep.title}');
           break;
         
-        case 'personal':
+        case 'Unconcernedness':
           // TODO: 个人信息页
           ToastHelper.showMessage('Please complete ${detail.nextStep.title}');
           break;
         
-        case 'job':
+        case 'Jammable':
           // TODO: 工作信息页
           ToastHelper.showMessage('Please complete ${detail.nextStep.title}');
           break;
         
-        case 'ext':
+        case 'Pip':
           // TODO: 紧急联系人页
           ToastHelper.showMessage('Please complete ${detail.nextStep.title}');
           break;
         
-        case 'bank':
+        case 'Reentrance':
           // TODO: 绑卡页
           ToastHelper.showMessage('Please complete ${detail.nextStep.title}');
           break;

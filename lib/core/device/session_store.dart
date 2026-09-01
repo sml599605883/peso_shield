@@ -15,6 +15,23 @@ abstract interface class SessionPersistence {
   Future<void> writeUserId(String? value);
 
   Future<void> writePhone(String? value);
+
+  // 产品详情相关字段
+  Future<String?> readProductDetailPrompt();
+
+  Future<String?> readProductDetailIdentitySuccessPrompt();
+
+  Future<String?> readProductDetailFacePrompt();
+
+  Future<String?> readProductDetailOrderNo();
+
+  Future<void> writeProductDetailPrompt(String? value);
+
+  Future<void> writeProductDetailIdentitySuccessPrompt(String? value);
+
+  Future<void> writeProductDetailFacePrompt(String? value);
+
+  Future<void> writeProductDetailOrderNo(String? value);
 }
 
 class PersistentSessionPersistence implements SessionPersistence {
@@ -33,6 +50,12 @@ class PersistentSessionPersistence implements SessionPersistence {
   static const tokenKey = 'peso_shield.session.access_token';
   static const userIdKey = 'peso_shield.session.user_id';
   static const phoneKey = 'peso_shield.session.phone';
+  static const productDetailPromptKey = 'peso_shield.product_detail.prompt';
+  static const productDetailIdentitySuccessPromptKey =
+      'peso_shield.product_detail.identity_success_prompt';
+  static const productDetailFacePromptKey =
+      'peso_shield.product_detail.face_prompt';
+  static const productDetailOrderNoKey = 'peso_shield.product_detail.order_no';
 
   final SharedPreferencesAsync _preferences;
   final FlutterSecureStorage _secureStorage;
@@ -69,6 +92,54 @@ class PersistentSessionPersistence implements SessionPersistence {
     }
     return _preferences.setString(phoneKey, value);
   }
+
+  @override
+  Future<String?> readProductDetailPrompt() =>
+      _preferences.getString(productDetailPromptKey);
+
+  @override
+  Future<String?> readProductDetailIdentitySuccessPrompt() =>
+      _preferences.getString(productDetailIdentitySuccessPromptKey);
+
+  @override
+  Future<String?> readProductDetailFacePrompt() =>
+      _preferences.getString(productDetailFacePromptKey);
+
+  @override
+  Future<String?> readProductDetailOrderNo() =>
+      _preferences.getString(productDetailOrderNoKey);
+
+  @override
+  Future<void> writeProductDetailPrompt(String? value) {
+    if (value == null) {
+      return _preferences.remove(productDetailPromptKey);
+    }
+    return _preferences.setString(productDetailPromptKey, value);
+  }
+
+  @override
+  Future<void> writeProductDetailIdentitySuccessPrompt(String? value) {
+    if (value == null) {
+      return _preferences.remove(productDetailIdentitySuccessPromptKey);
+    }
+    return _preferences.setString(productDetailIdentitySuccessPromptKey, value);
+  }
+
+  @override
+  Future<void> writeProductDetailFacePrompt(String? value) {
+    if (value == null) {
+      return _preferences.remove(productDetailFacePromptKey);
+    }
+    return _preferences.setString(productDetailFacePromptKey, value);
+  }
+
+  @override
+  Future<void> writeProductDetailOrderNo(String? value) {
+    if (value == null) {
+      return _preferences.remove(productDetailOrderNoKey);
+    }
+    return _preferences.setString(productDetailOrderNoKey, value);
+  }
 }
 
 /// 会话持久化存储
@@ -84,6 +155,25 @@ class SessionStore {
 
   final SessionPersistence _persistence;
 
+  // 产品详情缓存（内存）
+  String _productDetailPrompt = '';
+  String _productDetailIdentitySuccessPrompt = '';
+  String _productDetailFacePrompt = '';
+  String _productDetailOrderNo = '';
+
+  /// 获取缓存的产品详情身份认证页顶部文案
+  String get productDetailPrompt => _productDetailPrompt;
+
+  /// 获取缓存的产品详情身份认证成功页顶部文案
+  String get productDetailIdentitySuccessPrompt =>
+      _productDetailIdentitySuccessPrompt;
+
+  /// 获取缓存的产品详情活体认证页顶部文案
+  String get productDetailFacePrompt => _productDetailFacePrompt;
+
+  /// 获取缓存的产品详情订单号
+  String get productDetailOrderNo => _productDetailOrderNo;
+
   /// 读取已保存的会话。
   ///
   /// 手机号独立于 token 恢复：未登录状态下也要带上，登录页才能跨启动预填。
@@ -93,9 +183,20 @@ class SessionStore {
         _persistence.readToken(),
         _persistence.readUserId(),
         _persistence.readPhone(),
+        _persistence.readProductDetailPrompt(),
+        _persistence.readProductDetailIdentitySuccessPrompt(),
+        _persistence.readProductDetailFacePrompt(),
+        _persistence.readProductDetailOrderNo(),
       ]);
       final token = _normalize(values[0]);
       final phone = _normalize(values[2]);
+      
+      // 恢复产品详情缓存到内存
+      _productDetailPrompt = _normalize(values[3]) ?? '';
+      _productDetailIdentitySuccessPrompt = _normalize(values[4]) ?? '';
+      _productDetailFacePrompt = _normalize(values[5]) ?? '';
+      _productDetailOrderNo = _normalize(values[6]) ?? '';
+      
       if (token == null) {
         return UserSession(phone: phone, isRestored: true);
       }
@@ -127,13 +228,48 @@ class SessionStore {
     }
   }
 
+  /// 保存产品详情相关字段
+  Future<void> saveProductDetail({
+    required String prompt,
+    required String identitySuccessPrompt,
+    required String facePrompt,
+    required String orderNo,
+  }) async {
+    _productDetailPrompt = prompt.trim();
+    _productDetailIdentitySuccessPrompt = identitySuccessPrompt.trim();
+    _productDetailFacePrompt = facePrompt.trim();
+    _productDetailOrderNo = orderNo.trim();
+
+    try {
+      await Future.wait([
+        _persistence.writeProductDetailPrompt(_productDetailPrompt),
+        _persistence
+            .writeProductDetailIdentitySuccessPrompt(_productDetailIdentitySuccessPrompt),
+        _persistence.writeProductDetailFacePrompt(_productDetailFacePrompt),
+        _persistence.writeProductDetailOrderNo(_productDetailOrderNo),
+      ]);
+    } catch (_) {
+      // 持久化失败时保留内存态
+    }
+  }
+
   /// 清除会话。手机号始终保留，方便下次登录预填。
   Future<void> clear() async {
     try {
       await Future.wait([
         _persistence.writeToken(null),
         _persistence.writeUserId(null),
+        _persistence.writeProductDetailPrompt(null),
+        _persistence.writeProductDetailIdentitySuccessPrompt(null),
+        _persistence.writeProductDetailFacePrompt(null),
+        _persistence.writeProductDetailOrderNo(null),
       ]);
+      
+      // 清除内存缓存
+      _productDetailPrompt = '';
+      _productDetailIdentitySuccessPrompt = '';
+      _productDetailFacePrompt = '';
+      _productDetailOrderNo = '';
     } catch (_) {
       // 忽略清除失败
     }

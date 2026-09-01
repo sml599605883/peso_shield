@@ -19,6 +19,7 @@ class AppRoutes {
 
   static const String settings = '/settings';
   static const String identityType = '/identity-type';
+  static const String identityUpload = '/identity-upload';
 
   /// 所有路由名称列表（用于调试和验证）
   static const List<String> all = [
@@ -29,6 +30,7 @@ class AppRoutes {
     mine,
     settings,
     identityType,
+    identityUpload,
   ];
 
   /// 验证路由名称是否有效

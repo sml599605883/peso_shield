@@ -5,6 +5,7 @@ import '../../pages/login_page.dart';
 import '../../root_tab_page.dart';
 import '../../pages/settings_page.dart';
 import '../../pages/identity_type_page.dart';
+import '../../pages/identity_upload_page.dart';
 import 'app_routes.dart';
 
 /// 路由参数类型定义
@@ -18,6 +19,16 @@ class IdentityTypePageArguments {
   const IdentityTypePageArguments({required this.productId});
 
   final String productId;
+}
+
+class IdentityUploadPageArguments {
+  const IdentityUploadPageArguments({
+    required this.productId,
+    required this.cardType,
+  });
+
+  final String productId;
+  final String cardType;
 }
 
 /// 应用路由生成器
@@ -62,6 +73,17 @@ class AppRouteGenerator {
         }
         return MaterialPageRoute<String>(
           builder: (_) => IdentityTypePage(productId: args.productId),
+          settings: settings,
+        );
+
+      case AppRoutes.identityUpload:
+        final args = settings.arguments as IdentityUploadPageArguments?;
+        if (args == null) return _errorRoute(settings.name);
+        return MaterialPageRoute<void>(
+          builder: (_) => IdentityUploadPage(
+            productId: args.productId,
+            cardType: args.cardType,
+          ),
           settings: settings,
         );
 

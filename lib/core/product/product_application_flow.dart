@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:peso_shield/core/device/session_store.dart';
 import 'package:peso_shield/core/device/user_session.dart';
 import 'package:peso_shield/core/navigation/app_deep_link.dart';
 import 'package:peso_shield/core/navigation/app_navigator.dart';
@@ -14,10 +15,12 @@ class ProductApplicationFlow {
   ProductApplicationFlow({
     required this.repository,
     required this.userSession,
+    required this.sessionStore,
   });
 
   final ProductRepository repository;
   final UserSession userSession;
+  final SessionStore sessionStore;
   final AppDeepLinkParser _deepLinkParser = const AppDeepLinkParser();
   bool _isProcessing = false;
 
@@ -102,7 +105,16 @@ class ProductApplicationFlow {
         return null;
       }
 
-      return response.data;
+      final detail = response.data;
+      // 保存产品详情相关字段到 SessionStore（参考 dali_cash）
+      await sessionStore.saveProductDetail(
+        prompt: detail.tips.identity,
+        identitySuccessPrompt: detail.tips.identitySuccess,
+        facePrompt: detail.tips.liveness,
+        orderNo: detail.basicInfo.orderNo,
+      );
+
+      return detail;
     } catch (e) {
       ToastHelper.hideLoading();
       if (context.mounted) {
@@ -222,14 +234,14 @@ class ProductApplicationFlow {
     String productId,
   ) async {
     // 检查是否有下一步认证项
-    if (detail.nextStep.type.isNotEmpty) {
+    if (detail.nextStep.taskType.isNotEmpty) {
       // 有未完成的认证项，跳转到对应认证页
-      debugPrint('Navigate to certification: ${detail.nextStep.type} - ${detail.nextStep.title}');
+      debugPrint('Navigate to certification: ${detail.nextStep.taskType} - ${detail.nextStep.title}');
       
       // 接口返回的是混淆后的值（histolyses 字段）
       // public -> Outpulls, face -> ViscosimeterDollop, personal -> Unconcernedness
       // work -> Jammable, ext -> Pip, bank -> Reentrance
-      switch (detail.nextStep.type) {
+      switch (detail.nextStep.taskType) {
         case 'Outpulls':
           // 身份认证 - 选择证件类型
           final identityType = await AppNavigator.toIdentityType(

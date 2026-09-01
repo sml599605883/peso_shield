@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../core/navigation/app_route_generator.dart';
+import '../core/navigation/app_routes.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/repository_provider.dart';
@@ -266,7 +269,15 @@ class _IdentityTypePageState extends ConsumerState<IdentityTypePage> {
           bottomRight: Radius.circular(layout.px(100)),
           bottomLeft: Radius.circular(layout.px(10)),
         ),
-        onTap: () => Navigator.of(context).pop(label),
+        onTap: () async {
+          await Navigator.of(context).pushNamed(
+            AppRoutes.identityUpload,
+            arguments: IdentityUploadPageArguments(
+              productId: widget.productId,
+              cardType: label,
+            ),
+          );
+        },
         child: Container(
           width: layout.px(301),
           height: layout.px(50),

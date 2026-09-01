@@ -138,9 +138,9 @@ void main() {
       final detail = ProductDetail.fromJson(json);
 
       expect(detail.certifications.length, 1);
-      expect(detail.certifications[0].type, 'public');
+      expect(detail.certifications[0].taskType, 'public');
       expect(detail.certifications[0].title, 'Informasi identitas');
-      expect(detail.nextStep.type, 'bank');
+      expect(detail.nextStep.taskType, 'bank');
       expect(detail.nextStep.title, 'Informasi bank');
       expect(detail.agreements.length, 1);
       expect(detail.agreements[0].title, 'Loan Agreement');

@@ -27,10 +27,7 @@ class AppNavigator {
   // ==================== 通用导航方法 ====================
 
   /// 通过路由名称跳转页面
-  static Future<T?> toNamed<T>(
-    String routeName, {
-    Object? arguments,
-  }) async {
+  static Future<T?> toNamed<T>(String routeName, {Object? arguments}) async {
     if (!AppRoutes.isValid(routeName)) {
       _log('Warning: Invalid route name: $routeName');
     }
@@ -160,7 +157,7 @@ class AppNavigator {
   }
 
   /// 跳转到证件类型选择页
-  /// 
+  ///
   /// 返回用户选择的证件类型字符串，用户点击返回按钮则返回 null
   static Future<String?> toIdentityType({required String productId}) async {
     return toNamed<String>(
@@ -169,12 +166,26 @@ class AppNavigator {
     );
   }
 
+  /// 跳转到证件上传页，接口接入前保留静态上传页面。
+  static Future<void> toIdentityUpload({
+    required String productId,
+    required String cardType,
+  }) async {
+    await toNamed<void>(
+      AppRoutes.identityUpload,
+      arguments: IdentityUploadPageArguments(
+        productId: productId,
+        cardType: cardType,
+      ),
+    );
+  }
+
   // ==================== 产品申请相关 ====================
 
   /// 执行产品申请流程（统一入口）
-  /// 
+  ///
   /// 所有页面调用产品申请都应该使用这个方法
-  /// 
+  ///
   /// 使用示例：
   /// ```dart
   /// await AppNavigator.applyProduct(
@@ -190,9 +201,9 @@ class AppNavigator {
     int apiRemind = 0,
   }) async {
     final flow = await ref.read(productApplicationFlowProvider.future);
-    
+
     if (!context.mounted) return;
-    
+
     await flow.applyProduct(
       context: context,
       productId: productId,

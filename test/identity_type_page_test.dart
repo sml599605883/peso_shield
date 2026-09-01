@@ -16,9 +16,7 @@ void main() {
 
     await tester.pumpWidget(
       const ProviderScope(
-        child: MaterialApp(
-          home: IdentityTypePage(productId: '1'),
-        ),
+        child: MaterialApp(home: IdentityTypePage(productId: '1')),
       ),
     );
     await tester.pump();

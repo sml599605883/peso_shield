@@ -29,6 +29,11 @@ abstract final class AppAssets {
   static const identityOptionArrow = 'assets/identity_option_arrow.png';
   static const identityShieldIllustration =
       'assets/identity_shield_illustration.png';
+  static const identityUploadDemo = 'assets/identity_upload_demo.png';
+  static const identityUploadIllustration =
+      'assets/identity_upload_illustration.png';
+  static const identityUploadIllustrationAlt =
+      'assets/identity_upload_illustration_alt.png';
 
   static const tabBarBackground = 'assets/navigation/tab_bar_background.png';
   static const homeActive = 'assets/navigation/home_active.png';

@@ -8,9 +8,11 @@ final productApplicationFlowProvider =
     FutureProvider<ProductApplicationFlow>((ref) async {
   final repository = await ref.watch(productRepositoryProvider.future);
   final userSession = ref.watch(userSessionProvider);
+  final sessionStore = ref.watch(sessionStoreProvider);
   
   return ProductApplicationFlow(
     repository: repository,
     userSession: userSession,
+    sessionStore: sessionStore,
   );
 });

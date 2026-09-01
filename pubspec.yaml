@@ -74,6 +74,12 @@ flutter:
     - assets/mine/
     - assets/login/
     - assets/settings/
+    - assets/identity_document_icon.png
+    - assets/identity_option_arrow.png
+    - assets/identity_shield_illustration.png
+    - assets/identity_upload_demo.png
+    - assets/identity_upload_illustration.png
+    - assets/identity_upload_illustration_alt.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

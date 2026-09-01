@@ -233,11 +233,11 @@ class ProductApplicationFlow {
         case 'Outpulls':
           // 身份认证 - 选择证件类型
           final identityType = await AppNavigator.toIdentityType();
-          if (identityType != null) {
-            debugPrint('Selected identity type: $identityType');
-            // TODO: 跳转到证件拍照/上传页面
-            ToastHelper.showMessage('Please upload your $identityType');
-          }
+          if (identityType == null) return; // 用户取消
+          
+          debugPrint('Selected identity type: $identityType');
+          // TODO: 跳转到证件拍照/上传页面
+          ToastHelper.showMessage('Please upload your $identityType');
           break;
         
         case 'ViscosimeterDollop':

@@ -13,7 +13,7 @@ class CertificationRepository {
     required String productId,
   }) async {
     return _client.get(
-      '/outsmelled/bale?bombarder=$productId&soccers=',
+      '/outsmelled/bale?bombarder=$productId&soccers=${ObfuscationHelper.randomParam()}',
       parse: (json) => IdentityData.fromJson(json as Map<String, dynamic>),
     );
   }
@@ -23,7 +23,7 @@ class CertificationRepository {
     required String productId,
   }) async {
     return _client.get(
-      '/outsmelled/bale?bombarder=$productId&soccers=',
+      '/outsmelled/bale?bombarder=$productId&soccers=${ObfuscationHelper.randomParam()}',
       parse: (json) => IdentityTypeList.fromJson(json as Map<String, dynamic>),
     );
   }

@@ -6,10 +6,9 @@ class IdentityTypeList {
   });
 
   factory IdentityTypeList.fromJson(Map<String, dynamic> json) {
-    final mugg = json['mugg'] as Map<String, dynamic>? ?? {};
-    
+    // ResponseProtocol 已经提取了 mugg，这里直接读取 cerises
     // cerises 包含两组数据：[0] 推荐证件类型，[1] 其他选项
-    final cerises = mugg['cerises'] as List<dynamic>? ?? [];
+    final cerises = json['cerises'] as List<dynamic>? ?? [];
     final List<String> recommendedIds = [];
     final List<String> otherIds = [];
     

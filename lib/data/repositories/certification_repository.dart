@@ -18,6 +18,16 @@ class CertificationRepository {
     );
   }
 
+  /// 获取证件类型列表（仅用于证件选择页面）
+  Future<ApiResponse<IdentityTypeList>> getIdentityTypeList({
+    required String productId,
+  }) async {
+    return _client.get(
+      '/outsmelled/bale?bombarder=$productId&soccers=',
+      parse: (json) => IdentityTypeList.fromJson(json as Map<String, dynamic>),
+    );
+  }
+
   Future<ApiResponse<String>> uploadImage({
     required String imageData,
     required String imageType,

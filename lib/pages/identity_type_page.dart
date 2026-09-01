@@ -20,23 +20,23 @@ class IdentityTypePage extends ConsumerStatefulWidget {
 
 class _IdentityTypePageState extends ConsumerState<IdentityTypePage> {
   bool _showOtherOptions = false;
-  IdentityData? _identityData;
+  IdentityTypeList? _identityTypeList;
 
   @override
   void initState() {
     super.initState();
-    _loadIdentityData();
+    _loadIdentityTypes();
   }
 
-  Future<void> _loadIdentityData() async {
+  Future<void> _loadIdentityTypes() async {
     final repository = await ref.read(certificationRepositoryProvider.future);
-    final response = await repository.getIdentityInfo(
+    final response = await repository.getIdentityTypeList(
       productId: widget.productId,
     );
 
     if (response.isSuccess && mounted) {
       setState(() {
-        _identityData = response.data;
+        _identityTypeList = response.data;
       });
     }
   }
@@ -47,8 +47,8 @@ class _IdentityTypePageState extends ConsumerState<IdentityTypePage> {
 
     // 完全使用接口数据，没有则为空
     final options = _showOtherOptions
-        ? (_identityData?.otherIdTypes ?? [])
-        : (_identityData?.recommendedIdTypes ?? []);
+        ? (_identityTypeList?.otherIdTypes ?? [])
+        : (_identityTypeList?.recommendedIdTypes ?? []);
 
     return Scaffold(
       body: SizedBox.expand(

@@ -4,6 +4,7 @@ import '../../pages/home_page.dart';
 import '../../pages/login_page.dart';
 import '../../root_tab_page.dart';
 import '../../pages/settings_page.dart';
+import '../../pages/identity_type_page.dart';
 import 'app_routes.dart';
 
 /// 路由参数类型定义
@@ -45,6 +46,12 @@ class AppRouteGenerator {
       case AppRoutes.settings:
         return MaterialPageRoute<void>(
           builder: (_) => const SettingsPage(),
+          settings: settings,
+        );
+
+      case AppRoutes.identityType:
+        return MaterialPageRoute<String>(
+          builder: (_) => const IdentityTypePage(),
           settings: settings,
         );
 

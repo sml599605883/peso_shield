@@ -18,9 +18,18 @@ class AppRoutes {
   static const String mine = '/mine';
 
   static const String settings = '/settings';
+  static const String identityType = '/identity-type';
 
   /// 所有路由名称列表（用于调试和验证）
-  static const List<String> all = [root, home, login, credit, mine, settings];
+  static const List<String> all = [
+    root,
+    home,
+    login,
+    credit,
+    mine,
+    settings,
+    identityType,
+  ];
 
   /// 验证路由名称是否有效
   static bool isValid(String? route) {

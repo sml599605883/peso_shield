@@ -26,4 +26,9 @@ abstract final class AppColors {
   static const settingsDeactivateText = Color.fromRGBO(161, 161, 161, 1);
   static const selectedNavigation = Color.fromRGBO(71, 71, 71, 1);
   static const unselectedNavigation = Color.fromRGBO(188, 188, 188, 1);
+  static const identityHighlight = Color.fromRGBO(255, 215, 136, 1);
+  static const identityPanelStart = Color.fromRGBO(139, 220, 240, 1);
+  static const identityPanelEnd = Color.fromRGBO(191, 249, 247, 1);
+  static const identityText = Color.fromRGBO(51, 51, 51, 1);
+  static const identityUnselected = Color.fromRGBO(197, 197, 197, 1);
 }

@@ -25,6 +25,10 @@ abstract final class AppAssets {
   static const minePrivacy = 'assets/mine/service_privacy.png';
   static const mineChevron = 'assets/mine/service_chevron.png';
   static const accountDialogPanel = 'assets/settings/account_dialog_panel.png';
+  static const identityDocumentIcon = 'assets/identity_document_icon.png';
+  static const identityOptionArrow = 'assets/identity_option_arrow.png';
+  static const identityShieldIllustration =
+      'assets/identity_shield_illustration.png';
 
   static const tabBarBackground = 'assets/navigation/tab_bar_background.png';
   static const homeActive = 'assets/navigation/home_active.png';

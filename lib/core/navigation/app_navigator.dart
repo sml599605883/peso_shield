@@ -159,6 +159,13 @@ class AppNavigator {
     return toNamed(AppRoutes.home);
   }
 
+  /// 跳转到证件类型选择页
+  /// 
+  /// 返回用户选择的证件类型字符串，如果用户取消则返回 null
+  static Future<String?> toIdentityType() async {
+    return toNamed<String>(AppRoutes.identityType);
+  }
+
   // ==================== 产品申请相关 ====================
 
   /// 执行产品申请流程（统一入口）

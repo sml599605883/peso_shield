@@ -154,7 +154,11 @@ class HttpClient {
         'arboured': signature,
       };
 
-      if (businessParams.isNotEmpty) {
+      if (options.data is FormData) {
+        // Multipart requests already contain their business fields and file.
+        // Keep the FormData intact while adding common params/signature above.
+        print('[HttpClient] POST body (multipart): FormData');
+      } else if (businessParams.isNotEmpty) {
         options.data = businessParams;
         print('[HttpClient] POST body (form): ${options.data}');
       } else {
@@ -294,6 +298,56 @@ class HttpClient {
       throw HttpException(
         type: HttpFailureType.unexpected,
         message: 'Request failed',
+        cause: e,
+      );
+    }
+  }
+
+  /// Upload a file using multipart/form-data
+  Future<ApiResponse<T>> upload<T>(
+    String path, {
+    required String filePath,
+    required String fileField,
+    Map<String, Object?>? params,
+    required T Function(Object?) parse,
+  }) async {
+    try {
+      final file = io.File(filePath);
+      if (!file.existsSync()) {
+        throw HttpException(
+          type: HttpFailureType.unexpected,
+          message: 'Upload file does not exist: $filePath',
+        );
+      }
+
+      // Create FormData with file and other parameters
+      final formData = FormData.fromMap({
+        if (params != null) ...params,
+        fileField: await MultipartFile.fromFile(
+          file.path,
+          filename: file.path.split('/').last,
+        ),
+      });
+
+      final response = await _dio.post<Map<String, Object?>>(
+        path,
+        data: formData,
+        options: Options(contentType: Headers.multipartFormDataContentType),
+      );
+
+      final protocol = ResponseProtocol.parse(response.data);
+      return ApiResponse<T>(
+        code: protocol.code,
+        message: protocol.message,
+        data: parse(protocol.data),
+      );
+    } on DioException catch (e) {
+      if (e.error is HttpException) {
+        rethrow;
+      }
+      throw HttpException(
+        type: HttpFailureType.unexpected,
+        message: 'Upload failed',
         cause: e,
       );
     }

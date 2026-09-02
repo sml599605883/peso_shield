@@ -9,7 +9,7 @@ import 'package:peso_shield/data/models/product_detail.dart';
 import 'package:peso_shield/data/repositories/product_repository.dart';
 
 /// 产品申请流程协调器
-/// 
+///
 /// 统一管理产品准入、产品详情等流程，供各个页面复用
 class ProductApplicationFlow {
   ProductApplicationFlow({
@@ -25,7 +25,7 @@ class ProductApplicationFlow {
   bool _isProcessing = false;
 
   /// 执行产品申请流程
-  /// 
+  ///
   /// [context] - 当前 context
   /// [productId] - 产品 ID
   /// [apiRemind] - 来源标识（0: 默认，1: 首页banner，2: 首页弹窗等）
@@ -35,7 +35,7 @@ class ProductApplicationFlow {
     int apiRemind = 0,
   }) async {
     if (_isProcessing) return;
-    
+
     _isProcessing = true;
     try {
       // 1. 检查登录状态
@@ -50,7 +50,7 @@ class ProductApplicationFlow {
 
       // 2. 调用准入接口
       ToastHelper.showLoading();
-      
+
       final response = await repository.applyProduct(
         productId: productId,
         apiRemind: apiRemind,
@@ -82,7 +82,7 @@ class ProductApplicationFlow {
   }
 
   /// 获取产品详情
-  /// 
+  ///
   /// [context] - 当前 context
   /// [productId] - 产品 ID
   Future<ProductDetail?> fetchProductDetail({
@@ -91,10 +91,8 @@ class ProductApplicationFlow {
   }) async {
     try {
       ToastHelper.showLoading();
-      
-      final response = await repository.getProductDetail(
-        productId: productId,
-      );
+
+      final response = await repository.getProductDetail(productId: productId);
 
       ToastHelper.hideLoading();
 
@@ -125,6 +123,20 @@ class ProductApplicationFlow {
     }
   }
 
+  /// Refresh product detail and dispatch the next certification step.
+  Future<void> continueProductDetailFlow({
+    required BuildContext context,
+    required String productId,
+  }) async {
+    final detail = await fetchProductDetail(
+      context: context,
+      productId: productId,
+    );
+    if (detail != null && context.mounted) {
+      await _continueFromDetail(context, detail, productId);
+    }
+  }
+
   /// 处理准入结果（参考 dali_cash 的 DeepLink 机制）
   Future<void> _handleAdmissionResult(
     BuildContext context,
@@ -137,24 +149,26 @@ class ProductApplicationFlow {
       await _navigateRawTarget(context, result.jumpUrl, productId);
       return;
     }
-    
+
     if (result.statusCode == 200) {
       // statusCode == 200 且 jumpUrl 为空，继续获取产品详情
       final detail = await fetchProductDetail(
         context: context,
         productId: productId,
       );
-      
+
       if (!context.mounted || detail == null) return;
-      
+
       // 根据产品详情的 nextStep 继续处理
       await _continueFromDetail(context, detail, productId);
       return;
     }
-    
+
     // 其他情况：准入失败
     ToastHelper.showError(
-      result.message.isNotEmpty ? result.message : 'Admission failed, please try again',
+      result.message.isNotEmpty
+          ? result.message
+          : 'Admission failed, please try again',
     );
   }
 
@@ -165,61 +179,64 @@ class ProductApplicationFlow {
     String productId,
   ) async {
     ToastHelper.hideLoading();
-    
+
     final deepLink = _deepLinkParser.parse(rawTarget);
-    
+
     switch (deepLink.kind) {
       case AppDeepLinkKind.webView:
         // HTTP/HTTPS → 打开 WebView
         debugPrint('Open WebView: ${deepLink.uri}');
         // TODO: await AppNavigator.toWebView(url: rawTarget);
         break;
-        
+
       case AppDeepLinkKind.creditReview:
         // ph://peso-shield/ios/Umbrages 或 gold://pocket/recredit → 打开授信审核页
         debugPrint('Open credit review: $rawTarget');
         // TODO: await AppNavigator.toCreditReview(productId: productId);
         break;
-        
+
       case AppDeepLinkKind.productDetail:
         // ph://peso-shield/ios/Conscribes → 打开产品详情
         debugPrint('Open product detail: $rawTarget');
-        final detail = await fetchProductDetail(context: context, productId: productId);
+        final detail = await fetchProductDetail(
+          context: context,
+          productId: productId,
+        );
         if (context.mounted && detail != null) {
           await _continueFromDetail(context, detail, productId);
         }
         break;
-        
+
       case AppDeepLinkKind.home:
         // ph://peso-shield/ios/Refineries → 回到首页
         debugPrint('Navigate to home');
         await AppNavigator.toHome();
         break;
-        
+
       case AppDeepLinkKind.settings:
         // ph://peso-shield/ios/Tweet → 跳转到设置页
         debugPrint('Navigate to settings');
         // TODO: await AppNavigator.toSettings();
         break;
-        
+
       case AppDeepLinkKind.order:
         // ph://peso-shield/ios/PermutesLinotypes → 跳转到订单列表
         debugPrint('Navigate to orders');
         // TODO: await AppNavigator.toOrders();
         break;
-        
+
       case AppDeepLinkKind.login:
         // ph://peso-shield/ios/UndertaxGrain → 跳转到登录页
         debugPrint('Navigate to login');
         await AppNavigator.toLogin();
         break;
-        
+
       case AppDeepLinkKind.admission:
         // ph://peso-shield/ios/Equisetum → 准入流程
         debugPrint('Start admission flow: productId=$productId');
         // 递归调用准入流程（通常不会到这里）
         break;
-        
+
       case AppDeepLinkKind.unsupported:
         debugPrint('Unsupported link: $rawTarget');
         ToastHelper.showError('Invalid link format');
@@ -236,8 +253,10 @@ class ProductApplicationFlow {
     // 检查是否有下一步认证项
     if (detail.nextStep.taskType.isNotEmpty) {
       // 有未完成的认证项，跳转到对应认证页
-      debugPrint('Navigate to certification: ${detail.nextStep.taskType} - ${detail.nextStep.title}');
-      
+      debugPrint(
+        'Navigate to certification: ${detail.nextStep.taskType} - ${detail.nextStep.title}',
+      );
+
       // 接口返回的是混淆后的值（histolyses 字段）
       // public -> Outpulls, face -> ViscosimeterDollop, personal -> Unconcernedness
       // work -> Jammable, ext -> Pip, bank -> Reentrance
@@ -248,37 +267,37 @@ class ProductApplicationFlow {
             productId: productId,
           );
           if (identityType == null) return; // 用户取消
-          
+
           debugPrint('Selected identity type: $identityType');
           // TODO: 跳转到证件拍照/上传页面
           ToastHelper.showMessage('Please upload your $identityType');
           break;
-        
+
         case 'ViscosimeterDollop':
           // TODO: 活体认证页
           ToastHelper.showMessage('Please complete ${detail.nextStep.title}');
           break;
-        
+
         case 'Unconcernedness':
           // TODO: 个人信息页
           ToastHelper.showMessage('Please complete ${detail.nextStep.title}');
           break;
-        
+
         case 'Jammable':
           // TODO: 工作信息页
           ToastHelper.showMessage('Please complete ${detail.nextStep.title}');
           break;
-        
+
         case 'Pip':
           // TODO: 紧急联系人页
           ToastHelper.showMessage('Please complete ${detail.nextStep.title}');
           break;
-        
+
         case 'Reentrance':
           // TODO: 绑卡页
           ToastHelper.showMessage('Please complete ${detail.nextStep.title}');
           break;
-        
+
         default:
           ToastHelper.showMessage('Please complete ${detail.nextStep.title}');
       }

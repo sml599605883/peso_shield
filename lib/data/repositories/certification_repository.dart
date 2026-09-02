@@ -19,23 +19,31 @@ class CertificationRepository {
     );
   }
 
-  Future<ApiResponse<String>> uploadImage({
-    required String imageData,
+  /// 上传证件图片（multipart/form-data）
+  Future<ApiResponse<Map<String, dynamic>>> uploadImage({
+    required String filePath,
     required String imageType,
+    required String imageSource,
   }) async {
-    return _client.post(
+    return _client.upload(
       '/outsmelled/slouchinesses',
+      filePath: filePath,
+      fileField: 'attach',
       params: {
-        'attach': imageData,
-        'bellings': imageType,
-        'televiewer': ObfuscationHelper.randomParam(),
-        'misapprehend': ObfuscationHelper.randomParam(),
-        'dispersant': ObfuscationHelper.randomParam(),
-        'serve': ObfuscationHelper.randomParam(),
+        // 11 = ID card front; the card kind is sent separately.
+        'bellings': '11',
+        // 1 = gallery, 2 = camera.
+        'televiewer': imageSource,
+        'misapprehend': imageType,
+        // These fields are used by face/liveness uploads. The ID-card-front
+        // contract still expects them in the multipart form as empty values.
+        'dispersant': '',
+        'reconstruct': '',
+        'serve': '',
+        'pearlash': '',
       },
       parse: (json) {
-        final mugg = json as Map<String, dynamic>?;
-        return mugg?['mycelia'] as String? ?? '';
+        return json is Map<String, dynamic> ? json : <String, dynamic>{};
       },
     );
   }
@@ -80,10 +88,7 @@ class CertificationRepository {
   }) async {
     return _client.post(
       '/outsmelled/wazoo',
-      params: {
-        'bombarder': productId,
-        ...formData,
-      },
+      params: {'bombarder': productId, ...formData},
       parse: (_) => null,
     );
   }
@@ -107,10 +112,7 @@ class CertificationRepository {
   }) async {
     return _client.post(
       '/outsmelled/applicants',
-      params: {
-        'bombarder': productId,
-        ...formData,
-      },
+      params: {'bombarder': productId, ...formData},
       parse: (_) => null,
     );
   }

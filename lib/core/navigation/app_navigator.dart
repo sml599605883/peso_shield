@@ -180,6 +180,21 @@ class AppNavigator {
     );
   }
 
+  static Future<void> toIdentityConfirmation({
+    required String productId,
+    required String cardType,
+    Map<String, dynamic>? recognizedInfo,
+  }) async {
+    await toNamed<void>(
+      AppRoutes.identityConfirmation,
+      arguments: IdentityConfirmationPageArguments(
+        productId: productId,
+        cardType: cardType,
+        recognizedInfo: recognizedInfo,
+      ),
+    );
+  }
+
   // ==================== 产品申请相关 ====================
 
   /// 执行产品申请流程（统一入口）

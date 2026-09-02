@@ -13,6 +13,14 @@
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
 	<string>Peso Shield</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Allow camera access to upload your ID and complete identity verification for a fast and secure application process.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>A location check during approval helps confirm who you are and protects your account from unauthorized access.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>A location check during approval helps confirm who you are and protects your account from unauthorized access.</string>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>Identifies your device, prevents fraud, and personalizes loan offers while keeping your information protected.</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

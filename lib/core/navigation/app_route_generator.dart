@@ -6,7 +6,19 @@ import '../../root_tab_page.dart';
 import '../../pages/settings_page.dart';
 import '../../pages/identity_type_page.dart';
 import '../../pages/identity_upload_page.dart';
+import '../../pages/identity_confirmation_page.dart';
 import 'app_routes.dart';
+
+/// 禁用侧滑返回的自定义路由
+class NoSwipePageRoute<T> extends MaterialPageRoute<T> {
+  NoSwipePageRoute({
+    required super.builder,
+    super.settings,
+  });
+
+  @override
+  bool get popGestureEnabled => false;
+}
 
 /// 路由参数类型定义
 class LoginPageArguments {
@@ -31,6 +43,17 @@ class IdentityUploadPageArguments {
   final String cardType;
 }
 
+class IdentityConfirmationPageArguments {
+  const IdentityConfirmationPageArguments({
+    required this.productId,
+    required this.cardType,
+    this.recognizedInfo,
+  });
+  final String productId;
+  final String cardType;
+  final Map<String, dynamic>? recognizedInfo;
+}
+
 /// 应用路由生成器
 class AppRouteGenerator {
   AppRouteGenerator._();
@@ -42,26 +65,26 @@ class AppRouteGenerator {
 
     switch (settings.name) {
       case AppRoutes.root:
-        return MaterialPageRoute<void>(
+        return NoSwipePageRoute<void>(
           builder: (_) => const RootTabPage(),
           settings: settings,
         );
 
       case AppRoutes.login:
         final args = settings.arguments as LoginPageArguments?;
-        return MaterialPageRoute<bool>(
+        return NoSwipePageRoute<bool>(
           builder: (_) => LoginPage(onLoginSuccess: args?.onLoginSuccess),
           settings: settings,
         );
 
       case AppRoutes.home:
-        return MaterialPageRoute<void>(
+        return NoSwipePageRoute<void>(
           builder: (_) => const HomePage(),
           settings: settings,
         );
 
       case AppRoutes.settings:
-        return MaterialPageRoute<void>(
+        return NoSwipePageRoute<void>(
           builder: (_) => const SettingsPage(),
           settings: settings,
         );
@@ -71,7 +94,7 @@ class AppRouteGenerator {
         if (args == null) {
           return _errorRoute(settings.name);
         }
-        return MaterialPageRoute<String>(
+        return NoSwipePageRoute<String>(
           builder: (_) => IdentityTypePage(productId: args.productId),
           settings: settings,
         );
@@ -79,10 +102,22 @@ class AppRouteGenerator {
       case AppRoutes.identityUpload:
         final args = settings.arguments as IdentityUploadPageArguments?;
         if (args == null) return _errorRoute(settings.name);
-        return MaterialPageRoute<void>(
+        return NoSwipePageRoute<void>(
           builder: (_) => IdentityUploadPage(
             productId: args.productId,
             cardType: args.cardType,
+          ),
+          settings: settings,
+        );
+
+      case AppRoutes.identityConfirmation:
+        final args = settings.arguments as IdentityConfirmationPageArguments?;
+        if (args == null) return _errorRoute(settings.name);
+        return NoSwipePageRoute<void>(
+          builder: (_) => IdentityConfirmationPage(
+            productId: args.productId,
+            cardType: args.cardType,
+            recognizedInfo: args.recognizedInfo,
           ),
           settings: settings,
         );
@@ -94,7 +129,7 @@ class AppRouteGenerator {
 
   /// 未找到路由时的错误页面
   static Route<dynamic> _errorRoute(String? routeName) {
-    return MaterialPageRoute<void>(
+    return NoSwipePageRoute<void>(
       builder: (context) => Scaffold(
         appBar: AppBar(title: const Text('Error')),
         body: Center(

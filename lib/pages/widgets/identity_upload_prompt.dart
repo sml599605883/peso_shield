@@ -15,7 +15,7 @@ class IdentityUploadPrompt extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       child: Padding(
-        padding: layout.edgeInsets(left: 10, right: 10),
+        padding: layout.edgeInsets(left: 10),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [

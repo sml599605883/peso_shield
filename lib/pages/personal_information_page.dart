@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../data/models/certification_data.dart' as model;
 import '../providers/repository_provider.dart';
 import '../theme/app_assets.dart';
-import '../core/navigation/app_navigator.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../theme/app_colors.dart';
+import '../theme/layout_adapter.dart';
+import '../widgets/app_back_button.dart';
+import 'widgets/identity_upload_prompt.dart';
 
 class PersonalInformationPage extends ConsumerStatefulWidget {
   const PersonalInformationPage({super.key, required this.productId});
+
   final String productId;
+
   @override
   ConsumerState<PersonalInformationPage> createState() =>
       _PersonalInformationPageState();
@@ -19,8 +25,14 @@ class _PersonalInformationPageState
   model.PersonalInfoData? _data;
   final _values = <String, String>{};
   final _controllers = <String, TextEditingController>{};
-  bool _loading = true, _submitting = false;
+  List<String>? _addresses;
+  bool _loading = true;
+  bool _submitting = false;
+  bool _loadingAddresses = false;
   String? _error;
+
+  static const _defaultPrompt =
+      'Step 1 to fast cash! Upload ID for the express approval channel.';
 
   @override
   void initState() {
@@ -29,284 +41,376 @@ class _PersonalInformationPageState
   }
 
   Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
-      final repo = await ref.read(certificationRepositoryProvider.future);
-      final response = await repo.getPersonalInfo(productId: widget.productId);
+      final repository = await ref.read(certificationRepositoryProvider.future);
+      final response = await repository.getPersonalInfo(
+        productId: widget.productId,
+      );
       if (!response.isSuccess) throw Exception(response.message);
+      if (!mounted) return;
+      _disposeControllers();
+      for (final field in response.data.fields) {
+        _values[field.key] = field.initialSubmitValue;
+        _controllers[field.key] = TextEditingController(
+          text: field.initialDisplayValue,
+        );
+      }
       setState(() {
         _data = response.data;
         _loading = false;
       });
-      for (final field in response.data.fields) {
-        _values[field.key] = field.defaultValue;
-        _controllers[field.key] = TextEditingController(
-          text: field.defaultValue,
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _loading = false;
-          _error = 'Unable to load information';
-        });
-      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = 'Unable to load information';
+      });
     }
   }
 
   @override
   void dispose() {
-    for (final c in _controllers.values) {
-      c.dispose();
-    }
+    _disposeControllers();
     super.dispose();
   }
 
+  void _disposeControllers() {
+    for (final controller in _controllers.values) {
+      controller.dispose();
+    }
+    _controllers.clear();
+  }
+
   Future<void> _submit() async {
-    final List<model.FormField> fields = _data?.fields ?? const [];
-    for (final f in fields) {
-      if (f.isRequired && (_values[f.key] ?? '').trim().isEmpty) {
+    final fields = _data?.fields ?? const <model.PersonalInformationField>[];
+    for (final field in fields) {
+      if (field.isRequired && (_values[field.key] ?? '').trim().isEmpty) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Please enter ${f.title}')));
+        ).showSnackBar(SnackBar(content: Text('Please enter ${field.title}')));
         return;
       }
     }
     setState(() => _submitting = true);
     try {
-      final repo = await ref.read(certificationRepositoryProvider.future);
-      final response = await repo.savePersonalInfo(
+      final repository = await ref.read(certificationRepositoryProvider.future);
+      final response = await repository.savePersonalInfo(
         productId: widget.productId,
         formData: _values,
       );
       if (!response.isSuccess) throw Exception(response.message);
-      if (mounted) {
-        AppNavigator.pop(true);
-      }
+      if (mounted) Navigator.of(context).pop(true);
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Submission failed, please try again')),
         );
       }
-    }
-    if (mounted) {
-      setState(() => _submitting = false);
+    } finally {
+      if (mounted) setState(() => _submitting = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final List<model.FormField> fields = _data?.fields ?? const [];
+    final layout = AppLayout.of(context);
+    final prompt = _data?.tips.trim();
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
       child: Scaffold(
-        backgroundColor: Colors.white,
-        body: SafeArea(
-          child: Column(
-            children: [
-              Container(
-                height: 221,
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xff9fd5fb), Color(0xffefffff)],
-                  ),
-                ),
-                child: Stack(
-                  children: [
-                    Positioned(
-                      left: 20,
-                      top: 18,
-                      child: IconButton(
-                        key: const Key('personalInformationBack'),
-                        icon: Image.asset(
-                          AppAssets.personalInformationBack,
-                          width: 24,
-                        ),
-                        onPressed: () => AppNavigator.pop(),
+        backgroundColor: AppColors.white,
+        body: DecoratedBox(
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage(AppAssets.homeBackground),
+              fit: BoxFit.fill,
+            ),
+          ),
+          child: SafeArea(
+            bottom: false,
+            child: Column(
+              children: [
+                SizedBox(height: layout.px(16)),
+                SizedBox(
+                  height: layout.px(24),
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        left: layout.px(20),
+                        child: const AppBackButton(),
                       ),
-                    ),
-                    const Positioned(
-                      top: 45,
-                      left: 0,
-                      right: 0,
-                      child: Center(
+                      Center(
                         child: Text(
                           'Personal information',
                           style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
+                            color: AppColors.black,
+                            fontFamily: 'Helvetica',
+                            fontSize: layout.px(20),
+                            fontWeight: FontWeight.w700,
+                            height: 24 / 20,
                           ),
                         ),
                       ),
-                    ),
-                    Positioned(
-                      left: 21,
-                      top: 130,
-                      child: SizedBox(
-                        width: 220,
-                        child: Text(
-                          _data?.tips.isNotEmpty == true
-                              ? _data!.tips
-                              : 'Step 1 to fast cash! Upload ID for the express approval channel.',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            fontStyle: FontStyle.italic,
-                            color: Color(0xff32636e),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      right: 20,
-                      top: 88,
-                      child: Image.asset(
-                        AppAssets.identityShieldIllustration,
-                        width: 120,
-                        height: 125,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(30),
-                    ),
+                    ],
                   ),
-                  child: _loading
-                      ? const Center(child: CircularProgressIndicator())
-                      : _error != null
-                      ? Center(child: Text(_error!))
-                      : ListView(
-                          padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(17),
-                              child: const LinearProgressIndicator(
-                                value: .25,
-                                minHeight: 14,
-                                backgroundColor: Color(0xffe8eeef),
-                                valueColor: AlwaysStoppedAnimation(
-                                  Color(0xffffc56f),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            ...fields.map(_field),
-                            const SizedBox(height: 30),
-                            SizedBox(
-                              height: 50,
-                              child: ElevatedButton(
-                                onPressed: _submitting ? null : _submit,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xff6ad1ff),
-                                  shape: const StadiumBorder(),
-                                ),
-                                child: _submitting
-                                    ? const CircularProgressIndicator(
-                                        color: Colors.white,
-                                      )
-                                    : const Text(
-                                        'Submit',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                              ),
-                            ),
-                          ],
-                        ),
                 ),
-              ),
-            ],
+                SizedBox(height: layout.px(16)),
+                IdentityUploadPrompt(
+                  message: prompt == null || prompt.isEmpty
+                      ? _defaultPrompt
+                      : prompt,
+                ),
+                Padding(
+                  padding: layout.edgeInsets(left: 15, right: 15, top: 8),
+                  child: Image.asset(
+                    AppAssets.personalInformationProgress,
+                    key: const Key('personalInformationProgress'),
+                    width: double.infinity,
+                    height: layout.px(18),
+                    fit: BoxFit.fill,
+                  ),
+                ),
+                SizedBox(height: layout.px(12)),
+                Expanded(child: _buildContent(layout)),
+              ],
+            ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _field(model.FormField field) {
-    final selectable =
-        field.options.isNotEmpty || field.type.toLowerCase().contains('select');
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            field.title,
-            style: const TextStyle(color: Color(0xff999999), fontSize: 14),
-          ),
-          const SizedBox(height: 7),
-          GestureDetector(
-            onTap: selectable ? () => _pick(field) : null,
-            child: AbsorbPointer(
-              absorbing: selectable,
-              child: TextField(
-                controller: _controllers[field.key],
-                keyboardType: field.isNumeric
-                    ? TextInputType.phone
-                    : TextInputType.text,
-                inputFormatters: field.maxLength > 0
-                    ? [LengthLimitingTextInputFormatter(field.maxLength)]
-                    : null,
-                onChanged: (v) => _values[field.key] = v,
-                decoration: InputDecoration(
-                  hintText: field.placeholder,
-                  suffixIcon: selectable
-                      ? const Icon(
-                          Icons.arrow_forward,
-                          color: Color(0xffdddddd),
-                        )
-                      : null,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 10,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    borderSide: const BorderSide(color: Color(0xffeceded)),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    borderSide: const BorderSide(color: Color(0xffeceded)),
+        bottomNavigationBar: SafeArea(
+          top: false,
+          child: Padding(
+            padding: layout.edgeInsets(
+              left: 56,
+              right: 56,
+              top: 10,
+              bottom: 10,
+            ),
+            child: SizedBox(
+              height: layout.px(50),
+              child: ElevatedButton(
+                key: const Key('personalInformationSubmit'),
+                onPressed: _loading || _submitting ? null : _submit,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.coral,
+                  foregroundColor: AppColors.white,
+                  disabledBackgroundColor: AppColors.coral,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: layout.radius(25),
                   ),
                 ),
+                child: _submitting
+                    ? SizedBox(
+                        width: layout.px(20),
+                        height: layout.px(20),
+                        child: const CircularProgressIndicator(
+                          color: AppColors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Text(
+                        'Submit',
+                        style: TextStyle(
+                          fontFamily: 'Helvetica',
+                          fontSize: layout.px(18),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }
 
-  Future<void> _pick(model.FormField field) async {
-    final chosen = await showModalBottomSheet<model.FieldOption>(
+  Widget _buildContent(AppLayout layout) {
+    if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_error != null) {
+      return Center(
+        child: TextButton(onPressed: _load, child: Text(_error!)),
+      );
+    }
+    final fields = _data?.fields ?? const <model.PersonalInformationField>[];
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(layout.px(16)),
+        ),
+      ),
+      child: ListView.separated(
+        padding: layout.edgeInsets(left: 20, top: 20, right: 20, bottom: 20),
+        itemCount: fields.length,
+        separatorBuilder: (_, _) => SizedBox(height: layout.px(14)),
+        itemBuilder: (_, index) => _buildField(fields[index], layout),
+      ),
+    );
+  }
+
+  Widget _buildField(model.PersonalInformationField field, AppLayout layout) {
+    final controller = _controllers[field.key]!;
+    final selectable =
+        field.control == model.PersonalInformationControl.selection ||
+        field.control == model.PersonalInformationControl.address;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          field.title,
+          style: TextStyle(
+            color: AppColors.personalInformationLabel,
+            fontFamily: 'Helvetica',
+            fontSize: layout.px(14),
+          ),
+        ),
+        SizedBox(height: layout.px(7)),
+        TextField(
+          controller: controller,
+          readOnly: selectable,
+          keyboardType: field.isNumeric
+              ? TextInputType.number
+              : TextInputType.text,
+          inputFormatters: field.isNumeric
+              ? [FilteringTextInputFormatter.digitsOnly]
+              : null,
+          onTap: selectable ? () => _selectField(field) : null,
+          onChanged: (value) => _values[field.key] = value,
+          decoration: InputDecoration(
+            hintText: field.placeholder,
+            hintStyle: TextStyle(
+              color: AppColors.loginHint,
+              fontSize: layout.px(14),
+            ),
+            suffixIcon: selectable
+                ? _loadingAddresses &&
+                          field.control ==
+                              model.PersonalInformationControl.address
+                      ? const Padding(
+                          padding: EdgeInsets.all(12),
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(
+                          Icons.chevron_right,
+                          color: AppColors.loginHint,
+                        )
+                : null,
+            contentPadding: layout.edgeInsets(
+              left: 20,
+              top: 13,
+              right: 14,
+              bottom: 13,
+            ),
+            enabledBorder: _fieldBorder(layout),
+            focusedBorder: _fieldBorder(layout),
+          ),
+        ),
+      ],
+    );
+  }
+
+  OutlineInputBorder _fieldBorder(AppLayout layout) => OutlineInputBorder(
+    borderRadius: layout.radius(20),
+    borderSide: const BorderSide(color: AppColors.personalInformationBorder),
+  );
+
+  Future<void> _selectField(model.PersonalInformationField field) async {
+    switch (field.control) {
+      case model.PersonalInformationControl.selection:
+        await _pickOption(field);
+      case model.PersonalInformationControl.address:
+        await _pickAddress(field);
+      case model.PersonalInformationControl.text:
+      case model.PersonalInformationControl.unsupported:
+        return;
+    }
+  }
+
+  Future<void> _pickOption(model.PersonalInformationField field) async {
+    final option = await showModalBottomSheet<model.PersonalInformationOption>(
       context: context,
-      builder: (_) => SafeArea(
+      builder: (context) => SafeArea(
         child: ListView(
-          children: field.options
-              .map(
-                (o) => ListTile(
-                  title: Text(o.name),
-                  onTap: () => Navigator.pop(context, o),
-                ),
-              )
-              .toList(),
+          shrinkWrap: true,
+          children: [
+            for (final option in field.options)
+              ListTile(
+                title: Text(option.label),
+                onTap: () => Navigator.of(context).pop(option),
+              ),
+          ],
         ),
       ),
     );
-    if (chosen != null) {
-      setState(() {
-        _values[field.key] = chosen.value;
-        _controllers[field.key]!.text = chosen.name;
-      });
+    if (option == null || !mounted) return;
+    setState(() {
+      _values[field.key] = option.value;
+      _controllers[field.key]!.text = option.label;
+    });
+  }
+
+  Future<void> _pickAddress(model.PersonalInformationField field) async {
+    if (_loadingAddresses) return;
+    setState(() => _loadingAddresses = true);
+    try {
+      _addresses ??= await _loadAddressChoices();
+      if (!mounted) return;
+      final address = await showModalBottomSheet<String>(
+        context: context,
+        builder: (context) => SafeArea(
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              for (final address in _addresses!)
+                ListTile(
+                  title: Text(address),
+                  onTap: () => Navigator.of(context).pop(address),
+                ),
+            ],
+          ),
+        ),
+      );
+      if (address != null && mounted) {
+        setState(() {
+          _values[field.key] = address;
+          _controllers[field.key]!.text = address;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Unable to load address options')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loadingAddresses = false);
     }
+  }
+
+  Future<List<String>> _loadAddressChoices() async {
+    final repository = await ref.read(certificationRepositoryProvider.future);
+    final response = await repository.getAddressInit();
+    if (!response.isSuccess) throw Exception(response.message);
+    return _flattenAddressValues([
+      response.data.provinces,
+      response.data.cities,
+      response.data.barangays,
+    ]).toSet().toList(growable: false);
+  }
+
+  List<String> _flattenAddressValues(Object? value) {
+    if (value is Map) {
+      return value.values.expand(_flattenAddressValues).toList(growable: false);
+    }
+    if (value is List) {
+      return value.expand(_flattenAddressValues).toList(growable: false);
+    }
+    final text = value?.toString().trim() ?? '';
+    return text.isEmpty ? const [] : [text];
   }
 }

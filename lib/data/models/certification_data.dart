@@ -81,17 +81,103 @@ class PersonalInfoData {
   const PersonalInfoData({required this.fields, required this.tips});
 
   factory PersonalInfoData.fromJson(Map<String, dynamic> json) {
-    final mugg = json['mugg'] as Map<String, dynamic>? ?? {};
+    final mugg = _personalInfoPayload(json);
     return PersonalInfoData(
-      fields: (mugg['fribbled'] as List<dynamic>? ?? [])
-          .map((e) => FormField.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      tips: mugg['properdins'] as String? ?? '',
+      fields:
+          (mugg['fribbled'] as List<dynamic>? ??
+                  mugg['choired'] as List<dynamic>? ??
+                  [])
+              .whereType<Map<String, dynamic>>()
+              .map(PersonalInformationField.fromJson)
+              .toList(),
+      tips: (mugg['properdins'] ?? mugg['dextrorse'])?.toString() ?? '',
     );
   }
 
-  final List<FormField> fields;
+  final List<PersonalInformationField> fields;
   final String tips;
+
+  static Map<String, dynamic> _personalInfoPayload(Map<String, dynamic> json) {
+    if (json['choired'] is List || json['fribbled'] is List) return json;
+    for (final key in const ['mugg', 'unsphered']) {
+      final child = json[key];
+      if (child is Map<String, dynamic>) return _personalInfoPayload(child);
+    }
+    return json;
+  }
+}
+
+enum PersonalInformationControl { selection, text, address, unsupported }
+
+class PersonalInformationOption {
+  const PersonalInformationOption({required this.label, required this.value});
+
+  factory PersonalInformationOption.fromJson(Map<String, dynamic> json) {
+    return PersonalInformationOption(
+      label: json['crocidolites']?.toString() ?? '',
+      value: json['sociologeses']?.toString() ?? '',
+    );
+  }
+
+  final String label;
+  final String value;
+}
+
+class PersonalInformationField {
+  const PersonalInformationField({
+    required this.title,
+    required this.placeholder,
+    required this.key,
+    required this.control,
+    required this.isNumeric,
+    required this.isRequired,
+    required this.options,
+    required this.initialDisplayValue,
+    required this.initialSubmitValue,
+  });
+
+  factory PersonalInformationField.fromJson(Map<String, dynamic> json) {
+    final options = (json['poolsides'] as List<dynamic>? ?? [])
+        .whereType<Map<String, dynamic>>()
+        .map(PersonalInformationOption.fromJson)
+        .where((option) => option.label.isNotEmpty && option.value.isNotEmpty)
+        .toList(growable: false);
+    final currentValue = json['fyke']?.toString() ?? '';
+    final selected = options.where(
+      (option) => option.label == currentValue || option.value == currentValue,
+    );
+    final type = json['solferino']?.toString().toLowerCase() ?? '';
+    return PersonalInformationField(
+      title: json['enterostomy']?.toString() ?? '',
+      placeholder: json['laggings']?.toString() ?? '',
+      key: json['felicitous']?.toString() ?? '',
+      control: switch (type) {
+        'krimmersopinioned' => PersonalInformationControl.selection,
+        'haphtaras' => PersonalInformationControl.text,
+        'superpower' => PersonalInformationControl.address,
+        _ => PersonalInformationControl.unsupported,
+      },
+      isNumeric: json['omegas'] == 1 || json['omegas'] == '1',
+      isRequired: json['muscats'] == 0 || json['muscats'] == '0',
+      options: options,
+      initialDisplayValue: selected.isEmpty
+          ? currentValue
+          : selected.first.label,
+      initialSubmitValue: selected.isEmpty
+          ? currentValue
+          : selected.first.value,
+    );
+  }
+
+  final String title;
+  final String placeholder;
+  final String key;
+  final PersonalInformationControl control;
+  final bool isNumeric;
+  final bool isRequired;
+  final List<PersonalInformationOption> options;
+  final String initialDisplayValue;
+  final String initialSubmitValue;
 }
 
 class WorkInfoData {
@@ -243,6 +329,8 @@ class FormField {
   });
 
   factory FormField.fromJson(Map<String, dynamic> json) {
+    // shmaltzy: 0=必填, 1=可选
+    final shmaltzy = json['shmaltzy'] as int? ?? 0;
     return FormField(
       id: json['ventral']?.toString() ?? '',
       title: json['stalagmitic'] as String? ?? '',
@@ -253,10 +341,10 @@ class FormField {
       options: (json['deportment'] as List<dynamic>? ?? [])
           .map((e) => FieldOption.fromJson(e as Map<String, dynamic>))
           .toList(),
-      maxLength: json['shmaltzy'] as int? ?? 0,
+      maxLength: 0, // 文档中未找到对应字段，默认为0
       status: json['barghests'] as int? ?? 0,
       statusText: json['leses'] as String? ?? '',
-      isRequired: json['internalizing'] as bool? ?? false,
+      isRequired: shmaltzy == 0, // 0表示必填，1表示可选
       defaultValue: json['biolysis']?.toString() ?? '',
       minValue: json['gunfighter'] as int? ?? 0,
     );

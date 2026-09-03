@@ -19,28 +19,36 @@ class CertificationRepository {
     );
   }
 
-  /// 上传证件图片（multipart/form-data）
+  /// 上传证件图片或人脸图片（multipart/form-data）
   Future<ApiResponse<Map<String, dynamic>>> uploadImage({
     required String filePath,
     required String imageType,
     required String imageSource,
+    String? uploadType,
+    String? livenessId,
+    String? license,
+    String? livenessType,
+    String? businessId,
   }) async {
     return _client.upload(
       '/outsmelled/slouchinesses',
       filePath: filePath,
       fileField: 'attach',
       params: {
-        // 11 = ID card front; the card kind is sent separately.
-        'bellings': '11',
-        // 1 = gallery, 2 = camera.
+        // 10 = face/liveness, 11 = ID card front
+        'bellings': uploadType ?? '11',
+        // 1 = gallery, 2 = camera. When uploadType=10, fixed as '1'.
         'televiewer': imageSource,
+        // ID card type for uploadType=11, empty for uploadType=10
         'misapprehend': imageType,
-        // These fields are used by face/liveness uploads. The ID-card-front
-        // contract still expects them in the multipart form as empty values.
-        'dispersant': '',
-        'reconstruct': '',
-        'serve': '',
-        'pearlash': '',
+        // For face upload: livenessId from trustdecision SDK
+        'dispersant': livenessId ?? '',
+        // For face upload: license/token from getFacePPToken
+        'reconstruct': license ?? '',
+        // For face upload: liveness type (7 = trustdecision)
+        'serve': livenessType ?? '',
+        // For face upload: business ID (type=10 && faceType=6)
+        'pearlash': businessId ?? '',
       },
       parse: (json) {
         return json is Map<String, dynamic> ? json : <String, dynamic>{};
@@ -234,26 +242,29 @@ class CertificationRepository {
     );
   }
 
-  /// 上传人脸识别结果
+  /// 上传人脸识别结果（已废弃，使用 uploadImage 替代）
+  @Deprecated('Use uploadImage with uploadType="10" instead')
   Future<ApiResponse<void>> uploadFaceLiveness({
     required String filePath,
     required String license,
     required String livenessId,
     required int livenessType,
   }) async {
-    return _client.upload(
-      '/viler/argots',
+    // 调用统一的 uploadImage 接口
+    final response = await uploadImage(
       filePath: filePath,
-      fileField: 'attach',
-      params: {
-        'etherifying': '10',
-        'tanners': '1',
-        'symptoms': '',
-        'gibbon': livenessId,
-        'mosque': license,
-        'wealthily': livenessType.toString(),
-      },
-      parse: (_) => null,
+      imageType: '',
+      imageSource: '1',
+      uploadType: '10',
+      livenessId: livenessId,
+      license: license,
+      livenessType: '7',
+    );
+    
+    return ApiResponse<void>(
+      code: response.code,
+      message: response.message,
+      data: null,
     );
   }
 }

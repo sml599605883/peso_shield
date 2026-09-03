@@ -34,4 +34,36 @@ abstract final class AppColors {
   static const identityUploadDivider = Color.fromRGBO(231, 231, 231, 1);
   static const personalInformationLabel = Color.fromRGBO(153, 153, 153, 1);
   static const personalInformationBorder = Color.fromRGBO(236, 237, 237, 1);
+  static const personalInformationSelectionBarrier = Color.fromRGBO(
+    0,
+    0,
+    0,
+    0.6235294117647059,
+  );
+  static const personalInformationOptionHint = Color.fromRGBO(255, 163, 0, 1);
+  static const personalInformationOptionLogoBorder = Color.fromRGBO(
+    151,
+    151,
+    151,
+    1,
+  );
+  static const personalInformationCancelButton = Color.fromRGBO(
+    238,
+    238,
+    238,
+    1,
+  );
+  static const personalInformationCancelText = Color.fromRGBO(153, 153, 153, 1);
+  static const personalInformationAddressSegment = Color.fromRGBO(
+    240,
+    240,
+    240,
+    1,
+  );
+  static const personalInformationAddressInactive = Color.fromRGBO(
+    198,
+    198,
+    198,
+    1,
+  );
 }

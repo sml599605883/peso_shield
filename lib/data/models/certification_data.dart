@@ -110,17 +110,30 @@ class PersonalInfoData {
 enum PersonalInformationControl { selection, text, address, unsupported }
 
 class PersonalInformationOption {
-  const PersonalInformationOption({required this.label, required this.value});
+  const PersonalInformationOption({
+    required this.label,
+    required this.value,
+    required this.logoUrl,
+    required this.showsHint,
+    required this.hint,
+  });
 
   factory PersonalInformationOption.fromJson(Map<String, dynamic> json) {
     return PersonalInformationOption(
-      label: json['cymenes']?.toString() ?? '',
-      value: json['bellings']?.toString() ?? '',
+      label: (json['cymenes'] ?? json['crocidolites'])?.toString() ?? '',
+      value: (json['bellings'] ?? json['sociologeses'])?.toString() ?? '',
+      logoUrl: json['leachate']?.toString().trim() ?? '',
+      showsHint: json['barghests'] == 1 || json['barghests'] == '1',
+      // The server field carrying the hint text is not documented yet.
+      hint: '',
     );
   }
 
   final String label;
   final String value;
+  final String logoUrl;
+  final bool showsHint;
+  final String hint;
 }
 
 class PersonalInformationField {
@@ -128,6 +141,7 @@ class PersonalInformationField {
     required this.title,
     required this.placeholder,
     required this.key,
+    required this.controlType,
     required this.control,
     required this.isNumeric,
     required this.isRequired,
@@ -137,28 +151,38 @@ class PersonalInformationField {
   });
 
   factory PersonalInformationField.fromJson(Map<String, dynamic> json) {
-    final options = (json['deportment'] as List<dynamic>? ?? [])
-        .whereType<Map<String, dynamic>>()
-        .map(PersonalInformationOption.fromJson)
-        .where((option) => option.label.isNotEmpty && option.value.isNotEmpty)
-        .toList(growable: false);
-    final currentValue = json['biolysis']?.toString() ?? '';
+    final options =
+        ((json['deportment'] ?? json['poolsides']) as List<dynamic>? ?? [])
+            .whereType<Map<String, dynamic>>()
+            .map(PersonalInformationOption.fromJson)
+            .where(
+              (option) => option.label.isNotEmpty && option.value.isNotEmpty,
+            )
+            .toList(growable: false);
+    final currentValue = (json['biolysis'] ?? json['fyke'])?.toString() ?? '';
     final selected = options.where(
       (option) => option.label == currentValue || option.value == currentValue,
     );
     final type = json['torsos']?.toString().toLowerCase() ?? '';
     return PersonalInformationField(
-      title: json['stalagmitic']?.toString() ?? '',
-      placeholder: json['vacantness']?.toString() ?? '',
-      key: json['coffees']?.toString() ?? '',
+      title: (json['stalagmitic'] ?? json['enterostomy'])?.toString() ?? '',
+      placeholder: (json['vacantness'] ?? json['laggings'])?.toString() ?? '',
+      key: (json['coffees'] ?? json['felicitous'])?.toString() ?? '',
+      controlType: json['torsos']?.toString() ?? '',
       control: switch (type) {
-        'stepped' || 'enum' => PersonalInformationControl.selection,
-        'onto' || 'txt' => PersonalInformationControl.text,
-        'stage' => PersonalInformationControl.address,
+        'stepped' || 'enum' || 'superorganisms' => PersonalInformationControl.selection,
+        'onto' ||
+        'txt' ||
+        'empathisedwombiest' => PersonalInformationControl.text,
+        'stage' || 'cityselect' || 'browbeat' => PersonalInformationControl.address,
         _ => PersonalInformationControl.unsupported,
       },
-      isNumeric: json['forgets'] == 1 || json['forgets'] == '1',
-      isRequired: json['shmaltzy'] == 0 || json['shmaltzy'] == '0',
+      isNumeric:
+          (json['forgets'] ?? json['omegas']) == 1 ||
+          (json['forgets'] ?? json['omegas']) == '1',
+      isRequired:
+          (json['shmaltzy'] ?? json['muscats']) == 0 ||
+          (json['shmaltzy'] ?? json['muscats']) == '0',
       options: options,
       initialDisplayValue: selected.isEmpty
           ? currentValue
@@ -172,6 +196,10 @@ class PersonalInformationField {
   final String title;
   final String placeholder;
   final String key;
+
+  /// Raw API control type. The UI uses this to decide whether the design
+  /// should show the trailing arrow, independently of the mapped behaviour.
+  final String controlType;
   final PersonalInformationControl control;
   final bool isNumeric;
   final bool isRequired;
@@ -291,24 +319,58 @@ class BankAccount {
 }
 
 class AddressData {
-  const AddressData({
-    required this.provinces,
-    required this.cities,
-    required this.barangays,
-  });
+  const AddressData({required this.nodes});
 
   factory AddressData.fromJson(Map<String, dynamic> json) {
-    final mugg = json['mugg'] as Map<String, dynamic>? ?? {};
-    return AddressData(
-      provinces: mugg['countertrend'] as Map<String, dynamic>? ?? {},
-      cities: mugg['hostages'] as Map<String, dynamic>? ?? {},
-      barangays: mugg['traceabilities'] as Map<String, dynamic>? ?? {},
+    final mugg = json['mugg'] as Map<String, dynamic>? ?? json;
+    return AddressData(nodes: PersonalAddressNode.parseList(mugg));
+  }
+
+  final List<PersonalAddressNode> nodes;
+}
+
+class PersonalAddressNode {
+  const PersonalAddressNode({
+    required this.id,
+    required this.label,
+    required this.children,
+  });
+
+  final String id;
+  final String label;
+  final List<PersonalAddressNode> children;
+
+  factory PersonalAddressNode.fromJson(Map<String, dynamic> json) {
+    return PersonalAddressNode(
+      id: json['ventral']?.toString().trim() ?? '',
+      label: json['cymenes']?.toString().trim() ?? '',
+      children: _parseNodeList(json['applicants']),
     );
   }
 
-  final Map<String, dynamic> provinces;
-  final Map<String, dynamic> cities;
-  final Map<String, dynamic> barangays;
+  static List<PersonalAddressNode> parseList(Map<String, dynamic> json) {
+    return _parseNodeList(json['applicants']);
+  }
+
+  static List<PersonalAddressNode> _parseNodeList(Object? raw) {
+    if (raw is! List) return const [];
+    return raw
+        .whereType<Map>()
+        .map(
+          (entry) =>
+              PersonalAddressNode.fromJson(entry.cast<String, dynamic>()),
+        )
+        .where((node) => node.id.isNotEmpty && node.label.isNotEmpty)
+        .toList(growable: false);
+  }
+
+  PersonalAddressNode copyWith({List<PersonalAddressNode>? children}) {
+    return PersonalAddressNode(
+      id: id,
+      label: label,
+      children: children ?? this.children,
+    );
+  }
 }
 
 class FormField {

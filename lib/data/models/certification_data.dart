@@ -114,8 +114,8 @@ class PersonalInformationOption {
 
   factory PersonalInformationOption.fromJson(Map<String, dynamic> json) {
     return PersonalInformationOption(
-      label: json['crocidolites']?.toString() ?? '',
-      value: json['sociologeses']?.toString() ?? '',
+      label: json['cymenes']?.toString() ?? '',
+      value: json['bellings']?.toString() ?? '',
     );
   }
 
@@ -137,28 +137,28 @@ class PersonalInformationField {
   });
 
   factory PersonalInformationField.fromJson(Map<String, dynamic> json) {
-    final options = (json['poolsides'] as List<dynamic>? ?? [])
+    final options = (json['deportment'] as List<dynamic>? ?? [])
         .whereType<Map<String, dynamic>>()
         .map(PersonalInformationOption.fromJson)
         .where((option) => option.label.isNotEmpty && option.value.isNotEmpty)
         .toList(growable: false);
-    final currentValue = json['fyke']?.toString() ?? '';
+    final currentValue = json['biolysis']?.toString() ?? '';
     final selected = options.where(
       (option) => option.label == currentValue || option.value == currentValue,
     );
-    final type = json['solferino']?.toString().toLowerCase() ?? '';
+    final type = json['torsos']?.toString().toLowerCase() ?? '';
     return PersonalInformationField(
-      title: json['enterostomy']?.toString() ?? '',
-      placeholder: json['laggings']?.toString() ?? '',
-      key: json['felicitous']?.toString() ?? '',
+      title: json['stalagmitic']?.toString() ?? '',
+      placeholder: json['vacantness']?.toString() ?? '',
+      key: json['coffees']?.toString() ?? '',
       control: switch (type) {
-        'krimmersopinioned' => PersonalInformationControl.selection,
-        'haphtaras' => PersonalInformationControl.text,
-        'superpower' => PersonalInformationControl.address,
+        'stepped' || 'enum' => PersonalInformationControl.selection,
+        'onto' || 'txt' => PersonalInformationControl.text,
+        'stage' => PersonalInformationControl.address,
         _ => PersonalInformationControl.unsupported,
       },
-      isNumeric: json['omegas'] == 1 || json['omegas'] == '1',
-      isRequired: json['muscats'] == 0 || json['muscats'] == '0',
+      isNumeric: json['forgets'] == 1 || json['forgets'] == '1',
+      isRequired: json['shmaltzy'] == 0 || json['shmaltzy'] == '0',
       options: options,
       initialDisplayValue: selected.isEmpty
           ? currentValue

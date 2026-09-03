@@ -18,10 +18,13 @@ final class ClientBridgeRegistrar: NSObject {
 
   func register(with controller: FlutterViewController?) {
     guard let controller else { return }
+    register(with: controller.binaryMessenger)
+  }
 
+  func register(with binaryMessenger: FlutterBinaryMessenger) {
     let channel = FlutterMethodChannel(
       name: Self.channelName,
-      binaryMessenger: controller.binaryMessenger
+      binaryMessenger: binaryMessenger
     )
     channel.setMethodCallHandler { [weak self] call, result in
       switch call.method {

@@ -1,4 +1,3 @@
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'user_session.dart';
@@ -37,15 +36,7 @@ abstract interface class SessionPersistence {
 class PersistentSessionPersistence implements SessionPersistence {
   PersistentSessionPersistence({
     SharedPreferencesAsync? preferences,
-    FlutterSecureStorage? secureStorage,
-  }) : _preferences = preferences ?? SharedPreferencesAsync(),
-       _secureStorage =
-           secureStorage ??
-           const FlutterSecureStorage(
-             iOptions: IOSOptions(
-               accessibility: KeychainAccessibility.first_unlock_this_device,
-             ),
-           );
+  }) : _preferences = preferences ?? SharedPreferencesAsync();
 
   static const tokenKey = 'peso_shield.session.access_token';
   static const userIdKey = 'peso_shield.session.user_id';
@@ -58,10 +49,9 @@ class PersistentSessionPersistence implements SessionPersistence {
   static const productDetailOrderNoKey = 'peso_shield.product_detail.order_no';
 
   final SharedPreferencesAsync _preferences;
-  final FlutterSecureStorage _secureStorage;
 
   @override
-  Future<String?> readToken() => _secureStorage.read(key: tokenKey);
+  Future<String?> readToken() => _preferences.getString(tokenKey);
 
   @override
   Future<String?> readUserId() => _preferences.getString(userIdKey);
@@ -72,9 +62,9 @@ class PersistentSessionPersistence implements SessionPersistence {
   @override
   Future<void> writeToken(String? value) {
     if (value == null) {
-      return _secureStorage.delete(key: tokenKey);
+      return _preferences.remove(tokenKey);
     }
-    return _secureStorage.write(key: tokenKey, value: value);
+    return _preferences.setString(tokenKey, value);
   }
 
   @override
@@ -144,7 +134,7 @@ class PersistentSessionPersistence implements SessionPersistence {
 
 /// 会话持久化存储
 ///
-/// access token 存 Keychain，其余非敏感字段存 SharedPreferences。
+/// 所有字段统一存 SharedPreferences，确保卸载后数据被清除。
 /// 读写失败不抛给调用方：登录态丢失只影响体验，不应让 App 启动失败。
 class SessionStore {
   SessionStore(this._persistence);

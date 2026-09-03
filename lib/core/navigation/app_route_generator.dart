@@ -7,14 +7,12 @@ import '../../pages/settings_page.dart';
 import '../../pages/identity_type_page.dart';
 import '../../pages/identity_upload_page.dart';
 import '../../pages/identity_confirmation_page.dart';
+import '../../pages/face_recognition_page.dart';
 import 'app_routes.dart';
 
 /// 禁用侧滑返回的自定义路由
 class NoSwipePageRoute<T> extends MaterialPageRoute<T> {
-  NoSwipePageRoute({
-    required super.builder,
-    super.settings,
-  });
+  NoSwipePageRoute({required super.builder, super.settings});
 
   @override
   bool get popGestureEnabled => false;
@@ -52,6 +50,11 @@ class IdentityConfirmationPageArguments {
   final String productId;
   final String cardType;
   final Map<String, dynamic>? recognizedInfo;
+}
+
+class FaceRecognitionPageArguments {
+  const FaceRecognitionPageArguments({required this.productId});
+  final String productId;
 }
 
 /// 应用路由生成器
@@ -119,6 +122,14 @@ class AppRouteGenerator {
             cardType: args.cardType,
             recognizedInfo: args.recognizedInfo,
           ),
+          settings: settings,
+        );
+
+      case AppRoutes.faceRecognition:
+        final args = settings.arguments as FaceRecognitionPageArguments?;
+        if (args == null) return _errorRoute(settings.name);
+        return NoSwipePageRoute<void>(
+          builder: (_) => FaceRecognitionPage(productId: args.productId),
           settings: settings,
         );
 

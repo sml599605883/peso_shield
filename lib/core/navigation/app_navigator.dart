@@ -195,6 +195,16 @@ class AppNavigator {
     );
   }
 
+  /// 跳转到人脸识别页
+  static Future<void> toFaceRecognition({
+    required String productId,
+  }) async {
+    await toNamed<void>(
+      AppRoutes.faceRecognition,
+      arguments: FaceRecognitionPageArguments(productId: productId),
+    );
+  }
+
   // ==================== 产品申请相关 ====================
 
   /// 执行产品申请流程（统一入口）

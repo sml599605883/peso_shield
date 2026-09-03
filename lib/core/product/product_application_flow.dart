@@ -40,10 +40,8 @@ class ProductApplicationFlow {
     try {
       // 1. 检查登录状态
       if (!userSession.isLoggedIn) {
-        final loginSuccess = await AppNavigator.toLogin();
-        if (loginSuccess != true) {
-          return;
-        }
+        await AppNavigator.toLogin();
+        return;  // 跳转登录后直接返回，不继续准入流程（参考 dali_cash）
       }
 
       if (!context.mounted) return;
@@ -274,8 +272,8 @@ class ProductApplicationFlow {
           break;
 
         case 'ViscosimeterDollop':
-          // TODO: 活体认证页
-          ToastHelper.showMessage('Please complete ${detail.nextStep.title}');
+          // 人脸识别/活体认证
+          await AppNavigator.toFaceRecognition(productId: productId);
           break;
 
         case 'Unconcernedness':

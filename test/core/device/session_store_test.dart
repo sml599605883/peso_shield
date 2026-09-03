@@ -5,6 +5,10 @@ class _FakeSessionPersistence implements SessionPersistence {
   String? token;
   String? userId;
   String? phone;
+  String? productDetailPrompt;
+  String? productDetailIdentitySuccessPrompt;
+  String? productDetailFacePrompt;
+  String? productDetailOrderNo;
   bool throwOnRead = false;
 
   @override
@@ -27,6 +31,36 @@ class _FakeSessionPersistence implements SessionPersistence {
 
   @override
   Future<void> writePhone(String? value) async => phone = value;
+
+  @override
+  Future<String?> readProductDetailPrompt() async => productDetailPrompt;
+
+  @override
+  Future<String?> readProductDetailIdentitySuccessPrompt() async =>
+      productDetailIdentitySuccessPrompt;
+
+  @override
+  Future<String?> readProductDetailFacePrompt() async =>
+      productDetailFacePrompt;
+
+  @override
+  Future<String?> readProductDetailOrderNo() async => productDetailOrderNo;
+
+  @override
+  Future<void> writeProductDetailPrompt(String? value) async =>
+      productDetailPrompt = value;
+
+  @override
+  Future<void> writeProductDetailIdentitySuccessPrompt(String? value) async =>
+      productDetailIdentitySuccessPrompt = value;
+
+  @override
+  Future<void> writeProductDetailFacePrompt(String? value) async =>
+      productDetailFacePrompt = value;
+
+  @override
+  Future<void> writeProductDetailOrderNo(String? value) async =>
+      productDetailOrderNo = value;
 }
 
 void main() {

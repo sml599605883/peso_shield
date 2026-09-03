@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +7,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../core/device/user_session.dart';
 import '../core/navigation/app_navigator.dart';
+import '../core/ui/toast_helper.dart';
 import '../providers/repository_provider.dart';
 import '../theme/app_assets.dart';
 import '../theme/app_colors.dart';
@@ -97,7 +97,7 @@ class _IdentityUploadPageState extends ConsumerState<IdentityUploadPage> {
                       ],
                     ),
                   ),
-                  SizedBox(height: layout.px(33)),
+                  SizedBox(height: layout.px(16)),
                   IdentityUploadPrompt(message: prompt),
                   Image.asset(
                     AppAssets.identityUploadDemo,
@@ -181,9 +181,7 @@ class _IdentityUploadPageState extends ConsumerState<IdentityUploadPage> {
       if (permissionResult == CameraPermissionStatus.denied) {
         // 临时拒绝，用户下次还能看到权限弹窗，只显示轻提示
         if (mounted) {
-          BotToast.showText(
-            text: 'Camera permission is required to take photos',
-          );
+          ToastHelper.showError('Camera permission is required to take photos');
         }
         return;
       }
@@ -254,7 +252,7 @@ class _IdentityUploadPageState extends ConsumerState<IdentityUploadPage> {
   }
 
   Future<void> _pickCompressAndUpload(IdentityUploadMethod method) async {
-    final loading = BotToast.showLoading();
+    final loading = ToastHelper.showLoading();
     try {
       // Step 1: Pick image from camera or album
       final String? filePath;
@@ -273,7 +271,7 @@ class _IdentityUploadPageState extends ConsumerState<IdentityUploadPage> {
       final compressedPath = await _imageCompressor.compressToLimit(filePath);
       if (compressedPath == null || compressedPath.isEmpty) {
         loading();
-        BotToast.showText(text: 'Image compression failed');
+        ToastHelper.showError('Image compression failed');
         return;
       }
 
@@ -282,7 +280,7 @@ class _IdentityUploadPageState extends ConsumerState<IdentityUploadPage> {
       loading();
     } catch (error) {
       loading();
-      BotToast.showText(text: 'Upload failed: ${error.toString()}');
+      ToastHelper.showError('Upload failed: ${error.toString()}');
     }
   }
 
@@ -315,15 +313,13 @@ class _IdentityUploadPageState extends ConsumerState<IdentityUploadPage> {
           ),
         );
       } else {
-        BotToast.showText(
-          text: response.message.isNotEmpty
-              ? response.message
-              : 'Upload failed',
+        ToastHelper.showError(
+          response.message.isNotEmpty ? response.message : 'Upload failed',
         );
       }
     } catch (error) {
       if (mounted) {
-        BotToast.showText(text: 'Upload error: $error');
+        ToastHelper.showError('Upload error: $error');
       }
     } finally {
       if (mounted) {

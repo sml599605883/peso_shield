@@ -9,21 +9,21 @@ import CFNetwork
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     ClientBridgeRegistrar.shared.activateTrustDecision()
-    ClientBridgeRegistrar.shared.register(
-      with: window?.rootViewController as? FlutterViewController
-    )
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
 
-    // Register capture proxy channel
+    // Register ClientBridgeRegistrar for native interactions
     guard let registrar = engineBridge.pluginRegistry.registrar(
-      forPlugin: "PesoShieldCaptureProxy"
+      forPlugin: "PesoShieldClientBridge"
     ) else {
       return
     }
+    ClientBridgeRegistrar.shared.register(with: registrar.messenger())
+
+    // Register capture proxy channel
     let channel = FlutterMethodChannel(
       name: "peso_shield/capture_proxy",
       binaryMessenger: registrar.messenger()

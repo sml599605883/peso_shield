@@ -42,8 +42,9 @@ class _IdentityConfirmationPageState
     };
     for (final k in aliases[key] ?? [key]) {
       final value = source[k];
-      if (value != null && value.toString().trim().isNotEmpty)
+      if (value != null && value.toString().trim().isNotEmpty) {
         return value.toString();
+      }
     }
     return fallback;
   }
@@ -118,7 +119,7 @@ class _IdentityConfirmationPageState
                     padding: l.edgeInsets(bottom: 20),
                     child: Column(
                       children: [
-                        SizedBox(height: l.px(33)),
+                        SizedBox(height: l.px(16)),
                         IdentityUploadPrompt(message: _prompt()),
                         Container(
                           width: double.infinity,
@@ -371,11 +372,12 @@ class _IdentityConfirmationPageState
         return;
       }
       final flow = await ref.read(productApplicationFlowProvider.future);
-      if (mounted)
+      if (mounted) {
         await flow.continueProductDetailFlow(
           context: context,
           productId: widget.productId,
         );
+      }
     } finally {
       if (mounted) setState(() => _submitting = false);
     }

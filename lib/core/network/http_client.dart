@@ -106,11 +106,6 @@ class HttpClient {
       token: _getUserToken(),
     );
 
-    print('[HttpClient] 公共参数:');
-    commonParams.forEach((key, value) {
-      print('  $key: $value');
-    });
-
     // 提取业务参数
     final businessParams = <String, Object?>{
       if (options.method == 'GET' && options.queryParameters.isNotEmpty)
@@ -118,22 +113,13 @@ class HttpClient {
       if (options.method == 'POST' && options.data is Map)
         ...options.data as Map<String, Object?>,
     };
-
-    print('[HttpClient] 业务参数: $businessParams');
-
     // 签名计算：仅公共参数 + path（不含业务参数）
     final signInput = <String, Object?>{
       ...commonParams,
       'mitogenic': _clearPath(options.path),
     };
 
-    print('[HttpClient] 签名输入:');
-    signInput.forEach((key, value) {
-      print('  $key: $value');
-    });
-
     final signature = _signer.sign(signInput);
-    print('[HttpClient] 生成签名: $signature');
 
     // 区分 GET 和 POST 的参数处理
     if (options.method == 'GET') {
@@ -144,7 +130,6 @@ class HttpClient {
         'arboured': signature,
       };
       options.data = null;
-      print('[HttpClient] GET 请求最终 URL: ${options.uri}');
     } else if (options.method == 'POST') {
       // POST 请求：公共参数 + 签名 → queryParameters，业务参数 → form body。
       // AES is reserved for repository methods whose endpoint documents an
@@ -157,14 +142,11 @@ class HttpClient {
       if (options.data is FormData) {
         // Multipart requests already contain their business fields and file.
         // Keep the FormData intact while adding common params/signature above.
-        print('[HttpClient] POST body (multipart): FormData');
       } else if (businessParams.isNotEmpty) {
         options.data = businessParams;
-        print('[HttpClient] POST body (form): ${options.data}');
       } else {
         options.data = null;
       }
-      print('[HttpClient] POST 请求 URL: ${options.uri}');
     }
 
     handler.next(options);

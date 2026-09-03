@@ -233,4 +233,27 @@ class CertificationRepository {
       },
     );
   }
+
+  /// 上传人脸识别结果
+  Future<ApiResponse<void>> uploadFaceLiveness({
+    required String filePath,
+    required String license,
+    required String livenessId,
+    required int livenessType,
+  }) async {
+    return _client.upload(
+      '/viler/argots',
+      filePath: filePath,
+      fileField: 'attach',
+      params: {
+        'etherifying': '10',
+        'tanners': '1',
+        'symptoms': '',
+        'gibbon': livenessId,
+        'mosque': license,
+        'wealthily': livenessType.toString(),
+      },
+      parse: (_) => null,
+    );
+  }
 }

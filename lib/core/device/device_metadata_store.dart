@@ -1,4 +1,3 @@
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 abstract interface class DeviceMetadataPersistence {
@@ -18,24 +17,16 @@ abstract interface class DeviceMetadataPersistence {
 class PersistentDeviceMetadata implements DeviceMetadataPersistence {
   PersistentDeviceMetadata({
     SharedPreferencesAsync? preferences,
-    FlutterSecureStorage? secureStorage,
-  })  : _preferences = preferences ?? SharedPreferencesAsync(),
-        _secureStorage = secureStorage ??
-            const FlutterSecureStorage(
-              iOptions: IOSOptions(
-                accessibility: KeychainAccessibility.first_unlock_this_device,
-              ),
-            );
+  }) : _preferences = preferences ?? SharedPreferencesAsync();
 
   static const deviceIdKey = 'peso_shield.device.stable_idfv';
   static const deviceNameKey = 'peso_shield.device.server_name';
   static const physicalSizeKey = 'peso_shield.device.physical_size';
 
   final SharedPreferencesAsync _preferences;
-  final FlutterSecureStorage _secureStorage;
 
   @override
-  Future<String?> readDeviceId() => _secureStorage.read(key: deviceIdKey);
+  Future<String?> readDeviceId() => _preferences.getString(deviceIdKey);
 
   @override
   Future<String?> readDeviceName() => _preferences.getString(deviceNameKey);
@@ -45,7 +36,7 @@ class PersistentDeviceMetadata implements DeviceMetadataPersistence {
 
   @override
   Future<void> writeDeviceId(String value) {
-    return _secureStorage.write(key: deviceIdKey, value: value);
+    return _preferences.setString(deviceIdKey, value);
   }
 
   @override

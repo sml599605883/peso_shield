@@ -3,6 +3,8 @@ import 'package:peso_shield/core/device/session_store.dart';
 import 'package:peso_shield/core/device/user_session.dart';
 import 'package:peso_shield/core/navigation/app_deep_link.dart';
 import 'package:peso_shield/core/navigation/app_navigator.dart';
+import 'package:peso_shield/core/navigation/app_routes.dart';
+import 'package:peso_shield/core/navigation/app_route_generator.dart';
 import 'package:peso_shield/core/ui/toast_helper.dart';
 import 'package:peso_shield/data/models/product_apply_result.dart';
 import 'package:peso_shield/data/models/product_detail.dart';
@@ -41,7 +43,7 @@ class ProductApplicationFlow {
       // 1. 检查登录状态
       if (!userSession.isLoggedIn) {
         await AppNavigator.toLogin();
-        return;  // 跳转登录后直接返回，不继续准入流程（参考 dali_cash）
+        return; // 跳转登录后直接返回，不继续准入流程（参考 dali_cash）
       }
 
       if (!context.mounted) return;
@@ -277,8 +279,10 @@ class ProductApplicationFlow {
           break;
 
         case 'Unconcernedness':
-          // TODO: 个人信息页
-          ToastHelper.showMessage('Please complete ${detail.nextStep.title}');
+          await AppNavigator.toNamed(
+            AppRoutes.personalInformation,
+            arguments: PersonalInformationPageArguments(productId: productId),
+          );
           break;
 
         case 'Jammable':

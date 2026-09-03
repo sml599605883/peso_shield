@@ -11,7 +11,7 @@ class IdentityTypeList {
     final cerises = json['cerises'] as List<dynamic>? ?? [];
     final List<String> recommendedIds = [];
     final List<String> otherIds = [];
-    
+
     if (cerises.isNotEmpty) {
       recommendedIds.addAll(
         (cerises[0] as List<dynamic>? ?? []).map((e) => e.toString()),
@@ -22,7 +22,7 @@ class IdentityTypeList {
         (cerises[1] as List<dynamic>? ?? []).map((e) => e.toString()),
       );
     }
-    
+
     return IdentityTypeList(
       recommendedIdTypes: recommendedIds,
       otherIdTypes: otherIds,
@@ -78,10 +78,7 @@ class IdType {
 }
 
 class PersonalInfoData {
-  const PersonalInfoData({
-    required this.fields,
-    required this.tips,
-  });
+  const PersonalInfoData({required this.fields, required this.tips});
 
   factory PersonalInfoData.fromJson(Map<String, dynamic> json) {
     final mugg = json['mugg'] as Map<String, dynamic>? ?? {};
@@ -98,10 +95,7 @@ class PersonalInfoData {
 }
 
 class WorkInfoData {
-  const WorkInfoData({
-    required this.fields,
-    required this.tips,
-  });
+  const WorkInfoData({required this.fields, required this.tips});
 
   factory WorkInfoData.fromJson(Map<String, dynamic> json) {
     final mugg = json['mugg'] as Map<String, dynamic>? ?? {};
@@ -118,10 +112,7 @@ class WorkInfoData {
 }
 
 class ContactInfoData {
-  const ContactInfoData({
-    required this.contacts,
-    required this.tips,
-  });
+  const ContactInfoData({required this.contacts, required this.tips});
 
   factory ContactInfoData.fromJson(Map<String, dynamic> json) {
     final mugg = json['mugg'] as Map<String, dynamic>? ?? {};
@@ -138,10 +129,7 @@ class ContactInfoData {
 }
 
 class ContactField {
-  const ContactField({
-    required this.title,
-    required this.fields,
-  });
+  const ContactField({required this.title, required this.fields});
 
   factory ContactField.fromJson(Map<String, dynamic> json) {
     return ContactField(
@@ -180,10 +168,7 @@ class BankInfoData {
 }
 
 class BankOption {
-  const BankOption({
-    required this.name,
-    required this.code,
-  });
+  const BankOption({required this.name, required this.code});
 
   factory BankOption.fromJson(Map<String, dynamic> json) {
     return BankOption(
@@ -293,10 +278,7 @@ class FormField {
 }
 
 class FieldOption {
-  const FieldOption({
-    required this.name,
-    required this.value,
-  });
+  const FieldOption({required this.name, required this.value});
 
   factory FieldOption.fromJson(Map<String, dynamic> json) {
     return FieldOption(

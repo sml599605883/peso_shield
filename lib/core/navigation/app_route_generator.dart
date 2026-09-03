@@ -8,6 +8,7 @@ import '../../pages/identity_type_page.dart';
 import '../../pages/identity_upload_page.dart';
 import '../../pages/identity_confirmation_page.dart';
 import '../../pages/face_recognition_page.dart';
+import '../../pages/personal_information_page.dart';
 import 'app_routes.dart';
 
 /// 禁用侧滑返回的自定义路由
@@ -54,6 +55,11 @@ class IdentityConfirmationPageArguments {
 
 class FaceRecognitionPageArguments {
   const FaceRecognitionPageArguments({required this.productId});
+  final String productId;
+}
+
+class PersonalInformationPageArguments {
+  const PersonalInformationPageArguments({required this.productId});
   final String productId;
 }
 
@@ -130,6 +136,13 @@ class AppRouteGenerator {
         if (args == null) return _errorRoute(settings.name);
         return NoSwipePageRoute<void>(
           builder: (_) => FaceRecognitionPage(productId: args.productId),
+          settings: settings,
+        );
+      case AppRoutes.personalInformation:
+        final args = settings.arguments as PersonalInformationPageArguments?;
+        if (args == null) return _errorRoute(settings.name);
+        return NoSwipePageRoute<bool>(
+          builder: (_) => PersonalInformationPage(productId: args.productId),
           settings: settings,
         );
 

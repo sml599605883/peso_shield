@@ -39,6 +39,9 @@ abstract final class AppAssets {
   static const identityUploadCamera = 'assets/identity_upload_camera.png';
   static const faceRecognitionIllustration =
       'assets/face_recognition_illustration.png';
+  static const personalInformationProgress =
+      'assets/personal_information_progress.png';
+  static const personalInformationBack = 'assets/personal_information_back.png';
 
   static const tabBarBackground = 'assets/navigation/tab_bar_background.png';
   static const homeActive = 'assets/navigation/home_active.png';

@@ -13,11 +13,21 @@ import 'widgets/identity_upload_prompt.dart';
 import 'widgets/personal_information_address_sheet.dart';
 import 'widgets/personal_information_input_field.dart';
 import 'widgets/personal_information_option_sheet.dart';
+import 'widgets/personal_information_payday_sheet.dart';
+
+enum InformationPageKind { personal, work }
 
 class PersonalInformationPage extends ConsumerStatefulWidget {
-  const PersonalInformationPage({super.key, required this.productId});
+  const PersonalInformationPage({super.key, required this.productId})
+    : kind = InformationPageKind.personal;
+
+  const PersonalInformationPage.work({super.key, required this.productId})
+    : kind = InformationPageKind.work;
 
   final String productId;
+  final InformationPageKind kind;
+
+  bool get isWork => kind == InformationPageKind.work;
 
   @override
   ConsumerState<PersonalInformationPage> createState() =>
@@ -33,8 +43,10 @@ class _PersonalInformationPageState
   bool _loading = true;
   String? _error;
 
-  static const _defaultPrompt =
+  static const _defaultPersonalPrompt =
       'Step 1 to fast cash! Upload ID for the express approval channel.';
+  static const _defaultWorkPrompt =
+      'Complete your work information for the express approval channel.';
 
   @override
   void initState() {
@@ -48,21 +60,17 @@ class _PersonalInformationPageState
       _error = null;
     });
     try {
-      final repository = await ref.read(certificationRepositoryProvider.future);
-      final response = await repository.getPersonalInfo(
-        productId: widget.productId,
-      );
-      if (!response.isSuccess) throw Exception(response.message);
+      final data = await _loadInformation();
       if (!mounted) return;
       _disposeControllers();
-      for (final field in response.data.fields) {
+      for (final field in data.fields) {
         _values[field.key] = field.initialSubmitValue;
         _controllers[field.key] = TextEditingController(
           text: field.initialDisplayValue,
         );
       }
       setState(() {
-        _data = response.data;
+        _data = data;
         _loading = false;
       });
     } catch (_) {
@@ -72,6 +80,26 @@ class _PersonalInformationPageState
         _error = 'Unable to load information';
       });
     }
+  }
+
+  Future<model.PersonalInfoData> _loadInformation() async {
+    final repository = await ref.read(certificationRepositoryProvider.future);
+    if (widget.isWork) {
+      final response = await repository.getWorkInfo(
+        productId: widget.productId,
+      );
+      if (!response.isSuccess) throw Exception(response.message);
+      return model.PersonalInfoData(
+        fields: response.data.fields,
+        tips: response.data.tips,
+      );
+    }
+
+    final response = await repository.getPersonalInfo(
+      productId: widget.productId,
+    );
+    if (!response.isSuccess) throw Exception(response.message);
+    return response.data;
   }
 
   @override
@@ -91,10 +119,15 @@ class _PersonalInformationPageState
     ToastHelper.showLoading();
     try {
       final repository = await ref.read(certificationRepositoryProvider.future);
-      final response = await repository.savePersonalInfo(
-        productId: widget.productId,
-        formData: _values,
-      );
+      final response = widget.isWork
+          ? await repository.saveWorkInfo(
+              productId: widget.productId,
+              formData: _values,
+            )
+          : await repository.savePersonalInfo(
+              productId: widget.productId,
+              formData: _values,
+            );
       ToastHelper.hideLoading();
       if (!mounted) return;
 
@@ -145,7 +178,9 @@ class _PersonalInformationPageState
                         ),
                         Center(
                           child: Text(
-                            'Personal information',
+                            widget.isWork
+                                ? 'Work Information'
+                                : 'Personal information',
                             style: TextStyle(
                               color: AppColors.black,
                               fontFamily: 'Helvetica',
@@ -161,7 +196,9 @@ class _PersonalInformationPageState
                   SizedBox(height: layout.px(16)),
                   IdentityUploadPrompt(
                     message: prompt == null || prompt.isEmpty
-                        ? _defaultPrompt
+                        ? widget.isWork
+                              ? _defaultWorkPrompt
+                              : _defaultPersonalPrompt
                         : prompt,
                   ),
                   SizedBox(height: layout.px(12)),
@@ -183,7 +220,11 @@ class _PersonalInformationPageState
             child: SizedBox(
               height: layout.px(50),
               child: ElevatedButton(
-                key: const Key('personalInformationSubmit'),
+                key: Key(
+                  widget.isWork
+                      ? 'workInformationSubmit'
+                      : 'personalInformationSubmit',
+                ),
                 onPressed: _loading ? null : _submit,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.coral,
@@ -224,8 +265,14 @@ class _PersonalInformationPageState
           Padding(
             padding: layout.edgeInsets(left: 15, top: 20, right: 15),
             child: Image.asset(
-              AppAssets.personalInformationProgress,
-              key: const Key('personalInformationProgress'),
+              widget.isWork
+                  ? AppAssets.workInformationProgress
+                  : AppAssets.personalInformationProgress,
+              key: Key(
+                widget.isWork
+                    ? 'workInformationProgress'
+                    : 'personalInformationProgress',
+              ),
               width: double.infinity,
               height: layout.px(18),
               fit: BoxFit.fill,
@@ -256,9 +303,10 @@ class _PersonalInformationPageState
 
   Widget _buildField(model.PersonalInformationField field) {
     final controller = _controllers[field.key]!;
-    final hasTrailingArrow =
-        field.controlType.toLowerCase() != 'empathisedwombiest';
-    final canEdit = !hasTrailingArrow;
+    final canEdit = field.control == model.PersonalInformationControl.text;
+    final canSelect =
+        field.control == model.PersonalInformationControl.selection ||
+        field.control == model.PersonalInformationControl.address;
     return PersonalInformationInputField(
       controller: controller,
       label: field.title,
@@ -268,19 +316,40 @@ class _PersonalInformationPageState
       inputFormatters: field.isNumeric
           ? [FilteringTextInputFormatter.digitsOnly]
           : null,
-      onTap: !canEdit ? () => _selectField(field) : null,
+      onTap: canSelect ? () => _selectField(field) : null,
       onChanged: (value) => _values[field.key] = value,
-      showTrailingArrow: hasTrailingArrow,
+      showTrailingArrow: canSelect,
     );
   }
 
   Future<void> _selectField(model.PersonalInformationField field) async {
-    if (field.controlType.toLowerCase() == 'empathisedwombiest') return;
     if (field.control == model.PersonalInformationControl.address) {
       await _pickAddress(field);
       return;
     }
+    if (field.control != model.PersonalInformationControl.selection) return;
+    if (widget.isWork && field.key.trim().toLowerCase() == 'overcrowds') {
+      await _pickPayday(field);
+      return;
+    }
+    if (field.options.any((option) => option.children.isNotEmpty)) {
+      await _pickNestedOption(field);
+      return;
+    }
     await _pickOption(field);
+  }
+
+  Future<void> _pickPayday(model.PersonalInformationField field) async {
+    final selection = await showPersonalInformationPaydaySheet(
+      context: context,
+      options: field.options,
+      initialValue: _values[field.key],
+    );
+    if (selection == null || !mounted) return;
+    setState(() {
+      _values[field.key] = selection.submitValue;
+      _controllers[field.key]!.text = selection.displayValue;
+    });
   }
 
   Future<void> _pickOption(model.PersonalInformationField field) async {
@@ -293,6 +362,31 @@ class _PersonalInformationPageState
     setState(() {
       _values[field.key] = option.value;
       _controllers[field.key]!.text = option.label;
+    });
+  }
+
+  Future<void> _pickNestedOption(model.PersonalInformationField field) async {
+    final parent = await showPersonalInformationOptionSheet(
+      context: context,
+      options: field.options,
+    );
+    if (parent == null || !mounted) return;
+    if (parent.children.isEmpty) {
+      setState(() {
+        _values[field.key] = parent.value;
+        _controllers[field.key]!.text = parent.label;
+      });
+      return;
+    }
+
+    final child = await showPersonalInformationOptionSheet(
+      context: context,
+      options: parent.children,
+    );
+    if (child == null || !mounted) return;
+    setState(() {
+      _values[field.key] = child.value;
+      _controllers[field.key]!.text = '${parent.label}|${child.label}';
     });
   }
 

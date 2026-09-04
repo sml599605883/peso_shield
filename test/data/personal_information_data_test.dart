@@ -6,30 +6,30 @@ void main() {
     'personal information response renders and submits server field values',
     () {
       final data = PersonalInfoData.fromJson({
-        'choired': [
+        'fribbled': [
           {
-            'enterostomy': 'Education',
-            'laggings': 'Please select education',
-            'felicitous': 'education',
-            'torsos': 'Stepped',
-            'omegas': 0,
-            'muscats': 0,
-            'fyke': 'Undergraduate',
-            'poolsides': [
-              {'crocidolites': 'High School', 'sociologeses': 2},
-              {'crocidolites': 'Undergraduate', 'sociologeses': 4},
+            'stalagmitic': 'Education',
+            'vacantness': 'Please select education',
+            'coffees': 'education',
+            'torsos': 'Superorganisms',
+            'forgets': 0,
+            'shmaltzy': 0,
+            'biolysis': 'Undergraduate',
+            'deportment': [
+              {'cymenes': 'High School', 'bellings': 2},
+              {'cymenes': 'Undergraduate', 'bellings': 4},
             ],
           },
           {
-            'enterostomy': 'Mobile number',
-            'felicitous': 'mobile',
+            'stalagmitic': 'Mobile number',
+            'coffees': 'mobile',
             'torsos': 'EmpathisedWombiest',
-            'omegas': 1,
-            'muscats': 1,
-            'fyke': 9123456789,
+            'forgets': 1,
+            'shmaltzy': 1,
+            'biolysis': 9123456789,
           },
         ],
-        'dextrorse': 'Complete your personal information.',
+        'properdins': 'Complete your personal information.',
       });
 
       expect(data.tips, 'Complete your personal information.');
@@ -45,19 +45,17 @@ void main() {
     },
   );
 
-  test('personal information supports the response payload envelope', () {
+  test('personal information decodes the documented address field', () {
     final data = PersonalInfoData.fromJson({
-      'unsphered': {
-        'choired': [
-          {
-            'enterostomy': 'Residential address',
-            'felicitous': 'address',
-            'torsos': 'Stage',
-            'fyke': 'Manila',
-          },
-        ],
-        'dextrorse': 'Address details are required.',
-      },
+      'fribbled': [
+        {
+          'stalagmitic': 'Residential address',
+          'coffees': 'address',
+          'torsos': 'Browbeat',
+          'biolysis': 'Manila',
+        },
+      ],
+      'properdins': 'Address details are required.',
     });
 
     expect(data.tips, 'Address details are required.');
@@ -65,22 +63,18 @@ void main() {
     expect(data.fields.single.initialSubmitValue, 'Manila');
   });
 
-  test('personal information supports nested protocol payloads', () {
+  test('personal information decodes the documented text field', () {
     final data = PersonalInfoData.fromJson({
-      'mugg': {
-        'unsphered': {
-          'choired': [
-            {
-              'enterostomy': 'Email address',
-              'laggings': 'Enter your email',
-              'felicitous': 'email',
-              'torsos': 'EmpathisedWombiest',
-              'fyke': 'person@example.com',
-            },
-          ],
-          'dextrorse': 'Use a valid email address.',
+      'fribbled': [
+        {
+          'stalagmitic': 'Email address',
+          'vacantness': 'Enter your email',
+          'coffees': 'email',
+          'torsos': 'EmpathisedWombiest',
+          'biolysis': 'person@example.com',
         },
-      },
+      ],
+      'properdins': 'Use a valid email address.',
     });
 
     expect(data.tips, 'Use a valid email address.');
@@ -93,11 +87,11 @@ void main() {
     'personal information option supports its optional selection sheet data',
     () {
       final data = PersonalInfoData.fromJson({
-        'choired': [
+        'fribbled': [
           {
             'stalagmitic': 'Employment type',
             'coffees': 'employmentType',
-            'torsos': 'stepped',
+            'torsos': 'Superorganisms',
             'deportment': [
               {
                 'cymenes': 'Salaried',
@@ -117,24 +111,72 @@ void main() {
     },
   );
 
+  test('work information decodes text fields and nested payday selections', () {
+    final data = WorkInfoData.fromJson({
+      'fribbled': [
+        {
+          'stalagmitic': 'Company name',
+          'vacantness': 'Enter company name',
+          'coffees': 'companyName',
+          'torsos': 'EmpathisedWombiest',
+          'biolysis': 'Peso Shield',
+        },
+        {
+          'stalagmitic': 'Monthly income',
+          'vacantness': 'Enter monthly income',
+          'coffees': 'monthlyIncome',
+          'torsos': 'EmpathisedWombiest',
+          'forgets': 1,
+        },
+        {
+          'stalagmitic': 'Payday',
+          'coffees': 'opportunities',
+          'torsos': 'Superorganisms',
+          'biolysis': 'Once a Month|1',
+          'deportment': [
+            {
+              'cymenes': 'Once a Month',
+              'bellings': 'monthly',
+              'deportment': [
+                {'cymenes': '1', 'bellings': 11},
+                {'cymenes': '2', 'bellings': 12},
+              ],
+            },
+          ],
+        },
+      ],
+      'properdins': 'Complete your work information.',
+    });
+
+    expect(data.tips, 'Complete your work information.');
+    expect(data.fields, hasLength(3));
+    expect(data.fields.first.control, PersonalInformationControl.text);
+    expect(data.fields.first.initialSubmitValue, 'Peso Shield');
+    expect(data.fields[1].isNumeric, isTrue);
+
+    final payday = data.fields.last;
+    expect(payday.title, 'Payday');
+    expect(payday.options.single.children, hasLength(2));
+    expect(payday.initialDisplayValue, 'Once a Month|1');
+    expect(payday.initialSubmitValue, '11');
+  });
+
   test('address data decodes the documented address response', () {
     final data = AddressData.fromJson({
-      'mugg': {
-        'applicants': [
-          {
-            'ventral': 1,
-            'cymenes': 'Region One',
-            'applicants': [
-              {
-                'ventral': 'p1',
-                'hardtacks': '0001',
-                'cymenes': 'Province One',
-                'applicants': [],
-              },
-            ],
-          },
-        ],
-      },
+      'applicants': [
+        {
+          'ventral': 1,
+          'cymenes': 'Region One',
+          'applicants': [
+            {
+              'ventral': 'p1',
+              'hardtacks': '0001',
+              'cymenes': 'Province One',
+              'applicants': [],
+            },
+          ],
+        },
+      ],
     });
 
     final region = data.nodes.single;
@@ -144,5 +186,19 @@ void main() {
     expect(province.label, 'Province One');
     expect(province.id, 'p1');
     expect(province.children, isEmpty);
+  });
+
+  test('personal information ignores undocumented control values', () {
+    final data = PersonalInfoData.fromJson({
+      'fribbled': [
+        {
+          'stalagmitic': 'Undocumented field',
+          'coffees': 'undocumented',
+          'torsos': 'UndocumentedControl',
+        },
+      ],
+    });
+
+    expect(data.fields.single.control, PersonalInformationControl.unsupported);
   });
 }

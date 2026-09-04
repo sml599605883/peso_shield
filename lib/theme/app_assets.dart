@@ -41,6 +41,7 @@ abstract final class AppAssets {
       'assets/face_recognition_illustration.png';
   static const personalInformationProgress =
       'assets/personal_information_progress.png';
+  static const workInformationProgress = 'assets/work_information_progress.png';
   static const personalInformationBack = 'assets/personal_information_back.png';
 
   static const tabBarBackground = 'assets/navigation/tab_bar_background.png';

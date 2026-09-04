@@ -46,7 +46,7 @@ void main() {
     test('解析授信页响应', () {
       final json = {
         'recklessly': 302,
-        'mycelia': 'gold://pocket/recredit',
+        'mycelia': 'ph://peso-shield/ios/Umbrages?bombarder=123',
         'bellings': 0,
       };
 
@@ -57,11 +57,22 @@ void main() {
       expect(result.needsWebJump, false);
     });
 
+    test('旧 gold scheme 不再识别为授信页', () {
+      final result = ProductApplyResult.fromJson({
+        'recklessly': 302,
+        'mycelia': 'gold://pocket/recredit',
+        'bellings': 0,
+      });
+
+      expect(result.isCreditReview, false);
+    });
+
     test('解析复贷弹窗响应', () {
       final json = {
         'abysmal': {
           'stalagmitic': 'Produk rekomendasi',
-          'closets': 'Tersedia jalur VIP，tingkat acc hingga 99%, klik untuk mengajukan',
+          'closets':
+              'Tersedia jalur VIP，tingkat acc hingga 99%, klik untuk mengajukan',
           'birls': [
             {'lookalike': 'AJUKAN SEKARANG', 'mycelia': 'url1'},
             {'lookalike': 'Mengajukan produk sekarang', 'mycelia': 'url2'},

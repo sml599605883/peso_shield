@@ -37,10 +37,15 @@ class ProductApplyResult {
   /// 是否需要跳转 H5
   bool get needsWebJump => jumpType == 1 && jumpUrl.isNotEmpty;
 
-  /// 是否是授信页（gold://pocket/recredit）
-  bool get isCreditReview => 
-      jumpUrl == 'gold://pocket/recredit' || 
-      (jumpUrl.startsWith('gold://') && jumpUrl.contains('recredit'));
+  /// 是否是授信页（ph://peso-shield/ios/Umbrages）
+  bool get isCreditReview {
+    final uri = Uri.tryParse(jumpUrl);
+    return uri?.scheme == 'ph' &&
+        uri?.host == 'peso-shield' &&
+        uri?.pathSegments.length == 2 &&
+        uri?.pathSegments[0] == 'ios' &&
+        uri?.pathSegments[1] == 'Umbrages';
+  }
 }
 
 class ApplyDialog {
@@ -72,10 +77,7 @@ class ApplyDialog {
 }
 
 class DialogButton {
-  const DialogButton({
-    required this.text,
-    required this.url,
-  });
+  const DialogButton({required this.text, required this.url});
 
   factory DialogButton.fromJson(Map<String, dynamic> json) {
     return DialogButton(

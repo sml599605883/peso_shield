@@ -23,6 +23,7 @@ class AppRoutes {
   static const String identityConfirmation = '/identity-confirmation';
   static const String faceRecognition = '/face-recognition';
   static const String personalInformation = '/personal-information';
+  static const String workInformation = '/work-information';
 
   /// 所有路由名称列表（用于调试和验证）
   static const List<String> all = [
@@ -37,6 +38,7 @@ class AppRoutes {
     identityConfirmation,
     faceRecognition,
     personalInformation,
+    workInformation,
   ];
 
   /// 验证路由名称是否有效

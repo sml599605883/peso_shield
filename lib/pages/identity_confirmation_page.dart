@@ -34,22 +34,14 @@ class _IdentityConfirmationPageState
 
   String _value(String key, [String fallback = '']) {
     final source = widget.recognizedInfo ?? const <String, dynamic>{};
-    final aliases = <String, List<String>>{
-      'crocidolites': ['crocidolites', 'cymenes', 'fullName'],
-      'imputes': ['imputes', 'neighborhood', 'idNumber'],
-      'annealers': ['annealers', 'sudaries', 'dateOfBirth'],
-      'mycelia': ['mycelia', 'imageUrl'],
-    };
-    for (final k in aliases[key] ?? [key]) {
-      final value = source[k];
-      if (value != null && value.toString().trim().isNotEmpty) {
-        return value.toString();
-      }
+    final value = source[key];
+    if (value != null && value.toString().trim().isNotEmpty) {
+      return value.toString();
     }
     return fallback;
   }
 
-  String get _imageUrl => _value('mycelia', _value('imageUrl'));
+  String get _imageUrl => _value('mycelia');
 
   String _prompt() {
     final value = ref
@@ -63,9 +55,9 @@ class _IdentityConfirmationPageState
   @override
   void initState() {
     super.initState();
-    _name = TextEditingController(text: _value('crocidolites'));
-    _id = TextEditingController(text: _value('imputes'));
-    _birth = TextEditingController(text: _normalizeBirth(_value('annealers')));
+    _name = TextEditingController(text: _value('cymenes'));
+    _id = TextEditingController(text: _value('neighborhood'));
+    _birth = TextEditingController(text: _normalizeBirth(_value('sudaries')));
   }
 
   @override

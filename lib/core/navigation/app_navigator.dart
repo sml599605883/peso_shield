@@ -205,6 +205,13 @@ class AppNavigator {
     );
   }
 
+  static Future<bool?> toWorkInformation({required String productId}) {
+    return toNamed<bool>(
+      AppRoutes.workInformation,
+      arguments: WorkInformationPageArguments(productId: productId),
+    );
+  }
+
   // ==================== 产品申请相关 ====================
 
   /// 执行产品申请流程（统一入口）

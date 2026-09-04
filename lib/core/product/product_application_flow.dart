@@ -190,7 +190,7 @@ class ProductApplicationFlow {
         break;
 
       case AppDeepLinkKind.creditReview:
-        // ph://peso-shield/ios/Umbrages 或 gold://pocket/recredit → 打开授信审核页
+        // ph://peso-shield/ios/Umbrages?bombarder=123 → 打开授信审核页
         debugPrint('Open credit review: $rawTarget');
         // TODO: await AppNavigator.toCreditReview(productId: productId);
         break;
@@ -286,8 +286,7 @@ class ProductApplicationFlow {
           break;
 
         case 'Jammable':
-          // TODO: 工作信息页
-          ToastHelper.showMessage('Please complete ${detail.nextStep.title}');
+          await AppNavigator.toWorkInformation(productId: productId);
           break;
 
         case 'Pip':

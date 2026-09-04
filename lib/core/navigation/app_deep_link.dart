@@ -2,28 +2,28 @@
 enum AppDeepLinkKind {
   /// 首页
   home,
-  
+
   /// 设置页
   settings,
-  
+
   /// 登录页
   login,
-  
+
   /// 订单列表
   order,
-  
+
   /// 产品详情（认证流程）
   productDetail,
-  
+
   /// 准入流程
   admission,
-  
+
   /// 授信审核页（重新授信 loading 页）
   creditReview,
-  
+
   /// WebView（HTTP/HTTPS）
   webView,
-  
+
   /// 不支持的链接
   unsupported,
 }
@@ -45,10 +45,10 @@ class AppDeepLink {
   /// 获取产品 ID
   String get productId {
     // 从 query 参数获取
-    final fromQuery = uri?.queryParameters['productId']?.trim() ?? '';
+    final fromQuery = uri?.queryParameters['bombarder']?.trim() ?? '';
     if (fromQuery.isNotEmpty) return fromQuery;
-    
-    // 从 arguments 获取
+
+    // 从调用方上下文获取
     if (arguments is Map) {
       final value = (arguments as Map)['productId'];
       return value?.toString().trim() ?? '';
@@ -60,7 +60,7 @@ class AppDeepLink {
   String get orderStatus {
     final fromQuery = uri?.queryParameters['status']?.trim() ?? '';
     if (fromQuery.isNotEmpty) return fromQuery;
-    
+
     if (arguments is Map) {
       final value = (arguments as Map)['status'];
       return value?.toString().trim() ?? '';
@@ -70,7 +70,7 @@ class AppDeepLink {
 }
 
 /// DeepLink 解析器
-/// 
+///
 /// 根据 API 文档 Scheme 定义：
 /// - ph://peso-shield/ios/Refineries → 首页
 /// - ph://peso-shield/ios/Tweet → 设置页
@@ -79,16 +79,11 @@ class AppDeepLink {
 /// - ph://peso-shield/ios/Conscribes → 产品详情
 /// - ph://peso-shield/ios/Umbrages → 重新授信
 /// - ph://peso-shield/ios/Equisetum → 准入
-/// - gold://pocket/recredit → 授信审核（兼容旧版）
 class AppDeepLinkParser {
   const AppDeepLinkParser();
 
   static const _scheme = 'ph';
   static const _host = 'peso-shield';
-  
-  // 旧版 scheme（兼容 gold://pocket）
-  static const _legacyScheme = 'gold';
-  static const _legacyHost = 'pocket';
 
   /// 解析 rawTarget 为 DeepLink
   AppDeepLink parse(String rawTarget, {Object? arguments}) {
@@ -103,10 +98,7 @@ class AppDeepLinkParser {
     // 尝试解析为 URI
     final uri = Uri.tryParse(target);
     if (uri == null) {
-      return AppDeepLink(
-        kind: AppDeepLinkKind.unsupported,
-        rawTarget: target,
-      );
+      return AppDeepLink(kind: AppDeepLinkKind.unsupported, rawTarget: target);
     }
 
     // HTTP/HTTPS → WebView
@@ -122,37 +114,24 @@ class AppDeepLinkParser {
     // ph://peso-shield/ios/xxx → 根据混淆名称判断
     if (uri.scheme == _scheme && uri.host == _host) {
       final segments = uri.pathSegments;
-      if (segments.isEmpty) {
+      if (segments.length < 2 || segments.first != 'ios') {
         return AppDeepLink(
           kind: AppDeepLinkKind.unsupported,
           rawTarget: target,
           uri: uri,
         );
       }
-      
-      // 跳过平台标识 ios
+
+      // The documented path is /ios/<alias>.
       final alias = segments.last;
       final kind = _kindFromAlias(alias);
-      
+
       return AppDeepLink(
         kind: kind,
         rawTarget: target,
         uri: uri,
         arguments: arguments,
       );
-    }
-
-    // gold://pocket/recredit → 授信审核（兼容旧版）
-    if (uri.scheme == _legacyScheme && uri.host == _legacyHost) {
-      final path = uri.pathSegments.isNotEmpty ? uri.pathSegments.first : '';
-      if (path == 'recredit') {
-        return AppDeepLink(
-          kind: AppDeepLinkKind.creditReview,
-          rawTarget: target,
-          uri: uri,
-          arguments: arguments,
-        );
-      }
     }
 
     // 其他情况

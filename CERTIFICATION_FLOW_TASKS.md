@@ -196,24 +196,24 @@ lib/widgets/dynamic_form/
     └── date_field.dart             # 日期选择
 ```
 
-**API 字段配置格式**（参考 dali_cash）：
+**API 字段配置格式**（当前 `ph_peso_shield_ios` 接口）：
 ```json
 {
-  "enterostomy": "Email Address",           // 字段标题
-  "laggings": "Enter your email",           // 占位符
-  "felicitous": "email",                    // 提交时的参数名
-  "fyke": "user@example.com",               // 当前值
-  "solferino": "haphtaras",                 // 控件类型（混淆值）
-  "muscats": 0,                             // 是否必填（0=必填，1=可选）
-  "omegas": 1,                              // 是否数字键盘（1=是）
-  "poolsides": [...]                        // 选择型字段的选项列表
+  "stalagmitic": "Email Address",            // 字段标题
+  "vacantness": "Enter your email",          // 占位符
+  "coffees": "email",                        // 提交时的参数名
+  "biolysis": "user@example.com",            // 当前值
+  "torsos": "EmpathisedWombiest",            // 控件类型（混淆值）
+  "shmaltzy": 0,                              // 是否必填（0=必填，1=可选）
+  "forgets": 1,                               // 是否数字键盘（1=是）
+  "deportment": [...]                         // 选择型字段的选项列表
 }
 ```
 
-**控件类型映射**（参考 dali_cash）：
-- `haphtaras` → 文本输入
-- `krimmersopinioned` → 单选/下拉选择
-- `superpower` → 地址级联选择
+**控件类型映射**（接口文档“认证项组件”）：
+- `EmpathisedWombiest` → 文本输入
+- `Superorganisms` → 单选/下拉选择
+- `Browbeat` → 地址级联选择
 - 其他 → 不支持的类型
 
 **表单提交**：

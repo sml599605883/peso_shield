@@ -104,11 +104,11 @@ class CertificationRepository {
   Future<ApiResponse<WorkInfoData>> getWorkInfo({
     required String productId,
   }) async {
-    return _client.post(
-      '/outsmelled/indissoluble',
+    return _client.get(
+      '/outsmelled/outduelled',
       params: {
         'bombarder': productId,
-        'bloodlust': ObfuscationHelper.randomParam(),
+        'reentrant': ObfuscationHelper.randomParam(),
       },
       parse: (json) => WorkInfoData.fromJson(json as Map<String, dynamic>),
     );
@@ -260,7 +260,7 @@ class CertificationRepository {
       license: license,
       livenessType: '7',
     );
-    
+
     return ApiResponse<void>(
       code: response.code,
       message: response.message,

@@ -11,6 +11,7 @@ import '../theme/layout_adapter.dart';
 import '../widgets/app_back_button.dart';
 import 'widgets/identity_upload_prompt.dart';
 import 'widgets/personal_information_address_sheet.dart';
+import 'widgets/personal_information_input_field.dart';
 import 'widgets/personal_information_option_sheet.dart';
 
 class PersonalInformationPage extends ConsumerStatefulWidget {
@@ -30,7 +31,6 @@ class _PersonalInformationPageState
   final _controllers = <String, TextEditingController>{};
   List<model.PersonalAddressNode>? _addressNodes;
   bool _loading = true;
-  bool _submitting = false;
   String? _error;
 
   static const _defaultPrompt =
@@ -88,32 +88,27 @@ class _PersonalInformationPageState
   }
 
   Future<void> _submit() async {
-    final fields = _data?.fields ?? const <model.PersonalInformationField>[];
-    for (final field in fields) {
-      if (field.isRequired && (_values[field.key] ?? '').trim().isEmpty) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Please enter ${field.title}')));
-        return;
-      }
-    }
-    setState(() => _submitting = true);
+    ToastHelper.showLoading();
     try {
       final repository = await ref.read(certificationRepositoryProvider.future);
       final response = await repository.savePersonalInfo(
         productId: widget.productId,
         formData: _values,
       );
-      if (!response.isSuccess) throw Exception(response.message);
-      if (mounted) Navigator.of(context).pop(true);
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Submission failed, please try again')),
-        );
+      ToastHelper.hideLoading();
+      if (!mounted) return;
+
+      if (!response.isSuccess) {
+        ToastHelper.showError(response.message);
+        return;
       }
-    } finally {
-      if (mounted) setState(() => _submitting = false);
+
+      Navigator.of(context).pop(true);
+    } catch (e) {
+      ToastHelper.hideLoading();
+      if (mounted) {
+        ToastHelper.showError('Submission failed, please try again');
+      }
     }
   }
 
@@ -189,7 +184,7 @@ class _PersonalInformationPageState
               height: layout.px(50),
               child: ElevatedButton(
                 key: const Key('personalInformationSubmit'),
-                onPressed: _loading || _submitting ? null : _submit,
+                onPressed: _loading ? null : _submit,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.coral,
                   foregroundColor: AppColors.white,
@@ -199,23 +194,14 @@ class _PersonalInformationPageState
                     borderRadius: layout.radius(25),
                   ),
                 ),
-                child: _submitting
-                    ? SizedBox(
-                        width: layout.px(20),
-                        height: layout.px(20),
-                        child: const CircularProgressIndicator(
-                          color: AppColors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : Text(
-                        'Submit',
-                        style: TextStyle(
-                          fontFamily: 'Helvetica',
-                          fontSize: layout.px(18),
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
+                child: Text(
+                  'Submit',
+                  style: TextStyle(
+                    fontFamily: 'Helvetica',
+                    fontSize: layout.px(18),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
             ),
           ),
@@ -264,77 +250,29 @@ class _PersonalInformationPageState
       padding: layout.edgeInsets(left: 20, right: 20, bottom: 20),
       itemCount: fields.length,
       separatorBuilder: (_, _) => SizedBox(height: layout.px(14)),
-      itemBuilder: (_, index) => _buildField(fields[index], layout),
+      itemBuilder: (_, index) => _buildField(fields[index]),
     );
   }
 
-  Widget _buildField(model.PersonalInformationField field, AppLayout layout) {
+  Widget _buildField(model.PersonalInformationField field) {
     final controller = _controllers[field.key]!;
     final hasTrailingArrow =
         field.controlType.toLowerCase() != 'empathisedwombiest';
     final canEdit = !hasTrailingArrow;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          field.title,
-          style: TextStyle(
-            color: AppColors.personalInformationLabel,
-            fontFamily: 'Helvetica',
-            fontSize: layout.px(14),
-          ),
-        ),
-        SizedBox(height: layout.px(7)),
-        TextField(
-          controller: controller,
-          readOnly: !canEdit,
-          keyboardType: field.isNumeric
-              ? TextInputType.number
-              : TextInputType.text,
-          inputFormatters: field.isNumeric
-              ? [FilteringTextInputFormatter.digitsOnly]
-              : null,
-          onTap: !canEdit ? () => _selectField(field) : null,
-          onChanged: (value) => _values[field.key] = value,
-          decoration: InputDecoration(
-            hintText: field.placeholder,
-            hintStyle: TextStyle(
-              color: AppColors.loginHint,
-              fontSize: layout.px(14),
-            ),
-            suffixIcon: hasTrailingArrow
-                ? Padding(
-                    padding: layout.edgeInsets(
-                      top: 14,
-                      bottom: 14,
-                      right: 14,
-                    ),
-                    child: Image.asset(
-                      AppAssets.personalInformationBack,
-                      width: layout.px(16),
-                      height: layout.px(11),
-                      fit: BoxFit.contain,
-                    ),
-                  )
-                : null,
-            contentPadding: layout.edgeInsets(
-              left: 20,
-              top: 13,
-              right: 14,
-              bottom: 13,
-            ),
-            enabledBorder: _fieldBorder(layout),
-            focusedBorder: _fieldBorder(layout),
-          ),
-        ),
-      ],
+    return PersonalInformationInputField(
+      controller: controller,
+      label: field.title,
+      hintText: field.placeholder,
+      readOnly: !canEdit,
+      keyboardType: field.isNumeric ? TextInputType.number : TextInputType.text,
+      inputFormatters: field.isNumeric
+          ? [FilteringTextInputFormatter.digitsOnly]
+          : null,
+      onTap: !canEdit ? () => _selectField(field) : null,
+      onChanged: (value) => _values[field.key] = value,
+      showTrailingArrow: hasTrailingArrow,
     );
   }
-
-  OutlineInputBorder _fieldBorder(AppLayout layout) => OutlineInputBorder(
-    borderRadius: layout.radius(20),
-    borderSide: const BorderSide(color: AppColors.personalInformationBorder),
-  );
 
   Future<void> _selectField(model.PersonalInformationField field) async {
     if (field.controlType.toLowerCase() == 'empathisedwombiest') return;
@@ -367,7 +305,6 @@ class _PersonalInformationPageState
       final address = await showPersonalInformationAddressSheet(
         context: context,
         nodes: _addressNodes!,
-        initialValue: _values[field.key] ?? '',
       );
       if (address != null && mounted) {
         setState(() {

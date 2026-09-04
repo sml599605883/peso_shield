@@ -38,6 +38,10 @@ void main() {
 
     await tester.tap(find.text('Region One'));
     await tester.pumpAndSettle();
+    expect(find.text('Province One'), findsNothing);
+    await tester.tap(find.text('Done'));
+    await tester.pumpAndSettle();
+    expect(find.text('Province One'), findsOneWidget);
     await tester.tap(find.text('Province One'));
     await tester.pumpAndSettle();
     expect(result, isNull);
@@ -46,36 +50,7 @@ void main() {
     expect(result, 'Region One-Province One');
   });
 
-  testWidgets('restores a documented two-level address on the province level', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(375, 812);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Builder(
-          builder: (context) => TextButton(
-            onPressed: () => showPersonalInformationAddressSheet(
-              context: context,
-              nodes: _nodes,
-              initialValue: 'Region One-Province One',
-            ),
-            child: const Text('Open'),
-          ),
-        ),
-      ),
-    );
-
-    await tester.tap(find.text('Open'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Province One'), findsNWidgets(2));
-  });
-
-  testWidgets('selects three-level address and returns immediately', (
+  testWidgets('selects three-level address only after Done at each level', (
     tester,
   ) async {
     String? result;
@@ -105,16 +80,83 @@ void main() {
 
     await tester.tap(find.text('Region One'));
     await tester.pumpAndSettle();
-    
+    await tester.tap(find.text('Done'));
+    await tester.pumpAndSettle();
+
     await tester.tap(find.text('Province Two'));
     await tester.pumpAndSettle();
-    
+    expect(result, isNull);
+    await tester.tap(find.text('Done'));
+    await tester.pumpAndSettle();
+
     await tester.tap(find.text('City One'));
     await tester.pumpAndSettle();
 
+    expect(result, isNull);
+    await tester.tap(find.text('Done'));
+    await tester.pumpAndSettle();
     expect(result, 'Region One-Province Two-City One');
   });
+
+  testWidgets('resets the list position when advancing to another level', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(375, 812);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showPersonalInformationAddressSheet(
+              context: context,
+              nodes: _manyNodes,
+            ),
+            child: const Text('Open'),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(
+      find.text('Region 100'),
+      400,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('Region 100'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Done'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Province 0'), findsOneWidget);
+    final listPosition = tester.state<ScrollableState>(
+      find.byType(Scrollable).first,
+    );
+    expect(listPosition.position.pixels, 0);
+  });
 }
+
+final _manyNodes = List.generate(
+  101,
+  (regionIndex) => PersonalAddressNode(
+    id: 'r$regionIndex',
+    label: 'Region $regionIndex',
+    children: List.generate(
+      101,
+      (provinceIndex) => PersonalAddressNode(
+        id: 'r${regionIndex}p$provinceIndex',
+        label: 'Province $provinceIndex',
+        children: const [],
+      ),
+    ),
+  ),
+);
 
 const _nodes = [
   PersonalAddressNode(

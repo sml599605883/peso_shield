@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../data/models/certification_data.dart';
+import '../../theme/app_assets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/layout_adapter.dart';
 
@@ -9,7 +10,6 @@ enum _AddressLevel { region, province, municipality }
 Future<String?> showPersonalInformationAddressSheet({
   required BuildContext context,
   required List<PersonalAddressNode> nodes,
-  String initialValue = '',
 }) {
   FocusManager.instance.primaryFocus?.unfocus();
   return showModalBottomSheet<String>(
@@ -17,21 +17,14 @@ Future<String?> showPersonalInformationAddressSheet({
     backgroundColor: Colors.transparent,
     barrierColor: AppColors.personalInformationSelectionBarrier,
     isScrollControlled: true,
-    builder: (_) => _PersonalInformationAddressSheet(
-      nodes: nodes,
-      initialValue: initialValue,
-    ),
+    builder: (_) => _PersonalInformationAddressSheet(nodes: nodes),
   );
 }
 
 class _PersonalInformationAddressSheet extends StatefulWidget {
-  const _PersonalInformationAddressSheet({
-    required this.nodes,
-    required this.initialValue,
-  });
+  const _PersonalInformationAddressSheet({required this.nodes});
 
   final List<PersonalAddressNode> nodes;
-  final String initialValue;
 
   @override
   State<_PersonalInformationAddressSheet> createState() =>
@@ -48,7 +41,6 @@ class _PersonalInformationAddressSheetState
   @override
   void initState() {
     super.initState();
-    _restoreInitialValue();
   }
 
   List<PersonalAddressNode> get _options => switch (_activeLevel) {
@@ -96,7 +88,7 @@ class _PersonalInformationAddressSheetState
                 SizedBox(height: layout.px(22)),
                 Expanded(
                   child: _AddressOptionList(
-                    key: ValueKey('$_activeLevel-${_selectedNode?.id ?? ''}'),
+                    key: ValueKey(_activeLevel),
                     options: _options,
                     selectedNode: _selectedNode,
                     onSelected: _selectNode,
@@ -139,34 +131,6 @@ class _PersonalInformationAddressSheetState
     );
   }
 
-  void _restoreInitialValue() {
-    final labels = widget.initialValue
-        .split('-')
-        .map((label) => label.trim())
-        .where((label) => label.isNotEmpty)
-        .toList(growable: false);
-    if (labels.isEmpty) return;
-    _region = _findByLabel(widget.nodes, labels[0]);
-    if (_region == null || labels.length < 2) return;
-    _province = _findByLabel(_region!.children, labels[1]);
-    if (_province == null || labels.length < 3) {
-      _activeLevel = _AddressLevel.province;
-      return;
-    }
-    _municipality = _findByLabel(_province!.children, labels[2]);
-    _activeLevel = _AddressLevel.municipality;
-  }
-
-  PersonalAddressNode? _findByLabel(
-    List<PersonalAddressNode> nodes,
-    String label,
-  ) {
-    for (final node in nodes) {
-      if (node.label == label) return node;
-    }
-    return null;
-  }
-
   void _selectLevel(_AddressLevel level) {
     if (level == _AddressLevel.province && _region == null) return;
     if (level == _AddressLevel.municipality && _province == null) return;
@@ -191,29 +155,42 @@ class _PersonalInformationAddressSheetState
           _region = node;
           _province = null;
           _municipality = null;
-          _activeLevel = _AddressLevel.province;
         });
       case _AddressLevel.province:
         setState(() {
           _province = node;
           _municipality = null;
-          _activeLevel = _AddressLevel.municipality;
         });
       case _AddressLevel.municipality:
-        final region = _region;
-        final province = _province;
-        if (region == null || province == null) return;
-        Navigator.of(context).pop('${region.label}-${province.label}-${node.label}');
+        setState(() => _municipality = node);
     }
   }
 
   void _completeSelection() {
+    switch (_activeLevel) {
+      case _AddressLevel.region:
+        if (_region == null) return;
+        setState(() => _activeLevel = _AddressLevel.province);
+      case _AddressLevel.province:
+        final province = _province;
+        if (province == null) return;
+        if (province.children.isEmpty) {
+          _finishSelection();
+        } else {
+          setState(() => _activeLevel = _AddressLevel.municipality);
+        }
+      case _AddressLevel.municipality:
+        if (_municipality == null) return;
+        _finishSelection();
+    }
+  }
+
+  void _finishSelection() {
     final region = _region;
     final province = _province;
-    final municipality = _municipality;
     if (region == null || province == null) return;
     final labels = [region.label, province.label];
-    if (municipality != null) labels.add(municipality.label);
+    if (_municipality != null) labels.add(_municipality!.label);
     Navigator.of(context).pop(labels.join('-'));
   }
 }
@@ -239,7 +216,7 @@ class _AddressSegments extends StatelessWidget {
     return Container(
       height: layout.px(36),
       margin: layout.edgeInsets(left: 8, right: 7),
-      padding: layout.edgeInsets(left: 2, top: 2, right: 22, bottom: 2),
+      padding: layout.edgeInsets(left: 2, top: 2, right: 2, bottom: 2),
       decoration: BoxDecoration(
         color: AppColors.personalInformationAddressSegment,
         borderRadius: BorderRadius.circular(layout.px(18)),
@@ -314,7 +291,7 @@ class _AddressSegmentItem extends StatelessWidget {
   }
 }
 
-class _AddressOptionList extends StatefulWidget {
+class _AddressOptionList extends StatelessWidget {
   const _AddressOptionList({
     super.key,
     required this.options,
@@ -327,102 +304,102 @@ class _AddressOptionList extends StatefulWidget {
   final ValueChanged<PersonalAddressNode> onSelected;
 
   @override
-  State<_AddressOptionList> createState() => _AddressOptionListState();
-}
-
-class _AddressOptionListState extends State<_AddressOptionList> {
-  late int _selectedIndex;
-  late final FixedExtentScrollController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedIndex = _initialIndex();
-    _controller = FixedExtentScrollController(initialItem: _selectedIndex);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final layout = AppLayout.of(context);
-    
-    if (widget.options.isEmpty) {
+    if (options.isEmpty) {
       return Center(
         child: Text(
           'No options available',
-          style: TextStyle(
-            color: AppColors.loginHint,
-            fontSize: layout.px(16),
-          ),
+          style: TextStyle(color: AppColors.loginHint, fontSize: layout.px(16)),
         ),
       );
     }
 
-    return ListWheelScrollView.useDelegate(
-      controller: _controller,
-      itemExtent: layout.px(52),
-      diameterRatio: 1000,
-      perspective: 0.003,
-      physics: const FixedExtentScrollPhysics(),
-      onSelectedItemChanged: (index) => setState(() => _selectedIndex = index),
-      childDelegate: ListWheelChildBuilderDelegate(
-        childCount: widget.options.length,
-        builder: (context, index) {
-          final node = widget.options[index];
-          final distance = (index - _selectedIndex).abs();
-          final selected = distance == 0;
-          return InkWell(
-            onTap: () => widget.onSelected(node),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                border: selected
-                    ? Border.symmetric(
-                        horizontal: BorderSide(
-                          color: AppColors.identityUploadDivider,
-                          width: layout.px(1),
-                        ),
-                      )
-                    : null,
-              ),
-              child: Center(
-                child: Padding(
-                  padding: layout.edgeInsets(left: 24, right: 24),
-                  child: Text(
-                    node.label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: selected
-                          ? AppColors.identityText
-                          : distance == 1
-                              ? AppColors.personalInformationLabel
-                              : AppColors.loginHint,
-                      fontFamily: selected ? 'Helvetica-Bold' : 'Helvetica',
-                      fontSize: layout.px(18),
-                      fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
-                      height: 22 / 18,
+    return ListView.separated(
+      padding: EdgeInsets.zero,
+      itemCount: options.length,
+      separatorBuilder: (_, _) => Container(
+        margin: layout.edgeInsets(left: 4, right: 5),
+        height: layout.px(1),
+        child: CustomPaint(
+          painter: _AddressDashedDividerPainter(
+            color: AppColors.identityUploadDivider,
+            dashWidth: layout.px(4),
+            gapWidth: layout.px(4),
+          ),
+        ),
+      ),
+      itemBuilder: (context, index) {
+        final node = options[index];
+        final selected = node.id == selectedNode?.id;
+        return SizedBox(
+          height: layout.px(69),
+          child: InkWell(
+            onTap: () => onSelected(node),
+            child: Padding(
+              padding: layout.edgeInsets(left: 33, right: 11),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      node.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: AppColors.identityText,
+                        fontFamily: 'Helvetica',
+                        fontSize: layout.px(18),
+                        height: 22 / 18,
+                      ),
                     ),
                   ),
-                ),
+                  if (selected)
+                    Image.asset(
+                      AppAssets.identityUploadCheckmark,
+                      width: layout.px(20),
+                      height: layout.px(21),
+                    ),
+                ],
               ),
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
+}
 
-  int _initialIndex() {
-    final selected = widget.selectedNode;
-    if (selected == null) return 0;
-    final index = widget.options.indexWhere((node) => node.id == selected.id);
-    return index < 0 ? 0 : index;
+class _AddressDashedDividerPainter extends CustomPainter {
+  const _AddressDashedDividerPainter({
+    required this.color,
+    required this.dashWidth,
+    required this.gapWidth,
+  });
+
+  final Color color;
+  final double dashWidth;
+  final double gapWidth;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = size.height
+      ..strokeCap = StrokeCap.square;
+    var x = 0.0;
+    final y = size.height / 2;
+    while (x < size.width) {
+      final end = (x + dashWidth).clamp(0.0, size.width);
+      canvas.drawLine(Offset(x, y), Offset(end, y), paint);
+      x += dashWidth + gapWidth;
+    }
+  }
+
+  @override
+  bool shouldRepaint(_AddressDashedDividerPainter oldDelegate) {
+    return color != oldDelegate.color ||
+        dashWidth != oldDelegate.dashWidth ||
+        gapWidth != oldDelegate.gapWidth;
   }
 }
 

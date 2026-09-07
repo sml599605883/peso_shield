@@ -53,6 +53,8 @@ class ProductBasicInfo {
     this.orderId = 0,
     this.buttonText = '',
     this.columnText,
+    this.termType = '',
+    this.loanTerm = '',
   });
 
   factory ProductBasicInfo.fromJson(Map<String, dynamic> json) {
@@ -73,6 +75,8 @@ class ProductBasicInfo {
       columnText: json['medicides'] != null
           ? ProductColumnText.fromJson(json['medicides'] as Map<String, dynamic>)
           : null,
+      termType: json['accessorised']?.toString() ?? '',
+      loanTerm: json['copies']?.toString() ?? '',
     );
   }
 
@@ -99,6 +103,12 @@ class ProductBasicInfo {
 
   /// 详情栏位文案（额度、利率等）
   final ProductColumnText? columnText;
+
+  /// 期限类型（混淆字段 accessorised）
+  final String termType;
+
+  /// 借款期限（混淆字段 copies）
+  final String loanTerm;
 }
 
 /// 详情栏位文案（medicides）

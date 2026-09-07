@@ -1,8 +1,13 @@
+import 'dart:convert';
+
 import '../../core/network/http_client.dart';
 import '../../core/network/api_response.dart';
 import '../../core/network/obfuscation_helper.dart';
+import '../../core/json/json.dart';
 
 import '../models/certification_data.dart';
+import '../models/emergency_contact_data.dart';
+import '../models/bind_card_data.dart';
 
 class CertificationRepository {
   const CertificationRepository(this._client);
@@ -125,71 +130,103 @@ class CertificationRepository {
     );
   }
 
-  Future<ApiResponse<ContactInfoData>> getContactInfo({
+  /// 获取联系人信息（第四项）
+  Future<ApiResponse<EmergencyContactData>> getContactInfo({
     required String productId,
   }) async {
-    return _client.post(
-      '/outsmelled/outduelled',
+    return _client.get(
+      '/outsmelled/bellings',
       params: {
         'bombarder': productId,
-        'noncombatant': ObfuscationHelper.randomParam(),
+        'columniation': ObfuscationHelper.randomParam(),
       },
-      parse: (json) => ContactInfoData.fromJson(json as Map<String, dynamic>),
+      parse: (json) => EmergencyContactData.fromJson(json as Map<String, dynamic>),
     );
   }
 
+  /// 保存联系人信息（第四项）
   Future<ApiResponse<void>> saveContactInfo({
     required String productId,
-    required List<Map<String, dynamic>> contacts,
+    required List<Map<String, String>> contacts,
   }) async {
     return _client.post(
       '/outsmelled/geochronologist',
       params: {
         'bombarder': productId,
-        'mugg': contacts,
+        'mugg': jsonEncode(contacts),
         'spermatozoal': ObfuscationHelper.randomParam(),
       },
       parse: (_) => null,
     );
   }
 
-  Future<ApiResponse<BankInfoData>> getBankInfo({
+  /// 获取绑卡信息（第五项）
+  Future<ApiResponse<BindCardData>> getBindCardInfo({
     required String productId,
   }) async {
-    return _client.post(
-      '/outsmelled/tremor',
+    return _client.get(
+      '/outsmelled/ventral',
       params: {
         'bombarder': productId,
-        'gunfighter': ObfuscationHelper.randomParam(),
+        'openhearted': ObfuscationHelper.randomParam(),
+        'revelation': ObfuscationHelper.randomParam(),
       },
-      parse: (json) => BankInfoData.fromJson(json as Map<String, dynamic>),
+      parse: (json) => BindCardData.fromJson(
+        Json(json as Map<String, dynamic>),
+      ),
     );
   }
 
-  Future<ApiResponse<void>> submitBankCard({
+  /// 提交绑卡（第五项）
+  Future<ApiResponse<Map<String, dynamic>>> submitBindCard({
     required String productId,
     required String accountType,
-    required String accountNumber,
-    required String firstName,
-    required String middleName,
-    required String lastName,
+    required Map<String, String> fields,
+    String livenessType = '',
+    String livenessId = '',
+    String image = '',
+    String businessId = '',
+    String license = '',
   }) async {
+    final params = <String, Object?>{
+      'bombarder': productId,
+      'misapprehend': accountType,
+      ...fields,
+      'serve': livenessType,
+      'dispersant': livenessId,
+      'attach': image,
+      'pearlash': businessId,
+      'reconstruct': license,
+      'potboilers': ObfuscationHelper.randomParam(),
+    };
+    final channel = params.remove('channelCode');
+    if (channel != null) params['bartering'] = channel;
     return _client.post(
       '/outsmelled/mycelia',
-      params: {
-        'bombarder': productId,
-        'misapprehend': accountType,
-        'barehanded': firstName,
-        'unforced': middleName,
-        'unenlightened': lastName,
-        'flanken': accountNumber,
-        'nighness': accountNumber,
-        'potboilers': ObfuscationHelper.randomParam(),
-      },
-      parse: (_) => null,
+      params: params,
+      parse: (json) =>
+          json is Map<String, dynamic> ? json : <String, dynamic>{},
     );
   }
 
+  /// 更换银行卡
+  Future<ApiResponse<String>> changeBindCard({
+    required String orderNo,
+    required String bindId,
+  }) async {
+    return _client.post(
+      '/outsmelled/crampfishes',
+      params: {
+        'superparasitism': orderNo,
+        'retraction': bindId,
+        'podophyllins': ObfuscationHelper.randomParam(),
+      },
+      parse: (json) =>
+          (json as Map<String, dynamic>?)?['antineoplastic']?.toString() ?? '',
+    );
+  }
+
+  /// 用户账户列表
   Future<ApiResponse<List<BankAccount>>> getUserBankAccounts({
     required String productId,
   }) async {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/product/product_providers.dart';
 import '../core/ui/toast_helper.dart';
 import '../data/models/certification_data.dart' as model;
 import '../providers/repository_provider.dart';
@@ -136,7 +137,14 @@ class _PersonalInformationPageState
         return;
       }
 
-      Navigator.of(context).pop(true);
+      // 提交成功后，调用 continueProductDetailFlow 获取下一步
+      final flow = await ref.read(productApplicationFlowProvider.future);
+      if (mounted) {
+        await flow.continueProductDetailFlow(
+          context: context,
+          productId: widget.productId,
+        );
+      }
     } catch (e) {
       ToastHelper.hideLoading();
       if (mounted) {

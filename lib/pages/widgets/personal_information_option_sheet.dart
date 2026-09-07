@@ -245,15 +245,9 @@ class _PersonalInformationOptionRow extends StatelessWidget {
           child: Row(
             children: [
               if (option.logoUrl.isNotEmpty) ...[
-                Container(
+                SizedBox(
                   width: layout.px(30),
                   height: layout.px(30),
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: AppColors.personalInformationOptionLogoBorder,
-                    ),
-                    borderRadius: layout.radius(8),
-                  ),
                   child: ClipRRect(
                     borderRadius: layout.radius(7),
                     child: Image.network(

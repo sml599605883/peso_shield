@@ -43,6 +43,14 @@ abstract final class AppAssets {
       'assets/personal_information_progress.png';
   static const workInformationProgress = 'assets/work_information_progress.png';
   static const personalInformationBack = 'assets/personal_information_back.png';
+  static const emergencyContactProgress =
+      'assets/emergency_contact_progress.png';
+  static const emergencyContactPicker = 'assets/emergency_contact_picker.png';
+  static const bindCardProgress = 'assets/bind_card_progress.png';
+  static const bindCardSuggestionBackground =
+      'assets/bind_card_suggestion_background.png';
+  static const bindCardSuggestionClose =
+      'assets/bind_card_suggestion_close.png';
 
   static const tabBarBackground = 'assets/navigation/tab_bar_background.png';
   static const homeActive = 'assets/navigation/home_active.png';

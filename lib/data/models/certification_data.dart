@@ -255,43 +255,6 @@ class ContactField {
   final List<FormField> fields;
 }
 
-class BankInfoData {
-  const BankInfoData({
-    required this.banks,
-    required this.accountInfo,
-    required this.tips,
-  });
-
-  factory BankInfoData.fromJson(Map<String, dynamic> json) {
-    final mugg = json['mugg'] as Map<String, dynamic>? ?? {};
-    return BankInfoData(
-      banks: (mugg['deportment'] as List<dynamic>? ?? [])
-          .map((e) => BankOption.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      accountInfo: mugg['fastball'] as Map<String, dynamic>? ?? {},
-      tips: mugg['properdins'] as String? ?? '',
-    );
-  }
-
-  final List<BankOption> banks;
-  final Map<String, dynamic> accountInfo;
-  final String tips;
-}
-
-class BankOption {
-  const BankOption({required this.name, required this.code});
-
-  factory BankOption.fromJson(Map<String, dynamic> json) {
-    return BankOption(
-      name: json['cymenes'] as String? ?? '',
-      code: json['bellings'] as String? ?? '',
-    );
-  }
-
-  final String name;
-  final String code;
-}
-
 class BankAccount {
   const BankAccount({
     required this.id,

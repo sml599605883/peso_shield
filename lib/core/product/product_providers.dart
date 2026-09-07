@@ -7,11 +7,13 @@ import 'package:peso_shield/providers/repository_provider.dart';
 final productApplicationFlowProvider =
     FutureProvider<ProductApplicationFlow>((ref) async {
   final repository = await ref.watch(productRepositoryProvider.future);
+  final orderRepository = await ref.watch(orderRepositoryProvider.future);
   final userSession = ref.watch(userSessionProvider);
   final sessionStore = ref.watch(sessionStoreProvider);
   
   return ProductApplicationFlow(
     repository: repository,
+    orderRepository: orderRepository,
     userSession: userSession,
     sessionStore: sessionStore,
   );

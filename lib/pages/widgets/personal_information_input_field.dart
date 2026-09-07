@@ -16,6 +16,7 @@ class PersonalInformationInputField extends StatelessWidget {
     this.readOnly = false,
     this.keyboardType = TextInputType.text,
     this.inputFormatters,
+    this.focusNode,
     this.onChanged,
     this.onTap,
     this.showTrailingArrow = false,
@@ -28,6 +29,7 @@ class PersonalInformationInputField extends StatelessWidget {
   final bool readOnly;
   final TextInputType keyboardType;
   final List<TextInputFormatter>? inputFormatters;
+  final FocusNode? focusNode;
   final ValueChanged<String>? onChanged;
   final VoidCallback? onTap;
   final bool showTrailingArrow;
@@ -49,6 +51,7 @@ class PersonalInformationInputField extends StatelessWidget {
         SizedBox(height: layout.px(7)),
         TextField(
           controller: controller,
+          focusNode: focusNode,
           readOnly: readOnly,
           keyboardType: keyboardType,
           inputFormatters: inputFormatters,

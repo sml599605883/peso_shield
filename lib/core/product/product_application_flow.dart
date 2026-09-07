@@ -3,12 +3,11 @@ import 'package:peso_shield/core/device/session_store.dart';
 import 'package:peso_shield/core/device/user_session.dart';
 import 'package:peso_shield/core/navigation/app_deep_link.dart';
 import 'package:peso_shield/core/navigation/app_navigator.dart';
-import 'package:peso_shield/core/navigation/app_routes.dart';
-import 'package:peso_shield/core/navigation/app_route_generator.dart';
 import 'package:peso_shield/core/ui/toast_helper.dart';
 import 'package:peso_shield/data/models/product_apply_result.dart';
 import 'package:peso_shield/data/models/product_detail.dart';
 import 'package:peso_shield/data/repositories/product_repository.dart';
+import 'package:peso_shield/data/repositories/order_repository.dart';
 
 /// 产品申请流程协调器
 ///
@@ -16,11 +15,13 @@ import 'package:peso_shield/data/repositories/product_repository.dart';
 class ProductApplicationFlow {
   ProductApplicationFlow({
     required this.repository,
+    required this.orderRepository,
     required this.userSession,
     required this.sessionStore,
   });
 
   final ProductRepository repository;
+  final OrderRepository orderRepository;
   final UserSession userSession;
   final SessionStore sessionStore;
   final AppDeepLinkParser _deepLinkParser = const AppDeepLinkParser();
@@ -279,24 +280,23 @@ class ProductApplicationFlow {
           break;
 
         case 'Unconcernedness':
-          await AppNavigator.toNamed(
-            AppRoutes.personalInformation,
-            arguments: PersonalInformationPageArguments(productId: productId),
-          );
+          // 个人信息
+          await AppNavigator.toPersonalInformation(productId: productId);
           break;
 
         case 'Jammable':
+          // 工作信息
           await AppNavigator.toWorkInformation(productId: productId);
           break;
 
         case 'Pip':
-          // TODO: 紧急联系人页
-          ToastHelper.showMessage('Please complete ${detail.nextStep.title}');
+          // 紧急联系人
+          await AppNavigator.toEmergencyContact(productId: productId);
           break;
 
         case 'Reentrance':
-          // TODO: 绑卡页
-          ToastHelper.showMessage('Please complete ${detail.nextStep.title}');
+          // 绑卡
+          await AppNavigator.toBindCard(productId: productId);
           break;
 
         default:
@@ -307,9 +307,32 @@ class ProductApplicationFlow {
 
     // 所有认证都已完成，可以进入借款确认流程
     debugPrint('All certifications completed, ready for loan confirmation');
-    // TODO: 调用借款目标接口，获取确认页 URL
-    // final destination = await repository.fetchLoanDestination(...);
-    // await AppNavigator.toWebView(url: destination.target);
-    ToastHelper.showSuccess('Certification completed');
+    
+    // 调用订单跳转接口，获取确认页 URL
+    ToastHelper.showLoading();
+    final response = await orderRepository.getOrderJumpUrl(
+      orderNo: detail.basicInfo.orderNo,
+      amount: detail.basicInfo.amount,
+      loanTerm: detail.basicInfo.loanTerm,
+      termType: detail.basicInfo.termType,
+    );
+    ToastHelper.hideLoading();
+
+    if (!context.mounted) return;
+
+    if (!response.isSuccess) {
+      ToastHelper.showError(response.message);
+      return;
+    }
+
+    final jumpUrl = response.data;
+    if (jumpUrl.isEmpty) {
+      debugPrint('Error: jump URL is empty');
+      ToastHelper.showError('Jump URL is missing');
+      return;
+    }
+
+    // 跳转到借款确认页面
+    await AppNavigator.toWebView(url: jumpUrl);
   }
 }

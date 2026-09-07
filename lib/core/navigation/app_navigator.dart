@@ -134,6 +134,56 @@ class AppNavigator {
     return _navigator?.canPop() ?? false;
   }
 
+  // ==================== 认证流程路由管理 ====================
+
+  /// 认证流程相关的路由集合
+  ///
+  /// 当跳转到新的顶层认证页面时，会清除路由栈中所有这些页面
+  static const Set<String> _certificationRoutes = {
+    AppRoutes.identityType,
+    AppRoutes.identityUpload,
+    AppRoutes.identityConfirmation,
+    AppRoutes.faceRecognition,
+    AppRoutes.personalInformation,
+    AppRoutes.workInformation,
+    AppRoutes.emergencyContact,
+    AppRoutes.bindCard,
+  };
+
+  /// 跳转到顶层认证页面（清除之前的认证页面）
+  ///
+  /// 参考 dali_cash 的 _openTopLevelCertification 机制：
+  /// - 移除路由栈中所有认证流程页面，直到遇到第一个非认证页面
+  /// - 然后安装新的顶层认证页面
+  /// - 这样确保认证页面不会堆积，用户返回时直接回到首页/入口页
+  static Future<T?> _toTopLevelCertification<T>(
+    String routeName, {
+    Object? arguments,
+  }) async {
+    if (!AppRoutes.isValid(routeName)) {
+      _log('Warning: Invalid route name: $routeName');
+    }
+
+    final navigator = _navigator;
+    if (navigator == null) {
+      _log('Error: Navigator not available');
+      return null;
+    }
+
+    _log('Opening top-level certification: $routeName');
+    return navigator.pushNamedAndRemoveUntil<T>(
+      routeName,
+      (route) {
+        final name = route.settings.name;
+        // 保留非认证流程的页面
+        return name != null &&
+            name.isNotEmpty &&
+            !_certificationRoutes.contains(name);
+      },
+      arguments: arguments,
+    );
+  }
+
   // ==================== 具体页面跳转方法 ====================
 
   /// 跳转到登录页
@@ -195,20 +245,58 @@ class AppNavigator {
     );
   }
 
-  /// 跳转到人脸识别页
+  /// 跳转到人脸识别页（顶层认证页面，清除之前的认证页面）
   static Future<void> toFaceRecognition({
     required String productId,
   }) async {
-    await toNamed<void>(
+    await _toTopLevelCertification<void>(
       AppRoutes.faceRecognition,
       arguments: FaceRecognitionPageArguments(productId: productId),
     );
   }
 
-  static Future<bool?> toWorkInformation({required String productId}) {
-    return toNamed<bool>(
+  /// 跳转到个人信息页（顶层认证页面，清除之前的认证页面）
+  static Future<void> toPersonalInformation({
+    required String productId,
+  }) async {
+    await _toTopLevelCertification<void>(
+      AppRoutes.personalInformation,
+      arguments: PersonalInformationPageArguments(productId: productId),
+    );
+  }
+
+  /// 跳转到工作信息页（顶层认证页面，清除之前的认证页面）
+  static Future<void> toWorkInformation({required String productId}) async {
+    await _toTopLevelCertification<void>(
       AppRoutes.workInformation,
       arguments: WorkInformationPageArguments(productId: productId),
+    );
+  }
+
+  /// 跳转到紧急联系人页（顶层认证页面，清除之前的认证页面）
+  static Future<void> toEmergencyContact({required String productId}) async {
+    await _toTopLevelCertification<void>(
+      AppRoutes.emergencyContact,
+      arguments: EmergencyContactPageArguments(productId: productId),
+    );
+  }
+
+  /// 跳转到绑卡页（顶层认证页面，清除之前的认证页面）
+  static Future<void> toBindCard({required String productId}) async {
+    await _toTopLevelCertification<void>(
+      AppRoutes.bindCard,
+      arguments: BindCardPageArguments(productId: productId),
+    );
+  }
+
+  /// 跳转到 WebView 页面
+  static Future<void> toWebView({
+    required String url,
+    String? title,
+  }) async {
+    await toNamed<void>(
+      AppRoutes.webView,
+      arguments: WebViewPageArguments(url: url, title: title),
     );
   }
 

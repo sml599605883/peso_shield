@@ -24,6 +24,9 @@ class AppRoutes {
   static const String faceRecognition = '/face-recognition';
   static const String personalInformation = '/personal-information';
   static const String workInformation = '/work-information';
+  static const String emergencyContact = '/emergency-contact';
+  static const String bindCard = '/bind-card';
+  static const String webView = '/webview';
 
   /// 所有路由名称列表（用于调试和验证）
   static const List<String> all = [
@@ -39,6 +42,9 @@ class AppRoutes {
     faceRecognition,
     personalInformation,
     workInformation,
+    emergencyContact,
+    bindCard,
+    webView,
   ];
 
   /// 验证路由名称是否有效

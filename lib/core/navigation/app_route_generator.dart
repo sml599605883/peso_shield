@@ -10,6 +10,9 @@ import '../../pages/identity_confirmation_page.dart';
 import '../../pages/face_recognition_page.dart';
 import '../../pages/personal_information_page.dart';
 import '../../pages/work_information_page.dart';
+import '../../pages/emergency_contact_page.dart';
+import '../../pages/bind_card_page.dart';
+import '../../pages/webview/webview_page.dart';
 import 'app_routes.dart';
 
 /// 禁用侧滑返回的自定义路由
@@ -68,6 +71,28 @@ class WorkInformationPageArguments {
   const WorkInformationPageArguments({required this.productId});
 
   final String productId;
+}
+
+class EmergencyContactPageArguments {
+  const EmergencyContactPageArguments({required this.productId});
+
+  final String productId;
+}
+
+class BindCardPageArguments {
+  const BindCardPageArguments({required this.productId});
+
+  final String productId;
+}
+
+class WebViewPageArguments {
+  const WebViewPageArguments({
+    required this.url,
+    this.title,
+  });
+
+  final String url;
+  final String? title;
 }
 
 /// 应用路由生成器
@@ -158,6 +183,33 @@ class AppRouteGenerator {
         if (args == null) return _errorRoute(settings.name);
         return NoSwipePageRoute<bool>(
           builder: (_) => WorkInformationPage(productId: args.productId),
+          settings: settings,
+        );
+
+      case AppRoutes.emergencyContact:
+        final args = settings.arguments as EmergencyContactPageArguments?;
+        if (args == null) return _errorRoute(settings.name);
+        return NoSwipePageRoute<bool>(
+          builder: (_) => EmergencyContactPage(productId: args.productId),
+          settings: settings,
+        );
+
+      case AppRoutes.bindCard:
+        final args = settings.arguments as BindCardPageArguments?;
+        if (args == null) return _errorRoute(settings.name);
+        return NoSwipePageRoute<void>(
+          builder: (_) => BindCardPage(productId: args.productId),
+          settings: settings,
+        );
+
+      case AppRoutes.webView:
+        final args = settings.arguments as WebViewPageArguments?;
+        if (args == null) return _errorRoute(settings.name);
+        return MaterialPageRoute<void>(
+          builder: (_) => WebViewPage(
+            initialUrl: args.url,
+            initialTitle: args.title,
+          ),
           settings: settings,
         );
 

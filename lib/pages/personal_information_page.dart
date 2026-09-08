@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +8,7 @@ import '../core/product/product_providers.dart';
 import '../core/ui/toast_helper.dart';
 import '../data/models/certification_data.dart' as model;
 import '../providers/repository_provider.dart';
+import '../providers/report_provider.dart';
 import '../theme/app_assets.dart';
 import '../theme/app_colors.dart';
 import '../theme/layout_adapter.dart';
@@ -43,6 +46,7 @@ class _PersonalInformationPageState
   List<model.PersonalAddressNode>? _addressNodes;
   bool _loading = true;
   String? _error;
+  late final int _sceneStartTime;
 
   static const _defaultPersonalPrompt =
       'Step 1 to fast cash! Upload ID for the express approval channel.';
@@ -52,6 +56,7 @@ class _PersonalInformationPageState
   @override
   void initState() {
     super.initState();
+    _sceneStartTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
     _load();
   }
 
@@ -136,6 +141,14 @@ class _PersonalInformationPageState
         ToastHelper.showError(response.message);
         return;
       }
+
+      // Report risk scene
+      final reportService = ref.read(reportServiceProvider);
+      unawaited(reportService.reportRisk(
+        productId: widget.productId,
+        scene: widget.isWork ? '6' : '5',
+        startedAtSeconds: _sceneStartTime,
+      ));
 
       // 提交成功后，调用 continueProductDetailFlow 获取下一步
       final flow = await ref.read(productApplicationFlowProvider.future);

@@ -2,25 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSAllowsArbitraryLoads</key>
-		<true/>
-	</dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
 	<string>Peso Shield</string>
-	<key>NSCameraUsageDescription</key>
-	<string>Allow camera access to upload your ID and complete identity verification for a fast and secure application process.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>A location check during approval helps confirm who you are and protects your account from unauthorized access.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>A location check during approval helps confirm who you are and protects your account from unauthorized access.</string>
-	<key>NSUserTrackingUsageDescription</key>
-	<string>Identifies your device, prevents fraud, and personalizes loan offers while keeping your information protected.</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -39,6 +26,19 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Allow camera access to upload your ID and complete identity verification for a fast and secure application process.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>A location check during approval helps confirm who you are and protects your account from unauthorized access.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>A location check during approval helps confirm who you are and protects your account from unauthorized access.</string>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>Identifies your device, prevents fraud, and personalizes loan offers while keeping your information protected.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

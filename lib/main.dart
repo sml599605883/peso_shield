@@ -2,15 +2,20 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/client/client_bridge.dart';
 import 'core/navigation/app_navigator.dart';
 import 'core/navigation/app_route_generator.dart';
 import 'core/navigation/app_route_observer.dart';
 import 'core/navigation/app_routes.dart';
+import 'core/permissions/permission_coordinator.dart';
 import 'core/startup/startup_network_gate.dart';
 import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize permission management
+  PermissionCoordinator.initialize(ClientBridge.shared);
   
   runApp(const ProviderScope(child: PesoShieldApp()));
 }

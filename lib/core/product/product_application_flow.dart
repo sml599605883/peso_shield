@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:peso_shield/core/device/session_store.dart';
 import 'package:peso_shield/core/device/user_session.dart';
 import 'package:peso_shield/core/navigation/app_deep_link.dart';
 import 'package:peso_shield/core/navigation/app_navigator.dart';
+import 'package:peso_shield/core/permissions/permission_helper.dart';
+import 'package:peso_shield/core/report/peso_report_service.dart';
 import 'package:peso_shield/core/ui/toast_helper.dart';
 import 'package:peso_shield/data/models/product_apply_result.dart';
 import 'package:peso_shield/data/models/product_detail.dart';
@@ -18,12 +22,14 @@ class ProductApplicationFlow {
     required this.orderRepository,
     required this.userSession,
     required this.sessionStore,
+    this.reportService,
   });
 
   final ProductRepository repository;
   final OrderRepository orderRepository;
   final UserSession userSession;
   final SessionStore sessionStore;
+  final PesoReportService? reportService;
   final AppDeepLinkParser _deepLinkParser = const AppDeepLinkParser();
   bool _isProcessing = false;
 
@@ -32,10 +38,12 @@ class ProductApplicationFlow {
   /// [context] - 当前 context
   /// [productId] - 产品 ID
   /// [apiRemind] - 来源标识（0: 默认，1: 首页banner，2: 首页弹窗等）
+  /// [checkLocationAccess] - 是否检查定位权限（默认 true）
   Future<void> applyProduct({
     required BuildContext context,
     required String productId,
     int apiRemind = 0,
+    bool checkLocationAccess = true,
   }) async {
     if (_isProcessing) return;
 
@@ -49,8 +57,24 @@ class ProductApplicationFlow {
 
       if (!context.mounted) return;
 
-      // 2. 调用准入接口
+      // 2. 检查定位权限（matching dali_cash）
+      if (checkLocationAccess && !await _ensureLocationAccess(context)) {
+        return; // 定位权限检查失败，中断准入流程
+      }
+
+      if (!context.mounted) return;
+
+      // 3. 调用准入接口
       ToastHelper.showLoading();
+
+      // Report location and device before apply (matching dali_cash)
+      unawaited(() async {
+        try {
+          await reportService?.reportLocationAndDevice();
+        } catch (error) {
+          debugPrint('Location and device report before apply failed: $error');
+        }
+      }());
 
       final response = await repository.applyProduct(
         productId: productId,
@@ -187,7 +211,7 @@ class ProductApplicationFlow {
       case AppDeepLinkKind.webView:
         // HTTP/HTTPS → 打开 WebView
         debugPrint('Open WebView: ${deepLink.uri}');
-        // TODO: await AppNavigator.toWebView(url: rawTarget);
+        await AppNavigator.toWebView(url: rawTarget);
         break;
 
       case AppDeepLinkKind.creditReview:
@@ -332,7 +356,27 @@ class ProductApplicationFlow {
       return;
     }
 
+    // Report scene 9: product redirect after order push
+    final resolvedProductId = detail.basicInfo.productId.trim().isNotEmpty
+        ? detail.basicInfo.productId
+        : productId;
+    reportService?.reportRisk(
+      productId: resolvedProductId,
+      scene: '9',
+      orderNo: detail.basicInfo.orderNo,
+      startedAtSeconds: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+    );
+
     // 跳转到借款确认页面
     await AppNavigator.toWebView(url: jumpUrl);
+  }
+
+  /// 检查并请求定位权限（matching dali_cash）
+  Future<bool> _ensureLocationAccess(BuildContext context) async {
+    final granted = await PermissionHelper.requestCertificationLocation(
+      context,
+    );
+
+    return granted;
   }
 }

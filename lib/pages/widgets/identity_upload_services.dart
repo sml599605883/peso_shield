@@ -41,6 +41,7 @@ class DefaultIdentityUploadImagePicker implements IdentityUploadImagePicker {
     final pickedFile = await _imagePicker.pickImage(
       source: ImageSource.gallery,
       imageQuality: 90,
+      requestFullMetadata: false,
     );
     return pickedFile?.path;
   }

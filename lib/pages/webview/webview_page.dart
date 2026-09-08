@@ -5,9 +5,11 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/navigation/app_navigator.dart';
+import '../../providers/report_provider.dart';
 import '../../theme/app_colors.dart';
 import 'webview_action_coordinator.dart';
 import 'webview_contract.dart';
@@ -184,7 +186,7 @@ class WebViewBridgeGate {
   }
 }
 
-class WebViewPage extends StatefulWidget {
+class WebViewPage extends ConsumerStatefulWidget {
   const WebViewPage({
     super.key,
     required this.initialUrl,
@@ -195,10 +197,10 @@ class WebViewPage extends StatefulWidget {
   final String? initialTitle;
 
   @override
-  State<WebViewPage> createState() => _WebViewPageState();
+  ConsumerState<WebViewPage> createState() => _WebViewPageState();
 }
 
-class _WebViewPageState extends State<WebViewPage>
+class _WebViewPageState extends ConsumerState<WebViewPage>
     with WidgetsBindingObserver {
   InAppWebViewController? _controller;
   late final WebViewActionCoordinator _coordinator;
@@ -248,11 +250,13 @@ class _WebViewPageState extends State<WebViewPage>
         required orderNo,
         required startedAtSeconds,
       }) {
-        // TODO: 接入风控上报
-        debugPrint(
-          '[WebView] Report risk: productId=$productId, orderNo=$orderNo',
+        final reportService = ref.read(reportServiceProvider);
+        return reportService.reportRisk(
+          productId: productId,
+          scene: '10',
+          orderNo: orderNo,
+          startedAtSeconds: startedAtSeconds,
         );
-        return Future<void>.value();
       },
       openWebView: (url) async {
         // 打开新的 WebView 页面

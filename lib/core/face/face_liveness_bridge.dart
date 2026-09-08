@@ -9,6 +9,7 @@ class FaceLivenessResult {
     required this.message,
     required this.image,
     required this.livenessId,
+    this.sequenceId = '',
   });
 
   final bool success;
@@ -16,11 +17,12 @@ class FaceLivenessResult {
   final String message;
   final String image;
   final String livenessId;
+  final String sequenceId;
 }
 
 class FaceLivenessBridge {
   FaceLivenessBridge({MethodChannel? channel})
-      : _channel = channel ?? const MethodChannel(channelName);
+    : _channel = channel ?? const MethodChannel(channelName);
 
   static const channelName = 'peso_shield/client_bridge';
   static final instance = FaceLivenessBridge();
@@ -57,6 +59,7 @@ class FaceLivenessBridge {
         message: _parseString(result['message']),
         image: _parseString(result['image']),
         livenessId: _parseString(result['liveness_id']),
+        sequenceId: _parseString(result['sequence_id']),
       );
     } on PlatformException catch (error) {
       return FaceLivenessResult(

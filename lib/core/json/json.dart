@@ -59,6 +59,27 @@ class Json {
     return false;
   }
 
+  /// 获取可空的 String 值
+  String? get stringOrNull {
+    final str = _value?.toString();
+    return (str == null || str.isEmpty || str == 'null') ? null : str;
+  }
+
+  /// 获取可空的 int 值
+  int? get intOrNull {
+    if (_value is int) return _value as int;
+    if (_value is num) return (_value as num).toInt();
+    final str = _value?.toString() ?? '';
+    return int.tryParse(str);
+  }
+
+  /// 获取可空的 bool 值
+  bool? get boolOrNull {
+    if (_value is bool) return _value as bool;
+    if (_value is int) return _value != 0;
+    return null;
+  }
+
   /// 通过键访问子值
   Json operator [](String key) {
     final map = mapOrNull;

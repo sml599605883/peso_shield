@@ -1,20 +1,18 @@
 import 'webview_contract.dart';
 
-typedef WebViewRiskReporter = Future<void> Function({
-  required String productId,
-  required String orderNo,
-  required int startedAtSeconds,
-});
+typedef WebViewRiskReporter =
+    Future<void> Function({
+      required String productId,
+      required String orderNo,
+      required int startedAtSeconds,
+    });
 typedef WebViewUrlAction = Future<void> Function(String url);
 typedef WebViewExternalAction = Future<bool> Function(Uri uri);
-typedef WebViewParamsBuilder = Future<Map<String, dynamic>> Function(
-  String path,
-);
+typedef WebViewParamsBuilder =
+    Future<Map<String, dynamic>> Function(String path);
 typedef WebViewRetryAction = Future<String> Function(String orderNo);
-typedef WebViewAccountAction = Future<void> Function({
-  required String productId,
-  required String orderNo,
-});
+typedef WebViewAccountAction =
+    Future<void> Function({required String productId, required String orderNo});
 typedef WebViewAsyncAction = Future<void> Function();
 typedef WebViewMessageAction = Future<void> Function(String message);
 typedef WebViewLogger = void Function(String message);
@@ -60,7 +58,7 @@ class WebViewActionCoordinator {
     try {
       return switch (request.action) {
         WebViewActions.uploadRisk => await _uploadRisk(request),
-        WebViewActions.openGooglePlay => _ignoreGooglePlay(request),
+        WebViewActions.openGooglePlay => await _openBrowser(request),
         WebViewActions.openUrl => await _openUrl(request),
         WebViewActions.close => await _run(closePage),
         WebViewActions.home => await _run(jumpHome),
@@ -69,9 +67,9 @@ class WebViewActionCoordinator {
         WebViewActions.changeAccount => await _changeAccount(request),
         WebViewActions.publicParams => await _publicParams(request),
         _ => WebViewResult.failure(
-            'Unsupported action: ${request.action}',
-            code: -2,
-          ),
+          'Unsupported action: ${request.action}',
+          code: -2,
+        ),
       };
     } catch (error) {
       final message = error.toString().trim();
@@ -82,23 +80,30 @@ class WebViewActionCoordinator {
   }
 
   Future<WebViewResult> _uploadRisk(WebViewRequest request) async {
-    final productId = _value(request, 'productId');
+    final productId = _value(request, 'polarimetric');
     if (productId.isEmpty) {
       return const WebViewResult.failure('Missing productId');
     }
     await reportRisk?.call(
       productId: productId,
-      orderNo: _value(request, 'orderNo'),
+      orderNo: _value(request, 'cysticercosis'),
       startedAtSeconds:
           nowSeconds?.call() ?? DateTime.now().millisecondsSinceEpoch ~/ 1000,
     );
     return const WebViewResult.success();
   }
 
-  WebViewResult _ignoreGooglePlay(WebViewRequest request) {
-    final package = _value(request, 'appPkg', fallbackToRaw: true);
-    logger?.call('Google Play action ignored on iOS: package=$package');
-    return const WebViewResult.success();
+  Future<WebViewResult> _openBrowser(WebViewRequest request) async {
+    final uri = Uri.tryParse(request.rawDataString);
+    if (uri == null ||
+        (uri.scheme != 'http' && uri.scheme != 'https') ||
+        uri.host.isEmpty) {
+      return const WebViewResult.failure('Invalid browser url');
+    }
+    final opened = await openExternal?.call(uri) ?? false;
+    return opened
+        ? const WebViewResult.success()
+        : const WebViewResult.failure('Unable to open url');
   }
 
   Future<WebViewResult> _openUrl(WebViewRequest request) async {
@@ -137,7 +142,7 @@ class WebViewActionCoordinator {
   }
 
   Future<WebViewResult> _retryOrder(WebViewRequest request) async {
-    final orderNo = _value(request, 'orderNo');
+    final orderNo = _value(request, 'cysticercosis');
     if (orderNo.isEmpty) {
       return const WebViewResult.failure('Missing orderNo');
     }
@@ -157,8 +162,8 @@ class WebViewActionCoordinator {
   }
 
   Future<WebViewResult> _changeAccount(WebViewRequest request) async {
-    final productId = _value(request, 'productId');
-    final orderNo = _value(request, 'orderNo');
+    final productId = _value(request, 'polarimetric');
+    final orderNo = _value(request, 'cysticercosis');
     if (productId.isEmpty || orderNo.isEmpty) {
       return const WebViewResult.failure('Missing account information');
     }

@@ -4,12 +4,15 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 import '../core/device/user_session.dart';
 import '../core/face/face_liveness_bridge.dart';
+import '../core/face/face_token_handler.dart';
+import '../core/permissions/permission_helper.dart';
 import '../core/product/product_providers.dart';
+import '../core/report/peso_report_service.dart';
 import '../core/ui/toast_helper.dart';
+import '../providers/report_provider.dart';
 import '../providers/repository_provider.dart';
 import '../theme/app_assets.dart';
 import '../theme/app_colors.dart';
@@ -30,6 +33,13 @@ class FaceRecognitionPage extends ConsumerStatefulWidget {
 
 class _FaceRecognitionPageState extends ConsumerState<FaceRecognitionPage> {
   bool _isProcessing = false;
+  late final int _sceneStartTime;
+
+  @override
+  void initState() {
+    super.initState();
+    _sceneStartTime = PesoReportService.nowSeconds();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -139,12 +149,11 @@ class _FaceRecognitionPageState extends ConsumerState<FaceRecognitionPage> {
     if (_isProcessing) return;
 
     // Step 1: Check camera permission
-    final permissionStatus = await Permission.camera.request();
+    final permissionStatus = await PermissionHelper.requestCameraPermission();
     if (!mounted) return;
 
-    if (permissionStatus != PermissionStatus.granted &&
-        permissionStatus != PermissionStatus.limited) {
-      await _showPermissionDialog();
+    if (permissionStatus != CameraPermissionStatus.granted) {
+      await PermissionHelper.showCameraPermissionDialog(context);
       return;
     }
 
@@ -171,19 +180,19 @@ class _FaceRecognitionPageState extends ConsumerState<FaceRecognitionPage> {
 
       if (!mounted) return;
 
-      if (!tokenResponse.isSuccess || tokenResponse.data.isEmpty) {
-        ToastHelper.showError(
-          tokenResponse.message.isNotEmpty
-              ? tokenResponse.message
-              : 'Failed to get verification token',
-        );
+      if (!await handleFaceTokenResponse(
+        context,
+        response: tokenResponse,
+        productId: widget.productId,
+      )) {
         return;
       }
 
-      final token = tokenResponse.data;
+      final token = tokenResponse.data.token;
 
       // Step 4: Launch FacePP SDK for liveness detection
       final result = await FaceLivenessBridge.instance.start(token);
+      unawaited(ref.read(reportServiceProvider).reportTrustDecisionResult(result));
 
       if (!result.success) {
         ToastHelper.showError(
@@ -211,6 +220,18 @@ class _FaceRecognitionPageState extends ConsumerState<FaceRecognitionPage> {
         livenessType: 0,
       );
       uploadLoading();
+
+      // 上报人脸识别场景
+      try {
+        final reportService = ref.read(reportServiceProvider);
+        unawaited(reportService.reportRisk(
+          productId: widget.productId,
+          scene: '4',
+          startedAtSeconds: _sceneStartTime,
+        ));
+      } catch (_) {
+        // 上报失败不影响业务
+      }
 
       if (!mounted) return;
 
@@ -262,31 +283,5 @@ class _FaceRecognitionPageState extends ConsumerState<FaceRecognitionPage> {
         ToastHelper.showError('Failed to continue: $e');
       }
     }
-  }
-
-  Future<void> _showPermissionDialog() {
-    return showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Allow Camera Access'),
-        content: const Text(
-          "We can't complete face verification without camera access. "
-          'Enable the permission to continue your application securely.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.of(dialogContext).pop();
-              await openAppSettings();
-            },
-            child: const Text('Settings'),
-          ),
-        ],
-      ),
-    );
   }
 }

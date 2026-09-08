@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 abstract final class AppColors {
   static const white = Color.fromRGBO(255, 255, 255, 1);
   static const black = Color.fromRGBO(0, 0, 0, 1);
+  static const dialogCancel = Color.fromRGBO(153, 153, 153, 1);
+  static const dialogConfirm = Color.fromRGBO(0, 0, 0, 1);
   static const darkNavy = Color.fromRGBO(19, 21, 96, 1);
   static const coral = Color.fromRGBO(106, 209, 255, 1);
   static const paleBlue = Color.fromRGBO(234, 246, 251, 1);

@@ -2,6 +2,9 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/services.dart';
 
+import '../json/json.dart';
+import '../report/peso_report_data.dart';
+
 class TrustDecisionLivenessResult {
   const TrustDecisionLivenessResult({
     required this.success,
@@ -23,15 +26,25 @@ class TrustDecisionLivenessResult {
 }
 
 class ClientBridge {
-  ClientBridge({MethodChannel? channel})
-    : _channel = channel ?? const MethodChannel('peso_shield/client_bridge');
+  ClientBridge({
+    MethodChannel? channel,
+    EventChannel? eventChannel,
+  }) : _channel = channel ?? const MethodChannel('peso_shield/client_bridge'),
+       _eventChannel =
+           eventChannel ?? const EventChannel('peso_shield/client_events');
+
+  static final ClientBridge shared = ClientBridge();
 
   final MethodChannel _channel;
+  final EventChannel _eventChannel;
+  Stream<Json>? _reportEventStream;
+
+  bool get supportsNativeBridge => Platform.isIOS;
 
   Future<TrustDecisionLivenessResult> showTrustDecisionLiveness(
     String license,
   ) async {
-    if (!Platform.isIOS) {
+    if (!supportsNativeBridge) {
       return const TrustDecisionLivenessResult(
         success: false,
         code: -1,
@@ -69,6 +82,68 @@ class ClientBridge {
         livenessId: '',
         raw: <String, dynamic>{'code': error.code},
       );
+    }
+  }
+
+  Future<PesoLocationSnapshot?> getReportLocation() async {
+    final result = await _safeInvokeMap('getReportLocation');
+    if (result == null) return null;
+    final location = PesoLocationSnapshot.fromMap(result);
+    return location.isValid ? location : null;
+  }
+
+  Future<String> requestLocationPermission() =>
+      _safeInvokeString('requestLocationPermission');
+
+  Future<PesoDeviceSnapshot> getReportDeviceSnapshot() async {
+    final result = await _safeInvokeMap('getReportDeviceSnapshot');
+    return PesoDeviceSnapshot.fromMap(result ?? const <Object?, Object?>{});
+  }
+
+  Future<String> getPushToken() => _safeInvokeString('getPushToken');
+
+  Future<void> registerForRemoteNotifications() async {
+    if (!supportsNativeBridge) return;
+    try {
+      await _channel.invokeMethod<void>('registerForRemoteNotifications');
+    } on PlatformException {
+      return;
+    } on MissingPluginException {
+      return;
+    }
+  }
+
+  Future<String> getTrackingStatus() => _safeInvokeString('getTrackingStatus');
+
+  Stream<Json> reportEvents() {
+    if (!supportsNativeBridge) return const Stream<Json>.empty();
+    return _reportEventStream ??= _eventChannel
+        .receiveBroadcastStream()
+        .map(Json.new)
+        .handleError((_) {})
+        .asBroadcastStream();
+  }
+
+  Future<Map<Object?, Object?>?> _safeInvokeMap(String method) async {
+    if (!supportsNativeBridge) return null;
+    try {
+      return await _channel.invokeMapMethod<Object?, Object?>(method);
+    } on PlatformException {
+      return null;
+    } on MissingPluginException {
+      return null;
+    }
+  }
+
+  Future<String> _safeInvokeString(String method) async {
+    if (!supportsNativeBridge) return '';
+    try {
+      final value = await _channel.invokeMethod<Object?>(method);
+      return value?.toString().trim() ?? '';
+    } on PlatformException {
+      return '';
+    } on MissingPluginException {
+      return '';
     }
   }
 }

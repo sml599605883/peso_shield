@@ -1,12 +1,12 @@
 import 'dart:async';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 import '../core/device/user_session.dart';
 import '../core/navigation/app_navigator.dart';
+import '../core/permissions/permission_helper.dart';
+import '../core/report/peso_report_service.dart';
 import '../core/ui/toast_helper.dart';
 import '../providers/repository_provider.dart';
 import '../theme/app_assets.dart';
@@ -16,9 +16,6 @@ import '../widgets/app_back_button.dart';
 import 'widgets/identity_upload_prompt.dart';
 import 'widgets/identity_upload_method_dialog.dart';
 import 'widgets/identity_upload_services.dart';
-
-/// Camera permission status
-enum CameraPermissionStatus { granted, denied, permanentlyDenied }
 
 /// ID upload page with camera/album integration and OCR upload
 class IdentityUploadPage extends ConsumerStatefulWidget {
@@ -45,6 +42,7 @@ class _IdentityUploadPageState extends ConsumerState<IdentityUploadPage> {
   late final IdentityUploadImageCompressor _imageCompressor =
       DefaultIdentityUploadImageCompressor();
   bool _isUploading = false;
+  int? _sceneStartTime;
 
   @override
   Widget build(BuildContext context) {
@@ -173,82 +171,21 @@ class _IdentityUploadPageState extends ConsumerState<IdentityUploadPage> {
     );
 
     if (selectedMethod == null || !mounted) return;
+    _sceneStartTime = PesoReportService.nowSeconds();
 
     // Request camera permission if photograph is selected
     if (selectedMethod == IdentityUploadMethod.photograph) {
-      final permissionResult = await _requestCameraPermission();
+      final permissionResult = await PermissionHelper.requestCameraPermission();
 
-      if (permissionResult == CameraPermissionStatus.denied) {
-        // 临时拒绝，用户下次还能看到权限弹窗，只显示轻提示
-        if (mounted) {
-          ToastHelper.showError('Camera permission is required to take photos');
-        }
-        return;
-      }
-
-      if (permissionResult == CameraPermissionStatus.permanentlyDenied) {
-        // 永久拒绝，必须去设置，显示引导对话框
-        if (mounted) {
-          await _showCameraPermissionDialog();
-        }
+      if (permissionResult != CameraPermissionStatus.granted) {
+        if (!context.mounted) return;
+        await PermissionHelper.showCameraPermissionDialog(context);
         return;
       }
     }
 
     // Pick, compress and upload image
     await _pickCompressAndUpload(selectedMethod);
-  }
-
-  Future<CameraPermissionStatus> _requestCameraPermission() async {
-    // 先检查当前状态
-    final currentStatus = await Permission.camera.status;
-
-    // 如果已授权，直接返回
-    if (currentStatus.isGranted) {
-      return CameraPermissionStatus.granted;
-    }
-
-    // 如果已永久拒绝，不要再请求
-    if (currentStatus.isPermanentlyDenied) {
-      return CameraPermissionStatus.permanentlyDenied;
-    }
-
-    // 其他情况（denied/limited/restricted）请求权限
-    final newStatus = await Permission.camera.request();
-
-    if (newStatus.isGranted) {
-      return CameraPermissionStatus.granted;
-    } else if (newStatus.isPermanentlyDenied) {
-      return CameraPermissionStatus.permanentlyDenied;
-    } else {
-      return CameraPermissionStatus.denied;
-    }
-  }
-
-  Future<void> _showCameraPermissionDialog() {
-    return showCupertinoDialog<void>(
-      context: context,
-      builder: (dialogContext) => CupertinoAlertDialog(
-        title: const Text('Allow Camera Access'),
-        content: const Text(
-          "We can't complete identity verification without camera access. Enable the permission to continue your application securely.",
-        ),
-        actions: [
-          CupertinoDialogAction(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancel'),
-          ),
-          CupertinoDialogAction(
-            onPressed: () async {
-              Navigator.of(dialogContext).pop();
-              await openAppSettings();
-            },
-            isDefaultAction: true,
-            child: const Text('Settings'),
-          ),
-        ],
-      ),
-    );
   }
 
   Future<void> _pickCompressAndUpload(IdentityUploadMethod method) async {
@@ -310,6 +247,7 @@ class _IdentityUploadPageState extends ConsumerState<IdentityUploadPage> {
             productId: widget.productId,
             cardType: widget.cardType,
             recognizedInfo: response.data,
+            startedAtSeconds: _sceneStartTime,
           ),
         );
       } else {

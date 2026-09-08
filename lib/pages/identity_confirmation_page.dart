@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/product/product_providers.dart';
 import '../core/device/user_session.dart';
 import '../providers/repository_provider.dart';
+import '../providers/report_provider.dart';
 import '../theme/app_assets.dart';
 import '../theme/app_colors.dart';
 import '../theme/layout_adapter.dart';
@@ -15,11 +18,13 @@ class IdentityConfirmationPage extends ConsumerStatefulWidget {
     required this.productId,
     required this.cardType,
     this.recognizedInfo,
+    this.startedAtSeconds,
     super.key,
   });
   final String productId;
   final String cardType;
   final Map<String, dynamic>? recognizedInfo;
+  final int? startedAtSeconds;
   @override
   ConsumerState<IdentityConfirmationPage> createState() =>
       _IdentityConfirmationPageState();
@@ -338,6 +343,7 @@ class _IdentityConfirmationPageState
   }
 
   Future<void> _submit() async {
+    if (_submitting) return;
     if (_name.text.trim().isEmpty ||
         _id.text.trim().isEmpty ||
         _birth.text.trim().isEmpty) {
@@ -363,11 +369,29 @@ class _IdentityConfirmationPageState
         ).showSnackBar(SnackBar(content: Text(result.message)));
         return;
       }
+      final startedAt = widget.startedAtSeconds;
+      if (startedAt != null) {
+        unawaited(
+          ref
+              .read(reportServiceProvider)
+              .reportRisk(
+                productId: widget.productId,
+                scene: '3',
+                startedAtSeconds: startedAt,
+              ),
+        );
+      }
       final flow = await ref.read(productApplicationFlowProvider.future);
       if (mounted) {
         await flow.continueProductDetailFlow(
           context: context,
           productId: widget.productId,
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Unable to submit. Please try again.')),
         );
       }
     } finally {

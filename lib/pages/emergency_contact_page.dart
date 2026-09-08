@@ -11,6 +11,7 @@ import '../core/ui/toast_helper.dart';
 import '../data/models/certification_data.dart' as model;
 import '../data/models/emergency_contact_data.dart';
 import '../providers/repository_provider.dart';
+import '../providers/report_provider.dart';
 import '../theme/app_assets.dart';
 import '../theme/app_colors.dart';
 import '../theme/layout_adapter.dart';
@@ -41,10 +42,12 @@ class _EmergencyContactPageState extends ConsumerState<EmergencyContactPage> {
   String _prompt = _defaultPrompt;
   String _loadError = '';
   bool _isSubmitting = false;
+  late final int _sceneStartTime;
 
   @override
   void initState() {
     super.initState();
+    _sceneStartTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
     unawaited(_load());
   }
 
@@ -344,6 +347,14 @@ class _EmergencyContactPageState extends ConsumerState<EmergencyContactPage> {
         ToastHelper.showError(response.message);
         return;
       }
+
+      // Report risk scene
+      final reportService = ref.read(reportServiceProvider);
+      unawaited(reportService.reportRisk(
+        productId: widget.productId,
+        scene: '7',
+        startedAtSeconds: _sceneStartTime,
+      ));
       
       // 提交成功后，调用 continueProductDetailFlow 获取下一步
       final flow = await ref.read(productApplicationFlowProvider.future);
@@ -576,6 +587,10 @@ class _FieldBox extends StatelessWidget {
       margin: layout.edgeInsets(left: 20, right: 20),
       child: Material(
         color: AppColors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: layout.radius(20),
+          side: const BorderSide(color: AppColors.personalInformationBorder),
+        ),
         child: InkWell(
           onTap: onTap,
           borderRadius: layout.radius(20),
@@ -586,10 +601,6 @@ class _FieldBox extends StatelessWidget {
               child: child,
             ),
           ),
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: layout.radius(20),
-          side: const BorderSide(color: AppColors.personalInformationBorder),
         ),
       ),
     );

@@ -4,6 +4,7 @@ import '../../core/network/http_client.dart';
 import '../../core/network/api_response.dart';
 import '../../core/network/obfuscation_helper.dart';
 import '../../core/json/json.dart';
+import '../models/face_token_result.dart';
 
 import '../models/certification_data.dart';
 import '../models/emergency_contact_data.dart';
@@ -260,7 +261,7 @@ class CertificationRepository {
     );
   }
 
-  Future<ApiResponse<String>> getFacePPToken({
+  Future<ApiResponse<FaceTokenResult>> getFacePPToken({
     required String orderNo,
     int type = 0,
   }) async {
@@ -272,10 +273,7 @@ class CertificationRepository {
         'vermiculations': ObfuscationHelper.randomParam(),
         'unsellable': ObfuscationHelper.randomParam(),
       },
-      parse: (json) {
-        final mugg = json as Map<String, dynamic>?;
-        return mugg?['legerity'] as String? ?? '';
-      },
+      parse: (json) => FaceTokenResult.fromJson(Json(json)),
     );
   }
 

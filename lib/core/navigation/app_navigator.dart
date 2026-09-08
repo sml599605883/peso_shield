@@ -171,17 +171,13 @@ class AppNavigator {
     }
 
     _log('Opening top-level certification: $routeName');
-    return navigator.pushNamedAndRemoveUntil<T>(
-      routeName,
-      (route) {
-        final name = route.settings.name;
-        // 保留非认证流程的页面
-        return name != null &&
-            name.isNotEmpty &&
-            !_certificationRoutes.contains(name);
-      },
-      arguments: arguments,
-    );
+    return navigator.pushNamedAndRemoveUntil<T>(routeName, (route) {
+      final name = route.settings.name;
+      // 保留非认证流程的页面
+      return name != null &&
+          name.isNotEmpty &&
+          !_certificationRoutes.contains(name);
+    }, arguments: arguments);
   }
 
   // ==================== 具体页面跳转方法 ====================
@@ -234,6 +230,7 @@ class AppNavigator {
     required String productId,
     required String cardType,
     Map<String, dynamic>? recognizedInfo,
+    int? startedAtSeconds,
   }) async {
     await toNamed<void>(
       AppRoutes.identityConfirmation,
@@ -241,14 +238,13 @@ class AppNavigator {
         productId: productId,
         cardType: cardType,
         recognizedInfo: recognizedInfo,
+        startedAtSeconds: startedAtSeconds,
       ),
     );
   }
 
   /// 跳转到人脸识别页（顶层认证页面，清除之前的认证页面）
-  static Future<void> toFaceRecognition({
-    required String productId,
-  }) async {
+  static Future<void> toFaceRecognition({required String productId}) async {
     await _toTopLevelCertification<void>(
       AppRoutes.faceRecognition,
       arguments: FaceRecognitionPageArguments(productId: productId),
@@ -256,9 +252,7 @@ class AppNavigator {
   }
 
   /// 跳转到个人信息页（顶层认证页面，清除之前的认证页面）
-  static Future<void> toPersonalInformation({
-    required String productId,
-  }) async {
+  static Future<void> toPersonalInformation({required String productId}) async {
     await _toTopLevelCertification<void>(
       AppRoutes.personalInformation,
       arguments: PersonalInformationPageArguments(productId: productId),
@@ -290,10 +284,7 @@ class AppNavigator {
   }
 
   /// 跳转到 WebView 页面
-  static Future<void> toWebView({
-    required String url,
-    String? title,
-  }) async {
+  static Future<void> toWebView({required String url, String? title}) async {
     await toNamed<void>(
       AppRoutes.webView,
       arguments: WebViewPageArguments(url: url, title: title),

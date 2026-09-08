@@ -51,10 +51,12 @@ class IdentityConfirmationPageArguments {
     required this.productId,
     required this.cardType,
     this.recognizedInfo,
+    this.startedAtSeconds,
   });
   final String productId;
   final String cardType;
   final Map<String, dynamic>? recognizedInfo;
+  final int? startedAtSeconds;
 }
 
 class FaceRecognitionPageArguments {
@@ -86,10 +88,7 @@ class BindCardPageArguments {
 }
 
 class WebViewPageArguments {
-  const WebViewPageArguments({
-    required this.url,
-    this.title,
-  });
+  const WebViewPageArguments({required this.url, this.title});
 
   final String url;
   final String? title;
@@ -159,6 +158,7 @@ class AppRouteGenerator {
             productId: args.productId,
             cardType: args.cardType,
             recognizedInfo: args.recognizedInfo,
+            startedAtSeconds: args.startedAtSeconds,
           ),
           settings: settings,
         );
@@ -206,10 +206,8 @@ class AppRouteGenerator {
         final args = settings.arguments as WebViewPageArguments?;
         if (args == null) return _errorRoute(settings.name);
         return MaterialPageRoute<void>(
-          builder: (_) => WebViewPage(
-            initialUrl: args.url,
-            initialTitle: args.title,
-          ),
+          builder: (_) =>
+              WebViewPage(initialUrl: args.url, initialTitle: args.title),
           settings: settings,
         );
 

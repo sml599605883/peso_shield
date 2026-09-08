@@ -1,30 +1,49 @@
 import '../../core/network/http_client.dart';
 import '../../core/network/api_response.dart';
 import '../../core/network/obfuscation_helper.dart';
-
+import '../../core/network/http_exception.dart';
 
 class ReportRepository {
-  const ReportRepository(this._client);
+  ReportRepository(HttpClient client) : _client = (() async => client);
 
-  final HttpClient _client;
+  ReportRepository.deferred(this._client);
+
+  final Future<HttpClient> Function() _client;
+
+  Future<ApiResponse<T>> _post<T>(
+    String path, {
+    required Map<String, dynamic> params,
+    required T Function(dynamic) parse,
+  }) async {
+    final client = await _client();
+    final response = await client.post<T>(path, params: params, parse: parse);
+    if (!response.isSuccess) {
+      throw HttpException(
+        type: HttpFailureType.businessLogic,
+        message: response.message,
+        code: response.code,
+      );
+    }
+    return response;
+  }
 
   Future<ApiResponse<void>> reportLocation({
     required String countryCode,
     required String country,
     required String street,
-    required double latitude,
-    required double longitude,
+    required String latitude,
+    required String longitude,
     required String city,
     String? province,
   }) async {
-    return _client.post(
+    return _post(
       '/outsmelled/akinetic',
       params: {
         'nabob': countryCode,
         'instituter': country,
         'traceabilities': street,
-        'sade': latitude.toString(),
-        'salivating': longitude.toString(),
+        'sade': latitude,
+        'salivating': longitude,
         'hostages': city,
         if (province != null) 'countertrend': province,
         'ovicide': ObfuscationHelper.randomParam(),
@@ -34,18 +53,19 @@ class ReportRepository {
     );
   }
 
-  Future<ApiResponse<void>> reportGoogleMarket({
+  Future<ApiResponse<String>> reportGoogleMarket({
     required String idfv,
     required String idfa,
   }) async {
-    return _client.post(
+    return _post(
       '/outsmelled/amoebaean',
       params: {
         'trouncing': idfv,
         'depriver': ObfuscationHelper.randomParam(),
         'tinged': idfa,
       },
-      parse: (_) => null,
+      parse: (data) =>
+          data is Map ? data['fogeyish']?.toString().trim() ?? '' : '',
     );
   }
 
@@ -55,12 +75,12 @@ class ReportRepository {
     required String orderNo,
     required String newDeviceId,
     required String advertisingId,
-    required double longitude,
-    required double latitude,
+    required double? longitude,
+    required double? latitude,
     required String startTime,
     required String endTime,
   }) async {
-    return _client.post(
+    return _post(
       '/outsmelled/quinellas',
       params: {
         'polarimetric': productId,
@@ -68,11 +88,11 @@ class ReportRepository {
         'cysticercosis': orderNo,
         'steamboats': newDeviceId,
         'contrastable': advertisingId,
-        'salivating': longitude,
-        'sade': latitude,
+        'salivating': longitude ?? '',
+        'sade': latitude ?? '',
         'hypersecretions': startTime,
         'galoping': endTime,
-        'openhearted': latitude,
+        'openhearted': latitude ?? '',
       },
       parse: (_) => null,
     );
@@ -81,11 +101,9 @@ class ReportRepository {
   Future<ApiResponse<void>> reportDeviceInfo({
     required String encryptedData,
   }) async {
-    return _client.post(
+    return _post(
       '/outsmelled/dieselization',
-      params: {
-        'mugg': encryptedData,
-      },
+      params: {'mugg': encryptedData},
       parse: (_) => null,
     );
   }
@@ -93,10 +111,26 @@ class ReportRepository {
   Future<ApiResponse<void>> reportApplePushToken({
     required String token,
   }) async {
-    return _client.post(
+    return _post(
       '/outsmelled/banisters',
+      params: {'amender': token},
+      parse: (_) => null,
+    );
+  }
+
+  Future<ApiResponse<void>> reportTrustDecisionResult({
+    required String livenessId,
+    required String requestId,
+    required String resultCode,
+    required String result,
+  }) {
+    return _post(
+      '/outsmelled/contexts',
       params: {
-        'amender': token,
+        'counterargued': livenessId,
+        'herrying': requestId,
+        'cullay': resultCode,
+        'recklessly': result,
       },
       parse: (_) => null,
     );

@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +9,7 @@ import 'package:peso_shield/core/device/user_session.dart';
 import 'package:peso_shield/core/network/device_params.dart';
 import 'package:peso_shield/pages/network_error_page.dart';
 import 'package:peso_shield/providers/network_provider.dart';
+import 'package:peso_shield/providers/report_provider.dart';
 
 class StartupNetworkGate extends StatefulWidget {
   const StartupNetworkGate({
@@ -62,7 +65,18 @@ class _StartupNetworkGateState extends State<StartupNetworkGate>
       await widget.ref.read(userSessionProvider.notifier).restore();
 
       final httpClient = await widget.ref.read(httpClientProvider.future);
-      final available = await httpClient.probeTransport();
+      var available = await httpClient.probeTransport();
+      if (!available) {
+        final fallback = await _loadFallbackApi();
+        if (fallback != null) {
+          widget.ref.read(runtimeApiBaseProvider.notifier).state = fallback;
+          widget.ref.invalidate(httpClientProvider);
+          final fallbackClient = await widget.ref.read(
+            httpClientProvider.future,
+          );
+          available = await fallbackClient.probeTransport();
+        }
+      }
 
       if (available) {
         // Sync device name in background after network is available
@@ -84,6 +98,13 @@ class _StartupNetworkGateState extends State<StartupNetworkGate>
         } catch (_) {
           // Ignore device name sync errors, continue to app
         }
+
+        // 初始化数据上报服务
+        try {
+          widget.ref.read(reportLifecycleProvider).start();
+        } catch (_) {
+          // 上报服务初始化失败不影响应用启动
+        }
       }
 
       if (!mounted) return;
@@ -98,6 +119,26 @@ class _StartupNetworkGateState extends State<StartupNetworkGate>
         _checking = false;
         _failed = true;
       });
+    }
+  }
+
+  Future<Uri?> _loadFallbackApi() async {
+    const source =
+        'https://raw.githubusercontent.com/ninelife442/TulongPera/refs/heads/main/spareList';
+    final client = HttpClient()
+      ..connectionTimeout = const Duration(seconds: 10);
+    try {
+      final response = await (await client.getUrl(Uri.parse(source))).close();
+      if (response.statusCode < 200 || response.statusCode >= 300) return null;
+      final body = await response.transform(utf8.decoder).join();
+      final decoded = base64.decode(body.trim());
+      final json = jsonDecode(utf8.decode(decoded));
+      final api = json is Map ? json['api'] : null;
+      return api is String ? Uri.tryParse(api) : null;
+    } catch (_) {
+      return null;
+    } finally {
+      client.close(force: true);
     }
   }
 

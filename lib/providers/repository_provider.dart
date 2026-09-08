@@ -18,22 +18,25 @@ final appRepositoryProvider = FutureProvider<AppRepository>((ref) async {
   return AppRepository(client);
 });
 
-final productRepositoryProvider = FutureProvider<ProductRepository>((ref) async {
+final productRepositoryProvider = FutureProvider<ProductRepository>((
+  ref,
+) async {
   final client = await ref.watch(httpClientProvider.future);
   return ProductRepository(client);
 });
 
-final certificationRepositoryProvider = FutureProvider<CertificationRepository>((ref) async {
-  final client = await ref.watch(httpClientProvider.future);
-  return CertificationRepository(client);
-});
+final certificationRepositoryProvider = FutureProvider<CertificationRepository>(
+  (ref) async {
+    final client = await ref.watch(httpClientProvider.future);
+    return CertificationRepository(client);
+  },
+);
 
 final orderRepositoryProvider = FutureProvider<OrderRepository>((ref) async {
   final client = await ref.watch(httpClientProvider.future);
   return OrderRepository(client);
 });
 
-final reportRepositoryProvider = FutureProvider<ReportRepository>((ref) async {
-  final client = await ref.watch(httpClientProvider.future);
-  return ReportRepository(client);
+final reportRepositoryProvider = Provider<ReportRepository>((ref) {
+  return ReportRepository.deferred(() => ref.read(httpClientProvider.future));
 });

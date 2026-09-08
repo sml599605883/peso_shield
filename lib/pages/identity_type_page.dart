@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../core/navigation/app_route_generator.dart';
 import '../core/navigation/app_routes.dart';
+import '../core/report/peso_report_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../providers/report_provider.dart';
 import '../providers/repository_provider.dart';
 import '../data/models/certification_data.dart';
 import '../theme/app_assets.dart';
@@ -24,10 +28,12 @@ class IdentityTypePage extends ConsumerStatefulWidget {
 class _IdentityTypePageState extends ConsumerState<IdentityTypePage> {
   bool _showOtherOptions = false;
   IdentityTypeList? _identityTypeList;
+  late final int _sceneStartTime;
 
   @override
   void initState() {
     super.initState();
+    _sceneStartTime = PesoReportService.nowSeconds();
     _loadIdentityTypes();
   }
 
@@ -270,6 +276,18 @@ class _IdentityTypePageState extends ConsumerState<IdentityTypePage> {
           bottomLeft: Radius.circular(layout.px(10)),
         ),
         onTap: () async {
+          // 上报认证选择场景
+          try {
+            final reportService = ref.read(reportServiceProvider);
+            unawaited(reportService.reportRisk(
+              productId: widget.productId,
+              scene: '2',
+              startedAtSeconds: _sceneStartTime,
+            ));
+          } catch (_) {
+            // 上报失败不影响业务
+          }
+          
           await Navigator.of(context).pushNamed(
             AppRoutes.identityUpload,
             arguments: IdentityUploadPageArguments(

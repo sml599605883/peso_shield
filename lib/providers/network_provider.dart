@@ -12,14 +12,24 @@ import '../core/network/network_config.dart';
 import '../core/session/session_expiry_coordinator.dart';
 
 final networkConfigProvider = Provider<NetworkConfig>((ref) {
+  final override = ref.watch(runtimeApiBaseProvider);
   return NetworkConfig(
-    apiBase: Uri.parse('http://8.212.131.176/slushier'),
+    apiBase: override ?? Uri.parse('http://8.212.131.176/slushier'),
     signSecret: 'cf938da7bebcecccd5563ca28d7f1fbd',
     marketIdentifier: 'ph_peso_shield_ios',
     aesKey: 'ea0deb3b9018009f',
     aesIv: '031dcd3b521e5cf6',
   );
 });
+
+final runtimeApiBaseProvider = NotifierProvider<RuntimeApiBaseNotifier, Uri?>(
+  RuntimeApiBaseNotifier.new,
+);
+
+class RuntimeApiBaseNotifier extends Notifier<Uri?> {
+  @override
+  Uri? build() => null;
+}
 
 final deviceMetadataStoreProvider = Provider<DeviceMetadataStore>((ref) {
   return DeviceMetadataStore.persistent();

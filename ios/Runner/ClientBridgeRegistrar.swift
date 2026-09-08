@@ -1,3 +1,5 @@
+import AdSupport
+import AppTrackingTransparency
 import Flutter
 import TDMobRisk
 import UIKit
@@ -27,13 +29,36 @@ final class ClientBridgeRegistrar: NSObject {
       binaryMessenger: binaryMessenger
     )
     channel.setMethodCallHandler { [weak self] call, result in
+      guard let self = self else {
+        result(FlutterMethodNotImplemented)
+        return
+      }
+      
+      // Try reporting methods first
+      if self.handleReportMethod(call, result: result) {
+        return
+      }
+      
+      // Fallback to other methods
       switch call.method {
       case "showTrustDecisionLiveness":
-        self?.showTrustDecisionLiveness(call.arguments, result: result)
+        self.showTrustDecisionLiveness(call.arguments, result: result)
+      case "registerForRemoteNotifications":
+        DispatchQueue.main.async {
+          UIApplication.shared.registerForRemoteNotifications()
+          result(nil)
+        }
+      case "getTrackingStatus":
+        result(self.currentTrackingStatus())
+      case "getPushToken":
+        result(self.pushToken)
       default:
         result(FlutterMethodNotImplemented)
       }
     }
+    
+    // Register event channel for reporting
+    registerReportingMethods(with: binaryMessenger)
   }
 
   /// Activates device-risk collection at application launch.

@@ -1,19 +1,19 @@
 import '../../core/json/json.dart';
 
 abstract final class WebViewContract {
-  static const handler = 'bridge_peso_shield';
+  static const handler = 'ph_peso_shield_ios';
 }
 
 abstract final class WebViewActions {
-  static const uploadRisk = 'bridge_uploadRisk';
-  static const openGooglePlay = 'bridge_openGooglePlay';
-  static const openUrl = 'bridge_openUrl';
-  static const close = 'bridge_close';
-  static const home = 'bridge_home';
-  static const grade = 'bridge_grade';
-  static const retryOrder = 'bridge_retryOrder';
-  static const changeAccount = 'bridge_changeAccount';
-  static const publicParams = 'bridge_publicParams';
+  static const uploadRisk = 'peso_shield_WVfjTuCRJGSqjIT';
+  static const openGooglePlay = 'peso_shield_9Rov8it6VzmyqBB';
+  static const openUrl = 'peso_shield_fVPjxOZ6Bw3LyQa';
+  static const close = 'peso_shield_a65wTdBVcctiFNh';
+  static const home = 'peso_shield_PPHwPq2wr2Zy3kX';
+  static const grade = 'peso_shield_bfhPVzF4iYNTXuF';
+  static const retryOrder = 'peso_shield_pKX7FGFmmsw0ztX';
+  static const changeAccount = 'peso_shield_jYHEviKaMFiBgvV';
+  static const publicParams = 'peso_shield_Hr6CywDtTBdnKoS';
 }
 
 class WebViewRequest {
@@ -65,25 +65,21 @@ class WebViewRequest {
 }
 
 class WebViewResult {
-  const WebViewResult({
-    required this.code,
-    required this.message,
-    this.data,
-  });
+  const WebViewResult({required this.code, required this.message, this.data});
 
   const WebViewResult.success([Object? data])
-      : this(code: 0, message: 'success', data: data);
+    : this(code: 0, message: 'success', data: data);
 
   const WebViewResult.failure(String message, {int code = -1})
-      : this(code: code, message: message);
+    : this(code: code, message: message);
 
   final int code;
   final String message;
   final Object? data;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'code': code,
-        'message': message,
-        'data': data ?? <String, dynamic>{},
-      };
+    'code': code,
+    'message': message,
+    'data': data ?? <String, dynamic>{},
+  };
 }

@@ -7,12 +7,15 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../core/device/user_session.dart';
 import '../core/face/face_liveness_bridge.dart';
+import '../core/face/face_token_handler.dart';
+import '../core/permissions/permission_helper.dart';
 import '../core/network/api_response.dart';
 import '../core/product/product_providers.dart';
 import '../core/ui/toast_helper.dart';
 import '../data/models/bind_card_data.dart';
 import '../data/models/certification_data.dart' as model;
 import '../providers/repository_provider.dart';
+import '../providers/report_provider.dart';
 import '../theme/app_assets.dart';
 import '../theme/app_colors.dart';
 import '../theme/layout_adapter.dart';
@@ -72,10 +75,12 @@ class _BindCardPageState extends ConsumerState<BindCardPage> {
   final Map<String, String> _values = {};
   final Set<String> _dismissedSuggestionKeys = {};
   String? _activeSuggestionKey;
+  late final int _sceneStartTime;
 
   @override
   void initState() {
     super.initState();
+    _sceneStartTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
     unawaited(_load());
   }
 
@@ -560,8 +565,10 @@ class _BindCardPageState extends ConsumerState<BindCardPage> {
     final loading = ToastHelper.showLoading();
     try {
       var response = await _save(group.type, fields);
-      if (response.code == 20000) {
-        response = await _completeLiveness(group.type, fields);
+      while (response.code == 20000) {
+        final livenessResponse = await _completeLiveness(group.type, fields);
+        if (livenessResponse == null) return;
+        response = livenessResponse;
       }
       if (!mounted) return;
       if (!response.isSuccess) {
@@ -585,6 +592,17 @@ class _BindCardPageState extends ConsumerState<BindCardPage> {
         if (url.isEmpty) ToastHelper.showError('Missing account change result');
         return;
       }
+
+      // Report risk scene
+      final reportService = ref.read(reportServiceProvider);
+      unawaited(
+        reportService.reportRisk(
+          productId: widget.productId,
+          scene: '8',
+          startedAtSeconds: _sceneStartTime,
+        ),
+      );
+
       await (widget.continueFlow ?? _continue)();
     } catch (error) {
       if (mounted) ToastHelper.showError(error.toString());
@@ -612,31 +630,39 @@ class _BindCardPageState extends ConsumerState<BindCardPage> {
         );
   }
 
-  Future<ApiResponse<Map<String, dynamic>>> _completeLiveness(
+  Future<ApiResponse<Map<String, dynamic>>?> _completeLiveness(
     String type,
     Map<String, String> fields,
   ) async {
     final permission =
         await (widget.requestCameraPermission ??
             () => Permission.camera.request())();
-    if (permission != PermissionStatus.granted &&
-        permission != PermissionStatus.limited) {
-      throw Exception('Camera permission is required for verification');
+    if (!mounted) return null;
+    if (permission != PermissionStatus.granted) {
+      ToastHelper.hideLoading();
+      await PermissionHelper.showCameraPermissionDialog(context);
+      return null;
     }
     final repository = await ref.read(certificationRepositoryProvider.future);
     final orderNo = widget.orderNo.isNotEmpty
         ? widget.orderNo
         : ref.read(sessionStoreProvider).productDetailOrderNo;
     final token = await repository.getFacePPToken(orderNo: orderNo, type: 1);
-    if (!token.isSuccess || token.data.isEmpty) {
-      throw Exception(
-        token.message.isEmpty ? 'Failed to get face token' : token.message,
-      );
+    if (!mounted) return null;
+    if (!await handleFaceTokenResponse(
+      context,
+      response: token,
+      productId: widget.productId,
+    )) {
+      return null;
     }
     final result =
         await (widget.startLiveness ?? FaceLivenessBridge.instance.start)(
-          token.data,
+          token.data.token,
         );
+    unawaited(
+      ref.read(reportServiceProvider).reportTrustDecisionResult(result),
+    );
     if (!result.success || result.livenessId.isEmpty) {
       throw Exception(
         result.message.isEmpty
@@ -653,7 +679,7 @@ class _BindCardPageState extends ConsumerState<BindCardPage> {
         result.livenessId,
         result.image,
         '',
-        token.data,
+        token.data.token,
       );
     }
     return repository.submitBindCard(
@@ -663,7 +689,7 @@ class _BindCardPageState extends ConsumerState<BindCardPage> {
       livenessType: '7',
       livenessId: result.livenessId,
       image: result.image,
-      license: token.data,
+      license: token.data.token,
     );
   }
 

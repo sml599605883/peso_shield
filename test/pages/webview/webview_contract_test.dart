@@ -3,57 +3,58 @@ import 'package:peso_shield/pages/webview/webview_contract.dart';
 
 void main() {
   group('WebViewContract', () {
-    test('handler should use bridge prefix', () {
-      expect(WebViewContract.handler, 'bridge_peso_shield');
+    test('handler should match the web bridge namespace', () {
+      expect(WebViewContract.handler, 'ph_peso_shield_ios');
     });
 
-    test('all actions should use bridge_ prefix', () {
-      expect(WebViewActions.uploadRisk, 'bridge_uploadRisk');
-      expect(WebViewActions.openGooglePlay, 'bridge_openGooglePlay');
-      expect(WebViewActions.openUrl, 'bridge_openUrl');
-      expect(WebViewActions.close, 'bridge_close');
-      expect(WebViewActions.home, 'bridge_home');
-      expect(WebViewActions.grade, 'bridge_grade');
-      expect(WebViewActions.retryOrder, 'bridge_retryOrder');
-      expect(WebViewActions.changeAccount, 'bridge_changeAccount');
-      expect(WebViewActions.publicParams, 'bridge_publicParams');
+    test('all actions should use the current web contract', () {
+      expect(WebViewActions.uploadRisk, 'peso_shield_WVfjTuCRJGSqjIT');
+      expect(WebViewActions.openGooglePlay, 'peso_shield_9Rov8it6VzmyqBB');
+      expect(WebViewActions.openUrl, 'peso_shield_fVPjxOZ6Bw3LyQa');
+      expect(WebViewActions.close, 'peso_shield_a65wTdBVcctiFNh');
+      expect(WebViewActions.home, 'peso_shield_PPHwPq2wr2Zy3kX');
+      expect(WebViewActions.grade, 'peso_shield_bfhPVzF4iYNTXuF');
+      expect(WebViewActions.retryOrder, 'peso_shield_pKX7FGFmmsw0ztX');
+      expect(WebViewActions.changeAccount, 'peso_shield_jYHEviKaMFiBgvV');
+      expect(WebViewActions.publicParams, 'peso_shield_Hr6CywDtTBdnKoS');
     });
   });
 
   group('WebViewRequest', () {
     test('decode should parse action from message', () {
       final message = {
-        'action': 'bridge_close',
+        'action': WebViewActions.close,
         'callbackId': 'cb_123',
         'data': {'key': 'value'},
       };
 
       final request = WebViewRequest.decode(message);
 
-      expect(request.action, 'bridge_close');
+      expect(request.action, WebViewActions.close);
       expect(request.callbackId, 'cb_123');
       expect(request.data['key'], 'value');
     });
 
     test('decode should handle JSON string message', () {
-      const message = '{"action":"bridge_home","callbackId":"cb_456"}';
+      final message =
+          '{"action":"${WebViewActions.home}","callbackId":"cb_456"}';
 
       final request = WebViewRequest.decode(message);
 
-      expect(request.action, 'bridge_home');
+      expect(request.action, WebViewActions.home);
       expect(request.callbackId, 'cb_456');
     });
 
     test('decode should support alternative field names', () {
       final message = {
-        'name': 'bridge_openUrl',
+        'name': WebViewActions.openUrl,
         'callback': 'cb_789',
         'payload': {'url': 'https://example.com'},
       };
 
       final request = WebViewRequest.decode(message);
 
-      expect(request.action, 'bridge_openUrl');
+      expect(request.action, WebViewActions.openUrl);
       expect(request.callbackId, 'cb_789');
       expect(request.data['url'], 'https://example.com');
     });

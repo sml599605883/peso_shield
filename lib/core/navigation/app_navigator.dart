@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../product/product_providers.dart';
+import '../ui/toast_helper.dart';
+import 'app_deep_link.dart';
 import 'app_route_generator.dart';
 import 'app_routes.dart';
 
@@ -323,6 +325,58 @@ class AppNavigator {
   }
 
   // ==================== 工具方法 ====================
+
+  static Future<void> navigateRawTarget({
+    required BuildContext context,
+    required WidgetRef ref,
+    required String target,
+    String productId = '',
+    int apiRemind = 1,
+  }) async {
+    final link = const AppDeepLinkParser().parse(
+      target,
+      arguments: {'productId': productId},
+    );
+    switch (link.kind) {
+      case AppDeepLinkKind.webView:
+        if (link.uri?.host.isEmpty ?? true) {
+          ToastHelper.showError('Invalid link');
+          return;
+        }
+        await toWebView(url: link.rawTarget);
+      case AppDeepLinkKind.home:
+        await toRoot();
+      case AppDeepLinkKind.settings:
+        await toNamed<void>(AppRoutes.settings);
+      case AppDeepLinkKind.login:
+        await toLogin();
+      case AppDeepLinkKind.admission:
+      case AppDeepLinkKind.productDetail:
+        final productId = link.productId;
+        if (productId.isEmpty) {
+          ToastHelper.showError('Invalid link');
+          return;
+        }
+        final flow = await ref.read(productApplicationFlowProvider.future);
+        if (!context.mounted) return;
+        if (link.kind == AppDeepLinkKind.admission) {
+          await flow.applyProduct(
+            context: context,
+            productId: productId,
+            apiRemind: apiRemind,
+          );
+        } else {
+          await flow.continueProductDetailFlow(
+            context: context,
+            productId: productId,
+          );
+        }
+      case AppDeepLinkKind.creditReview:
+      case AppDeepLinkKind.order:
+      case AppDeepLinkKind.unsupported:
+        ToastHelper.showError('Unable to open link');
+    }
+  }
 
   /// 显示对话框
   static Future<T?> showDialogWidget<T>({

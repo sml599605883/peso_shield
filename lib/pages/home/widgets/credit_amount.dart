@@ -4,32 +4,27 @@ import '../../../theme/app_colors.dart';
 import '../../../theme/layout_adapter.dart';
 
 class CreditAmount extends StatelessWidget {
-  const CreditAmount({super.key});
+  const CreditAmount({required this.amount, super.key});
+
+  final String amount;
 
   @override
   Widget build(BuildContext context) {
     final layout = AppLayout.of(context);
-    return Text.rich(
-      TextSpan(
-        children: [
-          TextSpan(
-            text: '₱',
-            style: TextStyle(
-              fontSize: layout.px(36),
-              fontWeight: FontWeight.w700,
-            ),
+    return SizedBox(
+      height: layout.px(60),
+      child: Center(
+        child: Text(
+          amount,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: AppColors.black,
+            fontSize: layout.px(50),
+            fontWeight: FontWeight.w700,
+            height: 60 / 50,
           ),
-          TextSpan(
-            text: ' 60,000',
-            style: TextStyle(
-              fontSize: layout.px(50),
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
+        ),
       ),
-      textAlign: TextAlign.center,
-      style: TextStyle(color: AppColors.black, height: 60 / 50),
     );
   }
 }

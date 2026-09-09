@@ -23,6 +23,8 @@ class ProductApplicationFlow {
     required this.userSession,
     required this.sessionStore,
     this.reportService,
+    this.beginLocationPermissionRequest,
+    this.endLocationPermissionRequest,
   });
 
   final ProductRepository repository;
@@ -30,6 +32,8 @@ class ProductApplicationFlow {
   final UserSession userSession;
   final SessionStore sessionStore;
   final PesoReportService? reportService;
+  final VoidCallback? beginLocationPermissionRequest;
+  final VoidCallback? endLocationPermissionRequest;
   final AppDeepLinkParser _deepLinkParser = const AppDeepLinkParser();
   bool _isProcessing = false;
 
@@ -331,7 +335,7 @@ class ProductApplicationFlow {
 
     // 所有认证都已完成，可以进入借款确认流程
     debugPrint('All certifications completed, ready for loan confirmation');
-    
+
     // 调用订单跳转接口，获取确认页 URL
     ToastHelper.showLoading();
     final response = await orderRepository.getOrderJumpUrl(
@@ -373,10 +377,11 @@ class ProductApplicationFlow {
 
   /// 检查并请求定位权限（matching dali_cash）
   Future<bool> _ensureLocationAccess(BuildContext context) async {
-    final granted = await PermissionHelper.requestCertificationLocation(
-      context,
-    );
-
-    return granted;
+    beginLocationPermissionRequest?.call();
+    try {
+      return await PermissionHelper.requestCertificationLocation(context);
+    } finally {
+      endLocationPermissionRequest?.call();
+    }
   }
 }

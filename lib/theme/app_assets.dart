@@ -1,4 +1,14 @@
 abstract final class AppAssets {
+  static const creditEmpty = 'assets/credit_empty.png';
+  static const orderBlue = 'assets/home/order_status_blue_background.png';
+  static const orderWarm = 'assets/home/order_status_warm_background.png';
+  static const orderReviewLabel = 'assets/home/order_status_review_label.png';
+  static const orderFailedLabel = 'assets/home/order_status_failed_label.png';
+  static const orderDisbursingLabel =
+      'assets/home/order_status_disbursing_label.png';
+  static const orderRepaymentLabel =
+      'assets/home/order_status_repayment_label.png';
+  static const orderOverdueLabel = 'assets/home/order_status_overdue_label.png';
   static const networkErrorIllustration =
       'assets/network_error_illustration@3x.png';
   static const homeBackground = 'assets/home/home_background.png';
@@ -6,6 +16,14 @@ abstract final class AppAssets {
   static const instantFundsBanner = 'assets/home/instant_funds_banner.png';
   static const loanProcessTitle = 'assets/home/loan_process_title.png';
   static const loanProcessSteps = 'assets/home/loan_process_steps.png';
+  static const loanProcessCardActiveBackground =
+      'assets/home/loan_process_card_active_background.png';
+  static const loanProcessCardInactiveBackground =
+      'assets/home/loan_process_card_inactive_background.png';
+  static const loanProcessLockActive =
+      'assets/home/loan_process_lock_active.png';
+  static const loanProcessLockInactive =
+      'assets/home/loan_process_lock_inactive.png';
   static const notification = 'assets/home/notification.png';
   static const loginIllustration = 'assets/login/login_illustration.png';
   static const loginAvatarPlaceholder =
@@ -30,8 +48,6 @@ abstract final class AppAssets {
   static const identityShieldIllustration =
       'assets/identity_shield_illustration.png';
   static const identityUploadDemo = 'assets/identity_upload_demo.png';
-  static const identityUploadIllustration =
-      'assets/identity_upload_illustration.png';
   static const identityUploadIllustrationAlt =
       'assets/identity_upload_illustration_alt.png';
   static const identityUploadCheckmark = 'assets/identity_upload_checkmark.png';

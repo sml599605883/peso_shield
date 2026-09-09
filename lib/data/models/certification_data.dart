@@ -264,11 +264,15 @@ class BankAccount {
   });
 
   factory BankAccount.fromJson(Map<String, dynamic> json) {
+    final names = json['rivieres'] as Map<String, dynamic>? ?? const {};
     return BankAccount(
-      id: json['ventral']?.toString() ?? '',
-      bankName: json['sunnah'] as String? ?? '',
-      accountNumber: json['subrogations'] as String? ?? '',
-      accountName: json['cymenes'] as String? ?? '',
+      id: json['retraction']?.toString() ?? '',
+      bankName: json['photoduplicated'] as String? ?? '',
+      accountNumber: json['banisters'] as String? ?? '',
+      accountName: ['barehanded', 'unforced', 'unenlightened']
+          .map((key) => names[key]?.toString().trim() ?? '')
+          .where((name) => name.isNotEmpty)
+          .join(' '),
     );
   }
 

@@ -4,7 +4,10 @@ import '../../../theme/app_colors.dart';
 import '../../../theme/layout_adapter.dart';
 
 class AppIdentity extends StatelessWidget {
-  const AppIdentity({super.key});
+  const AppIdentity({required this.name, required this.logoUrl, super.key});
+
+  final String name;
+  final String logoUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -21,10 +24,11 @@ class AppIdentity extends StatelessWidget {
           CircleAvatar(
             radius: layout.px(11),
             backgroundColor: AppColors.avatarGray,
+            backgroundImage: logoUrl.isEmpty ? null : NetworkImage(logoUrl),
           ),
           SizedBox(width: layout.px(6)),
           Text(
-            'App Name',
+            name,
             style: TextStyle(
               color: AppColors.black,
               fontSize: layout.px(16),

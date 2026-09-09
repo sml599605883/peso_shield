@@ -13,10 +13,10 @@ import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize permission management
   PermissionCoordinator.initialize(ClientBridge.shared);
-  
+
   runApp(const ProviderScope(child: PesoShieldApp()));
 }
 
@@ -34,7 +34,7 @@ class PesoShieldApp extends ConsumerWidget {
         // 配置全局导航键
         navigatorKey: AppNavigator.navigatorKey,
         // 配置路由观察者
-        navigatorObservers: [AppRouteObserver(), BotToastNavigatorObserver()],
+        navigatorObservers: [appRouteObserver, BotToastNavigatorObserver()],
         // 配置初始路由
         initialRoute: AppRoutes.root,
         // 配置路由生成器

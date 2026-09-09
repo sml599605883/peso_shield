@@ -4,7 +4,14 @@ import '../../../theme/layout_adapter.dart';
 import 'app_identity.dart';
 
 class LoanOfferCardHeader extends StatelessWidget {
-  const LoanOfferCardHeader({super.key});
+  const LoanOfferCardHeader({
+    required this.name,
+    required this.logoUrl,
+    super.key,
+  });
+
+  final String name;
+  final String logoUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +20,10 @@ class LoanOfferCardHeader extends StatelessWidget {
       height: layout.px(44),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [const AppIdentity(), const Spacer()],
+        children: [
+          AppIdentity(name: name, logoUrl: logoUrl),
+          const Spacer(),
+        ],
       ),
     );
   }

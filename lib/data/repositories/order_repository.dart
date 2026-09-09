@@ -9,6 +9,15 @@ class OrderRepository {
 
   final HttpClient _client;
 
+  Future<ApiResponse<String>> retryOriginalAccount(String orderNo) =>
+      _client.post(
+        '/outsmelled/superparasitism',
+        params: {'cysticercosis': orderNo},
+        parse: (json) => json is Map<String, dynamic>
+            ? json['antineoplastic']?.toString().trim() ?? ''
+            : '',
+      );
+
   Future<ApiResponse<String>> getOrderJumpUrl({
     required String orderNo,
     required String amount,
@@ -41,9 +50,9 @@ class OrderRepository {
     return _client.post(
       '/outsmelled/weakness',
       params: {
-        'segregate': page.toString(),
-        'interstratified': pageSize.toString(),
-        'ovicide': ObfuscationHelper.randomParam(),
+        'segregate': '4',
+        'instantiate': page.toString(),
+        'sorbets': pageSize.toString(),
       },
       parse: (json) => OrderListData.fromJson(json as Map<String, dynamic>),
     );

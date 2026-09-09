@@ -57,10 +57,6 @@ class _RootTabPageState extends ConsumerState<RootTabPage> {
       }
 
       if (!mounted) return;
-      // 登录成功后才落到目标 Tab，取消登录则停留在当前 Tab
-      if (ref.read(userSessionProvider).isLoggedIn) {
-        setState(() => _currentIndex = index);
-      }
       return;
     }
 
@@ -88,6 +84,11 @@ class _RootTabPageState extends ConsumerState<RootTabPage> {
   @override
   Widget build(BuildContext context) {
     final session = ref.watch(userSessionProvider);
+    ref.listen(userSessionProvider, (previous, next) {
+      if (previous?.isLoggedIn != next.isLoggedIn && _currentIndex != 0) {
+        setState(() => _currentIndex = 0);
+      }
+    });
 
     // 退出登录后需要登录的 Tab 不再可见，回落到首页
     if (!session.isLoggedIn && _requiresLogin(_currentIndex)) {
@@ -102,7 +103,7 @@ class _RootTabPageState extends ConsumerState<RootTabPage> {
       body: IndexedStack(
         index: _currentIndex,
         children: [
-          const HomePage(),
+          HomePage(isActive: _currentIndex == 0),
           const CreditPage(),
           MinePage(phone: session.phone),
         ],

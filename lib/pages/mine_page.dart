@@ -30,7 +30,7 @@ class MinePage extends StatelessWidget {
                 child: Column(
                   children: [
                     MineProfileHeader(layout: layout, phone: phone),
-                    const MineServiceTitle(),
+                    MineServiceTitle(title: 'Our Service'),
                     SizedBox(height: layout.px(11)),
                     Padding(
                       padding: layout.edgeInsets(left: 20, right: 20),

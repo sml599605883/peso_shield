@@ -13,13 +13,14 @@ class LoanTerm extends StatelessWidget {
   Widget build(BuildContext context) {
     final layout = AppLayout.of(context);
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
           label,
           maxLines: 1,
           softWrap: false,
           overflow: TextOverflow.clip,
+          textAlign: TextAlign.center,
           style: TextStyle(
             color: AppColors.mutedBlue,
             fontSize: layout.px(14),
@@ -32,7 +33,7 @@ class LoanTerm extends StatelessWidget {
           width: double.infinity,
           child: FittedBox(
             fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
+            alignment: Alignment.center,
             child: Text(
               value,
               maxLines: 1,

@@ -5,7 +5,9 @@ import '../../../theme/app_colors.dart';
 import '../../../theme/layout_adapter.dart';
 
 class MineServiceTitle extends StatelessWidget {
-  const MineServiceTitle({super.key});
+  const MineServiceTitle({super.key, required this.title});
+
+  final String title;
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +26,7 @@ class MineServiceTitle extends StatelessWidget {
           alignment: Alignment.topCenter,
           padding: layout.edgeInsets(top: 6, left: 13, right: 13),
           child: Text(
-            'Our Service',
+            title,
             style: TextStyle(
               color: AppColors.white,
               fontSize: layout.px(16),

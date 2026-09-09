@@ -5,5 +5,6 @@ export 'home_header.dart';
 export 'loan_offer_card.dart';
 export 'loan_offer_card_header.dart';
 export 'loan_process_card.dart';
+export 'loan_process_section.dart';
 export 'loan_term.dart';
 export 'loan_terms.dart';

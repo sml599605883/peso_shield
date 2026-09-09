@@ -1,6 +1,16 @@
 import 'package:flutter/material.dart';
 
 abstract final class AppColors {
+  static const orderAction = Color.fromRGBO(255, 51, 0, 1);
+  static const orderPanel = Color.fromRGBO(255, 255, 255, 0.31);
+  static const homePageIndicator = Color.fromRGBO(100, 122, 224, 1);
+  static const recommendationTop = Color.fromRGBO(149, 223, 255, 1);
+  static const recommendationBottom = Color.fromRGBO(0, 176, 255, 1);
+  static const recommendationTag = Color.fromRGBO(255, 245, 203, 1);
+  static const recommendationTagText = Color.fromRGBO(194, 172, 81, 1);
+  static const recommendationCaption = Color.fromRGBO(176, 176, 176, 1);
+  static const recommendationButton = Color.fromRGBO(133, 214, 250, 1);
+  static const recommendationShadow = Color.fromRGBO(0, 0, 0, 0.1);
   static const white = Color.fromRGBO(255, 255, 255, 1);
   static const black = Color.fromRGBO(0, 0, 0, 1);
   static const dialogCancel = Color.fromRGBO(153, 153, 153, 1);
@@ -10,6 +20,8 @@ abstract final class AppColors {
   static const paleBlue = Color.fromRGBO(234, 246, 251, 1);
   static const dividerBlue = Color.fromRGBO(215, 247, 255, 1);
   static const mutedBlue = Color.fromRGBO(161, 181, 203, 1);
+  static const loanProcessTrack = Color.fromRGBO(238, 238, 238, 1);
+  static const loanProcessInactive = Color.fromRGBO(168, 194, 194, 1);
   static const avatarGray = Color.fromRGBO(236, 236, 236, 1);
   static const mineServiceText = Color.fromRGBO(42, 42, 41, 1);
   static const mineServiceDivider = Color.fromRGBO(235, 235, 235, 1);

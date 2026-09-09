@@ -9,6 +9,7 @@ import '../core/navigation/app_navigator.dart';
 import '../core/network/http_exception.dart';
 import '../core/report/peso_report_service.dart';
 import '../core/ui/toast_helper.dart';
+import '../providers/home_provider.dart';
 import '../providers/report_provider.dart';
 import '../providers/repository_provider.dart';
 import '../theme/app_assets.dart';
@@ -162,22 +163,25 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             userId: response.data.userId,
             phone: _phoneController.text.trim(),
           );
-      
+
       // 上报登录成功和风险场景
       try {
         final reportService = ref.read(reportServiceProvider);
         await reportService.loginSucceeded();
-        unawaited(reportService.reportRisk(
-          productId: '', // 登录场景不需要 productId
-          scene: '1',
-          startedAtSeconds: _sceneStartTime,
-        ));
+        unawaited(
+          reportService.reportRisk(
+            productId: '', // 登录场景不需要 productId
+            scene: '1',
+            startedAtSeconds: _sceneStartTime,
+          ),
+        );
       } catch (_) {
         // 上报失败不影响登录流程
       }
-      
+
       if (!mounted) return true;
 
+      unawaited(ref.read(homeDataProvider.notifier).refresh());
       if (widget.onLoginSuccess != null) {
         await widget.onLoginSuccess!();
       } else if (mounted) {

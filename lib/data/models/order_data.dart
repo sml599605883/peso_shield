@@ -1,13 +1,10 @@
 class OrderListData {
-  const OrderListData({
-    required this.orders,
-    required this.totalPages,
-  });
+  const OrderListData({required this.orders, required this.totalPages});
 
   factory OrderListData.fromJson(Map<String, dynamic> json) {
     final mugg = json['mugg'] as Map<String, dynamic>? ?? {};
     return OrderListData(
-      orders: (mugg['geochronologist'] as List<dynamic>? ?? [])
+      orders: (mugg['applicants'] as List<dynamic>? ?? [])
           .map((e) => OrderItem.fromJson(e as Map<String, dynamic>))
           .toList(),
       totalPages: mugg['interstratified'] as int? ?? 1,

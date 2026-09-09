@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+final appRouteObserver = AppRouteObserver();
+
 /// 路由观察者 - 用于监听路由变化，可用于日志记录、埋点等
 class AppRouteObserver extends RouteObserver<PageRoute<dynamic>> {
   AppRouteObserver() {

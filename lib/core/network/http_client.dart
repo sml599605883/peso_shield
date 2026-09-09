@@ -160,6 +160,31 @@ class HttpClient {
     return path.split('?').first;
   }
 
+  /// 构建公共参数和签名（供WebView使用）
+  Map<String, dynamic> buildPublicParams(String path) {
+    final commonParams = CommonParams.create(
+      deviceId: _getDeviceId(),
+      market: _config.marketIdentifier,
+      appVersion: _getAppVersion(),
+      deviceName: _getDeviceName(),
+      osVersion: _getOsVersion(),
+      gpsAdId: _getGpsAdId(),
+      token: _getUserToken(),
+    );
+
+    final signInput = <String, Object?>{
+      ...commonParams,
+      'mitogenic': _clearPath(path),
+    };
+
+    final signature = _signer.sign(signInput);
+
+    return <String, dynamic>{
+      ...commonParams,
+      'arboured': signature,
+    };
+  }
+
   void _onResponse(
     Response<dynamic> response,
     ResponseInterceptorHandler handler,

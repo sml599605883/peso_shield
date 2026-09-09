@@ -16,6 +16,7 @@ class AppRoutes {
 
   /// 我的页面
   static const String mine = '/mine';
+  static const String mineOrderList = '/mine/orders';
 
   static const String settings = '/settings';
   static const String identityType = '/identity-type';
@@ -35,6 +36,7 @@ class AppRoutes {
     login,
     credit,
     mine,
+    mineOrderList,
     settings,
     identityType,
     identityUpload,

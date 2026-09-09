@@ -13,6 +13,8 @@ import '../../pages/work_information_page.dart';
 import '../../pages/emergency_contact_page.dart';
 import '../../pages/bind_card_page.dart';
 import '../../pages/webview/webview_page.dart';
+import '../../pages/order_list_page.dart';
+import '../../providers/credit_orders_provider.dart';
 import 'app_routes.dart';
 
 /// 禁用侧滑返回的自定义路由
@@ -126,6 +128,13 @@ class AppRouteGenerator {
       case AppRoutes.settings:
         return NoSwipePageRoute<void>(
           builder: (_) => const SettingsPage(),
+          settings: settings,
+        );
+
+      case AppRoutes.mineOrderList:
+        final filter = settings.arguments as OrderFilter?;
+        return NoSwipePageRoute<void>(
+          builder: (_) => OrderListPage(initialFilter: filter),
           settings: settings,
         );
 

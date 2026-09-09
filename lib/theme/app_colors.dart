@@ -20,6 +20,14 @@ abstract final class AppColors {
   static const paleBlue = Color.fromRGBO(234, 246, 251, 1);
   static const dividerBlue = Color.fromRGBO(215, 247, 255, 1);
   static const mutedBlue = Color.fromRGBO(161, 181, 203, 1);
+  static const orderInfoBackground = Color.fromRGBO(236, 236, 236, 1);
+  static const orderProductText = Color.fromRGBO(42, 42, 42, 1);
+  static const orderWarningTop = Color.fromRGBO(255, 210, 161, 1);
+  static const orderWarningBottom = Color.fromRGBO(255, 183, 66, 1);
+  static const orderStatusBlueStart = Color.fromRGBO(124, 184, 243, 1);
+  static const orderStatusBlueEnd = Color.fromRGBO(100, 122, 224, 1);
+  static const orderStatusAlertStart = Color.fromRGBO(255, 179, 50, 1);
+  static const orderStatusAlertEnd = Color.fromRGBO(255, 70, 19, 1);
   static const loanProcessTrack = Color.fromRGBO(238, 238, 238, 1);
   static const loanProcessInactive = Color.fromRGBO(168, 194, 194, 1);
   static const avatarGray = Color.fromRGBO(236, 236, 236, 1);

@@ -92,7 +92,7 @@ class ReportRepository {
         'sade': latitude ?? '',
         'hypersecretions': startTime,
         'galoping': endTime,
-        'openhearted': latitude ?? '',
+        'openhearted': ObfuscationHelper.randomParam(),
       },
       parse: (_) => null,
     );

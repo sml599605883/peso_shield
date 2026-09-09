@@ -20,7 +20,11 @@ class CertificationRepository {
     required String productId,
   }) async {
     return _client.get(
-      '/outsmelled/bale?bombarder=$productId&soccers=${ObfuscationHelper.randomParam()}',
+      '/outsmelled/bale',
+      params: {
+        'bombarder': productId,
+        'soccers': ObfuscationHelper.randomParam(),
+      },
       parse: (json) => IdentityTypeList.fromJson(json as Map<String, dynamic>),
     );
   }
@@ -102,7 +106,12 @@ class CertificationRepository {
   }) async {
     return _client.post(
       '/outsmelled/wazoo',
-      params: {'bombarder': productId, ...formData},
+      params: {
+        'bombarder': productId,
+        ...formData,
+        'pulis': ObfuscationHelper.randomParam(),
+        'brakiest': ObfuscationHelper.randomParam(),
+      },
       parse: (_) => null,
     );
   }
@@ -126,7 +135,13 @@ class CertificationRepository {
   }) async {
     return _client.post(
       '/outsmelled/applicants',
-      params: {'bombarder': productId, ...formData},
+      params: {
+        'bombarder': productId,
+        ...formData,
+        'gloat': ObfuscationHelper.randomParam(),
+        'shergottites': ObfuscationHelper.randomParam(),
+        'dawt': ObfuscationHelper.randomParam(),
+      },
       parse: (_) => null,
     );
   }

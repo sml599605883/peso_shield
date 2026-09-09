@@ -3,12 +3,19 @@ import 'package:flutter/material.dart';
 import '../../../theme/app_assets.dart';
 import '../../../theme/layout_adapter.dart';
 import 'profile_card.dart';
+import '../../../providers/credit_orders_provider.dart';
 
 class MineProfileHeader extends StatelessWidget {
-  const MineProfileHeader({required this.layout, this.phone, super.key});
+  const MineProfileHeader({
+    required this.layout,
+    this.phone,
+    this.onOrderTap,
+    super.key,
+  });
 
   final AppLayout layout;
   final String? phone;
+  final ValueChanged<OrderFilter>? onOrderTap;
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +32,7 @@ class MineProfileHeader extends StatelessWidget {
                 left: layout.px(10),
                 width: cardWidth,
                 height: cardHeight,
-                child: MineProfileCard(phone: phone),
+                child: MineProfileCard(phone: phone, onOrderTap: onOrderTap),
               ),
               Positioned(
                 top: layout.px(49),

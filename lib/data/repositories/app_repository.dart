@@ -28,7 +28,11 @@ class AppRepository {
 
   Future<ApiResponse<HomeData>> getHomePage() async {
     return _client.get(
-      '/outsmelled/mugg?hierarchies=&borohydrides=',
+      '/outsmelled/mugg',
+      params: {
+        'hierarchies': ObfuscationHelper.randomParam(),
+        'borohydrides': ObfuscationHelper.randomParam(),
+      },
       parse: (json) => HomeData.fromJson(json as Map<String, dynamic>),
     );
   }

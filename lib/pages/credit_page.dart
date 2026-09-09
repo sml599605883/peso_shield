@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/navigation/app_navigator.dart';
 import '../core/navigation/app_route_observer.dart';
 import '../core/ui/toast_helper.dart';
+import '../data/models/order_data.dart';
 import '../theme/app_assets.dart';
 import '../theme/app_colors.dart';
 import '../theme/layout_adapter.dart';
@@ -25,6 +26,7 @@ class _CreditPageState extends ConsumerState<CreditPage> with RouteAware {
   final _scrollController = ScrollController();
   PageRoute<dynamic>? _route;
   bool _refreshScheduled = false;
+  final Set<String> _activeActionIds = {};
 
   @override
   void initState() {
@@ -107,24 +109,57 @@ class _CreditPageState extends ConsumerState<CreditPage> with RouteAware {
     ref.read(creditOrdersProvider.notifier).loadOrders(filter: filter);
   }
 
-  Future<void> _handleCardTap(String url) async {
-    if (url.isEmpty) return;
-    if (!mounted) return;
-    await AppNavigator.navigateRawTarget(
-      context: context,
-      ref: ref,
-      target: url,
-    );
+  Future<void> _handleCardTap(OrderItem order) async {
+    await _handleOrderNavigation(order, target: order.cardClickUrl);
   }
 
-  Future<void> _handleButtonTap(String url) async {
-    if (url.isEmpty) return;
-    if (!mounted) return;
-    await AppNavigator.navigateRawTarget(
-      context: context,
-      ref: ref,
-      target: url,
-    );
+  Future<void> _handleButtonTap(OrderItem order) async {
+    await _handleOrderNavigation(order, target: order.buttonClickUrl);
+  }
+
+  Future<void> _handleOrderNavigation(
+    OrderItem order, {
+    required String target,
+  }) async {
+    final actionId = order.orderNo.isNotEmpty
+        ? order.orderNo
+        : '${order.productId}|$target';
+    
+    // Prevent duplicate actions
+    if (!_activeActionIds.add(actionId)) return;
+    
+    try {
+      // Priority 1: Navigate to target URL if provided
+      if (target.isNotEmpty) {
+        await _runNavigation(() => AppNavigator.navigateRawTarget(
+          context: context,
+          ref: ref,
+          target: target,
+        ));
+        return;
+      }
+      
+      // Priority 2: If no target but has productId, start product application
+      if (order.productId.isNotEmpty) {
+        await _runNavigation(() => AppNavigator.applyProduct(
+          context: context,
+          ref: ref,
+          productId: order.productId,
+        ));
+      }
+    } finally {
+      _activeActionIds.remove(actionId);
+    }
+  }
+
+  Future<void> _runNavigation(Future<void> Function() action) async {
+    try {
+      await action();
+    } catch (error) {
+      if (mounted) {
+        ToastHelper.showError(error.toString());
+      }
+    }
   }
 
   @override
@@ -266,10 +301,8 @@ class _CreditPageState extends ConsumerState<CreditPage> with RouteAware {
                           final order = state.orders[index];
                           return CreditOrderCard(
                             order: order,
-                            onCardTap: () =>
-                                _handleCardTap(order.cardClickUrl),
-                            onButtonTap: () =>
-                                _handleButtonTap(order.buttonClickUrl),
+                            onCardTap: () => _handleCardTap(order),
+                            onButtonTap: () => _handleButtonTap(order),
                           );
                         },
                       ),

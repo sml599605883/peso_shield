@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import '../../../theme/app_assets.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/layout_adapter.dart';
+import '../../../providers/credit_orders_provider.dart';
 import 'order_item.dart';
 
 class MineProfileCard extends StatelessWidget {
-  const MineProfileCard({this.phone, super.key});
+  const MineProfileCard({this.phone, this.onOrderTap, super.key});
 
   final String? phone;
+  final ValueChanged<OrderFilter>? onOrderTap;
 
   String get _displayPhone {
     final value = phone?.trim() ?? '';
@@ -41,12 +43,24 @@ class MineProfileCard extends StatelessWidget {
               ),
             ),
             SizedBox(height: layout.px(29)),
-            const Row(
+            Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                MineOrderItem('All order', AppAssets.mineOrderAll),
-                MineOrderItem('Outstanding', AppAssets.mineOrderOutstanding),
-                MineOrderItem('Settled', AppAssets.mineOrderSettled),
+                MineOrderItem(
+                  'All order',
+                  AppAssets.mineOrderAll,
+                  onTap: () => onOrderTap?.call(OrderFilter.all),
+                ),
+                MineOrderItem(
+                  'Outstanding',
+                  AppAssets.mineOrderOutstanding,
+                  onTap: () => onOrderTap?.call(OrderFilter.outstanding),
+                ),
+                MineOrderItem(
+                  'Settled',
+                  AppAssets.mineOrderSettled,
+                  onTap: () => onOrderTap?.call(OrderFilter.settled),
+                ),
               ],
             ),
           ],

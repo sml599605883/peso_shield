@@ -3,11 +3,11 @@ class OrderListData {
 
   factory OrderListData.fromJson(Map<String, dynamic> json) {
     final applicantsList = json['applicants'] as List<dynamic>? ?? [];
-    
+
     final orders = applicantsList
         .map((e) => OrderItem.fromJson(e as Map<String, dynamic>))
         .toList();
-    
+
     return OrderListData(
       orders: orders,
       totalPages: json['interstratified'] as int? ?? 1,
@@ -21,8 +21,11 @@ class OrderListData {
 class OrderItem {
   const OrderItem({
     required this.orderNo,
+    this.productId = '',
     required this.productName,
+    required this.productLogo,
     required this.statusText,
+    required this.statusCode,
     required this.statusColor,
     required this.amount,
     required this.amountLabel,
@@ -41,8 +44,11 @@ class OrderItem {
   factory OrderItem.fromJson(Map<String, dynamic> json) {
     return OrderItem(
       orderNo: json['cysticercosis'] as String? ?? '',
+      productId: json['polarimetric']?.toString() ?? '',
       productName: json['reinters'] as String? ?? '',
+      productLogo: json['crampfishes']?.toString().trim() ?? '',
       statusText: json['chloroplastic'] as String? ?? '',
+      statusCode: json['uncloud'] as int? ?? 0,
       statusColor: json['pemmicans'] as String? ?? '#6AD1FF',
       amount: json['desalting'] as String? ?? '',
       amountLabel: json['partition'] as String? ?? '',
@@ -60,8 +66,11 @@ class OrderItem {
   }
 
   final String orderNo;
+  final String productId;
   final String productName;
+  final String productLogo;
   final String statusText;
+  final int statusCode;
   final String statusColor;
   final String amount;
   final String amountLabel;
@@ -75,4 +84,10 @@ class OrderItem {
   final bool supportEarlyRepay;
   final String earlyRepayTip;
   final String earlyRepayUrl;
+
+  bool get usesOutstandingStyle => statusCode == 174;
+
+  bool get usesOverdueStyle => statusCode == 180;
+
+  bool get usesRepaymentStyle => usesOutstandingStyle || usesOverdueStyle;
 }

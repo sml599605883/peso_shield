@@ -15,9 +15,9 @@ import 'webview_action_coordinator.dart';
 import 'webview_contract.dart';
 
 bool isInlineWebViewScheme(String scheme) => switch (scheme.toLowerCase()) {
-      'http' || 'https' || 'about' || 'data' || 'javascript' || 'file' => true,
-      _ => false,
-    };
+  'http' || 'https' || 'about' || 'data' || 'javascript' || 'file' => true,
+  _ => false,
+};
 
 bool shouldCloseWebView({required bool canGoBack}) => !canGoBack;
 
@@ -105,10 +105,7 @@ class WebViewBackHistory {
 bool shouldShowWebViewLoadError({required bool? isForMainFrame}) =>
     isForMainFrame == true;
 
-bool shouldShowWebViewLoading({
-  required bool loading,
-  required int progress,
-}) =>
+bool shouldShowWebViewLoading({required bool loading, required int progress}) =>
     loading && progress < 100;
 
 String resolveWebViewTitle({
@@ -128,10 +125,7 @@ bool canUseWebViewController({
     activeController != null &&
     identical(activeController, controller);
 
-String? webViewCallbackScript(
-  WebViewRequest request,
-  WebViewResult result,
-) {
+String? webViewCallbackScript(WebViewRequest request, WebViewResult result) {
   if (!request.expectsCallback) return null;
   final payload = jsonEncode(<String, Object?>{
     'callbackId': request.callbackId,
@@ -141,10 +135,7 @@ String? webViewCallbackScript(
 }
 
 class WebViewBridgeGate {
-  WebViewBridgeGate({
-    required this.addHandler,
-    required this.removeHandler,
-  });
+  WebViewBridgeGate({required this.addHandler, required this.removeHandler});
 
   final void Function(Object controller) addHandler;
   final void Function(Object controller) removeHandler;
@@ -187,11 +178,7 @@ class WebViewBridgeGate {
 }
 
 class WebViewPage extends ConsumerStatefulWidget {
-  const WebViewPage({
-    super.key,
-    required this.initialUrl,
-    this.initialTitle,
-  });
+  const WebViewPage({super.key, required this.initialUrl, this.initialTitle});
 
   final String initialUrl;
   final String? initialTitle;
@@ -245,19 +232,16 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
 
   WebViewActionCoordinator _buildCoordinator() {
     return WebViewActionCoordinator(
-      reportRisk: ({
-        required productId,
-        required orderNo,
-        required startedAtSeconds,
-      }) {
-        final reportService = ref.read(reportServiceProvider);
-        return reportService.reportRisk(
-          productId: productId,
-          scene: '10',
-          orderNo: orderNo,
-          startedAtSeconds: startedAtSeconds,
-        );
-      },
+      reportRisk:
+          ({required productId, required orderNo, required startedAtSeconds}) {
+            final reportService = ref.read(reportServiceProvider);
+            return reportService.reportRisk(
+              productId: productId,
+              scene: '10',
+              orderNo: orderNo,
+              startedAtSeconds: startedAtSeconds,
+            );
+          },
       openWebView: (url) async {
         // 打开新的 WebView 页面
         await AppNavigator.toWebView(url: url);
@@ -398,9 +382,7 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
     if (mounted) AppNavigator.pop<void>();
   }
 
-  Future<void> _goBackOneHistoryEntry(
-    InAppWebViewController controller,
-  ) async {
+  Future<void> _goBackOneHistoryEntry(InAppWebViewController controller) async {
     if (!canUseWebViewController(
       mounted: mounted,
       activeController: _controller,
@@ -429,18 +411,18 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
   ) async {
     final uri = action.request.url;
     if (uri == null) return NavigationActionPolicy.CANCEL;
-    
+
     // 允许 WebView 内联加载的协议
     if (isInlineWebViewScheme(uri.scheme)) {
       return NavigationActionPolicy.ALLOW;
     }
-    
+
     // 处理内部协议跳转（如 ph:// 等自定义协议）
     if (uri.scheme == 'ph') {
       await _coordinator.navigateInternal?.call(uri.toString());
       return NavigationActionPolicy.CANCEL;
     }
-    
+
     // 处理外部链接（其他非 http/https 协议）
     await _coordinator.openExternal?.call(uri);
     return NavigationActionPolicy.CANCEL;
@@ -503,110 +485,86 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
             icon: const Icon(Icons.arrow_back_ios_new_rounded),
           ),
         ),
-        body: uri == null
-            ? const _WebViewFailure(message: 'Invalid page address')
-            : _loadFailed
-                ? _WebViewFailure(onRetry: _retry)
-                : Stack(
-                    children: [
-                      InAppWebView(
-                        initialUrlRequest: URLRequest(url: WebUri.uri(uri)),
-                        initialUserScripts: webViewInitialUserScripts(
-                          defaultTargetPlatform,
-                        ),
-                        initialSettings: InAppWebViewSettings(
-                          javaScriptEnabled: true,
-                          useShouldOverrideUrlLoading: true,
-                          useHybridComposition: true,
-                          isInspectable: kDebugMode,
-                          disableContextMenu: shouldDisableWebViewContextMenu(
-                            defaultTargetPlatform,
-                          ),
-                          allowsLinkPreview: !shouldDisableWebViewContextMenu(
-                            defaultTargetPlatform,
-                          ),
-                          mixedContentMode:
-                              MixedContentMode.MIXED_CONTENT_NEVER_ALLOW,
-                        ),
-                        onWebViewCreated: (controller) {
-                          _controller = controller;
-                          _bridgeGate.attach(controller);
-                        },
-                        shouldOverrideUrlLoading: _handleNavigation,
-                        onPermissionRequest: (controller, request) async {
-                          return PermissionResponse(
-                            resources: request.resources,
-                            action: PermissionResponseAction.DENY,
-                          );
-                        },
-                        onLoadStart: (controller, url) {
-                          if (mounted) {
-                            setState(() {
-                              _loading = true;
-                              _loadFailed = false;
-                            });
-                          }
-                        },
-                        onLoadStop: (controller, url) async {
-                          if (mounted) {
-                            final title = await controller.getTitle();
-                            if (!mounted) return;
-                            setState(() {
-                              _loading = false;
-                              _title = resolveWebViewTitle(
-                                pageTitle: title,
-                                fallback: _title,
-                              );
-                            });
-                          }
-                        },
-                        onProgressChanged: (controller, progress) {
-                          if (mounted) {
-                            setState(() {
-                              _loading = progress < 100;
-                            });
-                          }
-                        },
-                        onReceivedError: (controller, request, error) {
-                          if (mounted &&
-                              shouldShowWebViewLoadError(
-                                isForMainFrame: request.isForMainFrame,
-                              )) {
-                            setState(() {
-                              _loading = false;
-                              _loadFailed = true;
-                            });
-                          }
-                        },
-                        onTitleChanged: (controller, title) {
-                          final value = title?.trim() ?? '';
-                          if (mounted && value.isNotEmpty) {
-                            setState(() => _title = value);
-                          }
-                        },
-                      ),
-                      if (_loading)
-                        const Positioned(
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          child: LinearProgressIndicator(
-                            minHeight: 2,
-                            color: AppColors.coral,
-                          ),
-                        ),
-                    ],
-                  ),
+        body: InAppWebView(
+          initialUrlRequest: URLRequest(url: WebUri.uri(uri!)),
+          initialUserScripts: webViewInitialUserScripts(defaultTargetPlatform),
+          initialSettings: InAppWebViewSettings(
+            javaScriptEnabled: true,
+            useShouldOverrideUrlLoading: true,
+            useHybridComposition: true,
+            isInspectable: kDebugMode,
+            disableContextMenu: shouldDisableWebViewContextMenu(
+              defaultTargetPlatform,
+            ),
+            allowsLinkPreview: !shouldDisableWebViewContextMenu(
+              defaultTargetPlatform,
+            ),
+            mixedContentMode: MixedContentMode.MIXED_CONTENT_NEVER_ALLOW,
+          ),
+          onWebViewCreated: (controller) {
+            _controller = controller;
+            _bridgeGate.attach(controller);
+          },
+          shouldOverrideUrlLoading: _handleNavigation,
+          onPermissionRequest: (controller, request) async {
+            return PermissionResponse(
+              resources: request.resources,
+              action: PermissionResponseAction.DENY,
+            );
+          },
+          onLoadStart: (controller, url) {
+            if (mounted) {
+              setState(() {
+                _loading = true;
+                _loadFailed = false;
+              });
+            }
+          },
+          onLoadStop: (controller, url) async {
+            if (mounted) {
+              final title = await controller.getTitle();
+              if (!mounted) return;
+              setState(() {
+                _loading = false;
+                _title = resolveWebViewTitle(
+                  pageTitle: title,
+                  fallback: _title,
+                );
+              });
+            }
+          },
+          onProgressChanged: (controller, progress) {
+            if (mounted) {
+              setState(() {
+                _loading = progress < 100;
+              });
+            }
+          },
+          onReceivedError: (controller, request, error) {
+            if (mounted &&
+                shouldShowWebViewLoadError(
+                  isForMainFrame: request.isForMainFrame,
+                )) {
+              setState(() {
+                _loading = false;
+                _loadFailed = true;
+              });
+            }
+          },
+          onTitleChanged: (controller, title) {
+            final value = title?.trim() ?? '';
+            if (mounted && value.isNotEmpty) {
+              setState(() => _title = value);
+            }
+          },
+        ),
       ),
     );
   }
 }
 
 class _WebViewFailure extends StatelessWidget {
-  const _WebViewFailure({
-    this.message = 'Page failed to load',
-    this.onRetry,
-  });
+  const _WebViewFailure({this.message = 'Page failed to load', this.onRetry});
 
   final String message;
   final Future<void> Function()? onRetry;
@@ -619,7 +577,11 @@ class _WebViewFailure extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.wifi_off_rounded, color: AppColors.coral, size: 48),
+            const Icon(
+              Icons.wifi_off_rounded,
+              color: AppColors.coral,
+              size: 48,
+            ),
             const SizedBox(height: 16),
             Text(
               message,

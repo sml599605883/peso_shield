@@ -29,7 +29,13 @@ class MinePage extends StatelessWidget {
                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: Column(
                   children: [
-                    MineProfileHeader(layout: layout, phone: phone),
+                    MineProfileHeader(
+                      layout: layout,
+                      phone: phone,
+                      onOrderTap: (filter) => Navigator.of(
+                        context,
+                      ).pushNamed(AppRoutes.mineOrderList, arguments: filter),
+                    ),
                     MineServiceTitle(title: 'Our Service'),
                     SizedBox(height: layout.px(11)),
                     Padding(

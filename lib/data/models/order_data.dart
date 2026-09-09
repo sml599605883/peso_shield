@@ -3,17 +3,10 @@ class OrderListData {
 
   factory OrderListData.fromJson(Map<String, dynamic> json) {
     final applicantsList = json['applicants'] as List<dynamic>? ?? [];
-    print('OrderListData parsing: applicants count=${applicantsList.length}');
     
-    final orders = applicantsList.map((e) {
-      try {
-        return OrderItem.fromJson(e as Map<String, dynamic>);
-      } catch (error) {
-        print('Error parsing OrderItem: $error');
-        print('Raw data: $e');
-        rethrow;
-      }
-    }).toList();
+    final orders = applicantsList
+        .map((e) => OrderItem.fromJson(e as Map<String, dynamic>))
+        .toList();
     
     return OrderListData(
       orders: orders,

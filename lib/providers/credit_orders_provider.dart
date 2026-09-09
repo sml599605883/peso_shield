@@ -82,8 +82,6 @@ class CreditOrdersNotifier extends AsyncNotifier<CreditOrdersState> {
         segregate: targetFilter.segregateValue,
       );
 
-      print('API Response: isSuccess=${response.isSuccess}, message=${response.message}');
-
       if (!response.isSuccess) {
         throw ApiException(
           type: ApiFailureType.business,
@@ -92,10 +90,6 @@ class CreditOrdersNotifier extends AsyncNotifier<CreditOrdersState> {
       }
 
       final data = response.data;
-      print('Orders count: ${data.orders.length}, totalPages: ${data.totalPages}');
-      if (data.orders.isNotEmpty) {
-        print('First order: ${data.orders.first.productName}');
-      }
 
       if (ref.mounted) {
         state = AsyncData(
@@ -108,7 +102,6 @@ class CreditOrdersNotifier extends AsyncNotifier<CreditOrdersState> {
         );
       }
     } catch (error, stack) {
-      print('Load orders error: $error');
       if (ref.mounted) {
         state = AsyncError<CreditOrdersState>(error, stack);
       }

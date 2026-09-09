@@ -55,10 +55,7 @@ class OrderRepository {
         'instantiate': page.toString(),
         'sorbets': pageSize.toString(),
       },
-      parse: (json) {
-        print('Raw API response: $json');
-        return OrderListData.fromJson(json as Map<String, dynamic>);
-      },
+      parse: (json) => OrderListData.fromJson(json as Map<String, dynamic>),
     );
   }
 }

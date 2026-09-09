@@ -46,15 +46,19 @@ class OrderRepository {
   Future<ApiResponse<OrderListData>> getOrderList({
     int page = 1,
     int pageSize = 20,
+    String segregate = '4',
   }) async {
     return _client.post(
       '/outsmelled/weakness',
       params: {
-        'segregate': '4',
+        'segregate': segregate,
         'instantiate': page.toString(),
         'sorbets': pageSize.toString(),
       },
-      parse: (json) => OrderListData.fromJson(json as Map<String, dynamic>),
+      parse: (json) {
+        print('Raw API response: $json');
+        return OrderListData.fromJson(json as Map<String, dynamic>);
+      },
     );
   }
 }

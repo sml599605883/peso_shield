@@ -2,12 +2,22 @@ class OrderListData {
   const OrderListData({required this.orders, required this.totalPages});
 
   factory OrderListData.fromJson(Map<String, dynamic> json) {
-    final mugg = json['mugg'] as Map<String, dynamic>? ?? {};
+    final applicantsList = json['applicants'] as List<dynamic>? ?? [];
+    print('OrderListData parsing: applicants count=${applicantsList.length}');
+    
+    final orders = applicantsList.map((e) {
+      try {
+        return OrderItem.fromJson(e as Map<String, dynamic>);
+      } catch (error) {
+        print('Error parsing OrderItem: $error');
+        print('Raw data: $e');
+        rethrow;
+      }
+    }).toList();
+    
     return OrderListData(
-      orders: (mugg['applicants'] as List<dynamic>? ?? [])
-          .map((e) => OrderItem.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      totalPages: mugg['interstratified'] as int? ?? 1,
+      orders: orders,
+      totalPages: json['interstratified'] as int? ?? 1,
     );
   }
 
@@ -37,10 +47,10 @@ class OrderItem {
 
   factory OrderItem.fromJson(Map<String, dynamic> json) {
     return OrderItem(
-      orderNo: json['superparasitism'] as String? ?? '',
+      orderNo: json['cysticercosis'] as String? ?? '',
       productName: json['reinters'] as String? ?? '',
-      statusText: json['stalagmitic'] as String? ?? '',
-      statusColor: json['pemmicans'] as String? ?? '',
+      statusText: json['chloroplastic'] as String? ?? '',
+      statusColor: json['pemmicans'] as String? ?? '#6AD1FF',
       amount: json['desalting'] as String? ?? '',
       amountLabel: json['partition'] as String? ?? '',
       buttonText: json['haunts'] as String? ?? '',

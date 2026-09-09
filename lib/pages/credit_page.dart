@@ -1,23 +1,138 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
 
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../core/navigation/app_navigator.dart';
+import '../core/navigation/app_route_observer.dart';
+import '../core/ui/toast_helper.dart';
 import '../theme/app_assets.dart';
 import '../theme/app_colors.dart';
 import '../theme/layout_adapter.dart';
+import '../providers/credit_orders_provider.dart';
+import 'widgets/credit_order_card.dart';
 
-class CreditPage extends StatefulWidget {
-  const CreditPage({super.key});
+class CreditPage extends ConsumerStatefulWidget {
+  const CreditPage({super.key, this.isActive = true});
+
+  final bool isActive;
 
   @override
-  State<CreditPage> createState() => _CreditPageState();
+  ConsumerState<CreditPage> createState() => _CreditPageState();
 }
 
-class _CreditPageState extends State<CreditPage> {
-  static const _filters = ['All order', 'Outstanding', 'Overdue', 'Settled'];
-  int _selectedFilter = 0;
+class _CreditPageState extends ConsumerState<CreditPage> with RouteAware {
+  final _scrollController = ScrollController();
+  PageRoute<dynamic>? _route;
+  bool _refreshScheduled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+    // Load orders on init
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(creditOrdersProvider.notifier).loadOrders();
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute && route != _route) {
+      appRouteObserver.unsubscribe(this);
+      _route = route;
+      appRouteObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void didUpdateWidget(CreditPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.isActive != widget.isActive) {
+      _syncVisibility(refresh: widget.isActive);
+    }
+  }
+
+  @override
+  void didPush() => _syncVisibility(refresh: true);
+
+  @override
+  void didPushNext() => _syncVisibility();
+
+  @override
+  void didPopNext() => _syncVisibility(refresh: true);
+
+  @override
+  void didPop() {}
+
+  void _syncVisibility({bool refresh = false}) {
+    if (!refresh || _refreshScheduled) return;
+    _refreshScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _refreshScheduled = false;
+      if (!mounted) return;
+      final visible = widget.isActive && (_route?.isCurrent ?? true);
+      if (visible) {
+        unawaited(ref.read(creditOrdersProvider.notifier).loadOrders());
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    appRouteObserver.unsubscribe(this);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      ref.read(creditOrdersProvider.notifier).loadMore();
+    }
+  }
+
+  Future<void> _onRefresh() async {
+    final closeLoading = ToastHelper.showLoading();
+    try {
+      await ref.read(creditOrdersProvider.notifier).loadOrders();
+    } finally {
+      closeLoading();
+    }
+  }
+
+  void _onFilterChanged(OrderFilter filter) {
+    ref.read(creditOrdersProvider.notifier).loadOrders(filter: filter);
+  }
+
+  Future<void> _handleCardTap(String url) async {
+    if (url.isEmpty) return;
+    if (!mounted) return;
+    await AppNavigator.navigateRawTarget(
+      context: context,
+      ref: ref,
+      target: url,
+    );
+  }
+
+  Future<void> _handleButtonTap(String url) async {
+    if (url.isEmpty) return;
+    if (!mounted) return;
+    await AppNavigator.navigateRawTarget(
+      context: context,
+      ref: ref,
+      target: url,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final layout = AppLayout.of(context);
+    final ordersAsync = ref.watch(creditOrdersProvider);
+    final ordersState = ordersAsync.value ?? const CreditOrdersState();
+
     return SizedBox.expand(
       child: DecoratedBox(
         decoration: const BoxDecoration(
@@ -28,83 +143,76 @@ class _CreditPageState extends State<CreditPage> {
         ),
         child: SafeArea(
           bottom: false,
-          child: SingleChildScrollView(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxWidth: AppLayout.maxContentWidth,
-                ),
-                child: Padding(
-                  padding: layout.edgeInsets(left: 20, right: 20, bottom: 24),
-                  child: Column(
-                    children: [
-                      SizedBox(height: layout.px(19)),
-                      Row(
-                        children: [
-                          const Expanded(
-                            child: Text(
-                              'Hi!  Welcome',
-                              style: TextStyle(
-                                color: AppColors.black,
-                                fontSize: 22,
-                                fontWeight: FontWeight.w700,
-                                height: 26 / 22,
-                              ),
+          child: Column(
+            children: [
+              Padding(
+                padding: layout.edgeInsets(left: 20, right: 20),
+                child: Column(
+                  children: [
+                    SizedBox(height: layout.px(19)),
+                    Row(
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            'Hi!  Welcome',
+                            style: TextStyle(
+                              color: AppColors.black,
+                              fontSize: 22,
+                              fontWeight: FontWeight.w700,
+                              height: 26 / 22,
                             ),
                           ),
-                          Image.asset(
-                            AppAssets.notification,
-                            width: layout.px(29),
-                            height: layout.px(32),
-                            semanticLabel: 'Messages',
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: layout.px(10)),
-                      Container(
-                        height: layout.px(40),
-                        padding: EdgeInsets.all(layout.px(3)),
-                        decoration: BoxDecoration(
-                          color: AppColors.white,
-                          borderRadius: layout.radius(20),
                         ),
-                        child: Row(
-                          children: List.generate(_filters.length, (index) {
-                            final selected = index == _selectedFilter;
-                            return Expanded(
-                              flex: index == 1 ? 113 : 74,
-                              child: Semantics(
-                                selected: selected,
-                                button: true,
-                                child: Material(
-                                  color: selected
-                                      ? AppColors.coral
-                                      : AppColors.white,
-                                  borderRadius: layout.radius(20),
-                                  clipBehavior: Clip.antiAlias,
-                                  child: InkWell(
-                                    onTap: () =>
-                                        setState(() => _selectedFilter = index),
-                                    child: Center(
-                                      child: FittedBox(
-                                        fit: BoxFit.scaleDown,
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 4,
-                                          ),
-                                          child: Text(
-                                            _filters[index],
-                                            style: TextStyle(
-                                              color: selected
-                                                  ? AppColors.white
-                                                  : AppColors
-                                                        .identityUnselected,
-                                              fontSize: 12,
-                                              height: 18 / 12,
-                                              fontWeight: selected
-                                                  ? FontWeight.w700
-                                                  : FontWeight.w400,
-                                            ),
+                        Image.asset(
+                          AppAssets.notification,
+                          width: layout.px(29),
+                          height: layout.px(32),
+                          semanticLabel: 'Messages',
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: layout.px(10)),
+                    Container(
+                      height: layout.px(40),
+                      padding: EdgeInsets.all(layout.px(3)),
+                      decoration: BoxDecoration(
+                        color: AppColors.white,
+                        borderRadius: layout.radius(20),
+                      ),
+                      child: Row(
+                        children: OrderFilter.values.map((filter) {
+                          final selected = filter == ordersState.filter;
+                          return Expanded(
+                            flex: filter == OrderFilter.outstanding ? 113 : 74,
+                            child: Semantics(
+                              selected: selected,
+                              button: true,
+                              child: Material(
+                                color: selected
+                                    ? AppColors.coral
+                                    : AppColors.white,
+                                borderRadius: layout.radius(20),
+                                clipBehavior: Clip.antiAlias,
+                                child: InkWell(
+                                  onTap: () => _onFilterChanged(filter),
+                                  child: Center(
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 4,
+                                        ),
+                                        child: Text(
+                                          filter.label,
+                                          style: TextStyle(
+                                            color: selected
+                                                ? AppColors.white
+                                                : AppColors.identityUnselected,
+                                            fontSize: 12,
+                                            height: 18 / 12,
+                                            fontWeight: selected
+                                                ? FontWeight.w700
+                                                : FontWeight.w400,
                                           ),
                                         ),
                                       ),
@@ -112,32 +220,134 @@ class _CreditPageState extends State<CreditPage> {
                                   ),
                                 ),
                               ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: layout.px(15)),
+              Expanded(
+                child: ordersAsync.when(
+                  data: (state) {
+                    if (state.isEmpty) {
+                      return RefreshIndicator(
+                        onRefresh: _onRefresh,
+                        child: _buildEmptyState(layout),
+                      );
+                    }
+                    return RefreshIndicator(
+                      onRefresh: _onRefresh,
+                      child: ListView.separated(
+                        controller: _scrollController,
+                        padding: layout.edgeInsets(
+                          left: 20,
+                          right: 20,
+                          bottom: 24,
+                        ),
+                        itemCount: state.orders.length +
+                            (state.isLoadingMore ? 1 : 0),
+                        separatorBuilder: (context, index) =>
+                            SizedBox(height: layout.px(12)),
+                        itemBuilder: (context, index) {
+                          if (index >= state.orders.length) {
+                            return Center(
+                              child: Padding(
+                                padding: layout.edgeInsets(
+                                  top: 16,
+                                  bottom: 16,
+                                ),
+                                child: const CircularProgressIndicator(),
+                              ),
                             );
-                          }),
+                          }
+                          final order = state.orders[index];
+                          return CreditOrderCard(
+                            order: order,
+                            onCardTap: () =>
+                                _handleCardTap(order.cardClickUrl),
+                            onButtonTap: () =>
+                                _handleButtonTap(order.buttonClickUrl),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                  loading: () => const Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                  error: (error, stack) => RefreshIndicator(
+                    onRefresh: _onRefresh,
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.6,
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.error_outline,
+                                size: layout.px(64),
+                                color: AppColors.mutedBlue,
+                              ),
+                              SizedBox(height: layout.px(16)),
+                              Text(
+                                'Failed to load orders',
+                                style: TextStyle(
+                                  color: AppColors.mutedBlue,
+                                  fontSize: 14,
+                                  height: 18 / 14,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      SizedBox(height: layout.px(116)),
-                      Image.asset(
-                        AppAssets.creditEmpty,
-                        width: layout.px(204),
-                        height: layout.px(170),
-                        fit: BoxFit.contain,
-                        excludeFromSemantics: true,
-                      ),
-                      SizedBox(height: layout.px(19)),
-                      const Text(
-                        'No information available',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: AppColors.black,
-                          fontSize: 14,
-                          height: 18 / 14,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(AppLayout layout) {
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: AppLayout.maxContentWidth,
+          ),
+          child: Padding(
+            padding: layout.edgeInsets(left: 20, right: 20),
+            child: Column(
+              children: [
+                SizedBox(height: layout.px(116)),
+                Image.asset(
+                  AppAssets.creditEmpty,
+                  width: layout.px(204),
+                  height: layout.px(170),
+                  fit: BoxFit.contain,
+                  excludeFromSemantics: true,
+                ),
+                SizedBox(height: layout.px(19)),
+                const Text(
+                  'No information available',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.black,
+                    fontSize: 14,
+                    height: 18 / 14,
+                  ),
+                ),
+              ],
             ),
           ),
         ),

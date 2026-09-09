@@ -104,7 +104,7 @@ class _RootTabPageState extends ConsumerState<RootTabPage> {
         index: _currentIndex,
         children: [
           HomePage(isActive: _currentIndex == 0),
-          const CreditPage(),
+          CreditPage(isActive: _currentIndex == 1),
           MinePage(phone: session.phone),
         ],
       ),

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:peso_shield/theme/layout_adapter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/navigation/app_navigator.dart';
 import '../../core/ui/toast_helper.dart';
 import '../../data/models/home_popup_data.dart';
+import '../../theme/app_assets.dart';
 import '../../theme/app_colors.dart';
 
 class HomePopup {
@@ -16,67 +18,66 @@ class HomePopup {
     try {
       final open = await showDialog<bool>(
         context: context,
-        builder: (context) => data.type == HomePopupType.marketing
-            ? Dialog(
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                insetPadding: const EdgeInsets.all(16),
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      InkWell(
-                        onTap: () => Navigator.pop(context, true),
-                        child: Image.network(
-                          data.imageUrl,
-                          fit: BoxFit.contain,
-                          errorBuilder: (_, _, _) => const Icon(
-                            Icons.broken_image_outlined,
-                            color: AppColors.white,
-                            size: 48,
+        barrierColor: AppColors.dialogBarrier,
+        barrierDismissible: true,
+        builder: (context) => data.type == HomePopupType.appUpgrade
+            ? Material(
+                type: MaterialType.transparency,
+                child: _UpgradePopup(data: data),
+              )
+            : data.type == HomePopupType.marketing
+                ? GestureDetector(
+                    onTap: () {
+                      Navigator.pop(context, true);
+                    },
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 23),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(30),
+                          child: Image.network(
+                            data.imageUrl,
+                            fit: BoxFit.contain,
+                            errorBuilder: (_, __, ___) => Container(
+                              height: 200,
+                              decoration: BoxDecoration(
+                                color: AppColors.surface,
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              child: const Center(
+                                child: Icon(
+                                  Icons.broken_image_outlined,
+                                  color: AppColors.textPrimary,
+                                  size: 48,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      IconButton(
-                        tooltip: 'Close',
-                        onPressed: () => Navigator.pop(context, false),
-                        icon: const Icon(Icons.close, color: AppColors.white),
-                      ),
-                    ],
-                  ),
-                ),
-              )
+                    ),
+                  )
             : AlertDialog(
                 scrollable: true,
-                title: Text(
-                  data.type == HomePopupType.appUpgrade
-                      ? 'App Update'
-                      : 'Membership Upgrade',
-                ),
+                title: const Text('Membership Upgrade'),
                 content: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (data.type == HomePopupType.appUpgrade) ...[
-                      if (data.version.isNotEmpty) Text(data.version),
-                      if (data.message.isNotEmpty) Text(data.message),
-                    ] else ...[
-                      if (data.levelImageUrl.isNotEmpty)
-                        Image.network(
-                          data.levelImageUrl,
-                          width: 64,
-                          height: 64,
-                          errorBuilder: (_, _, _) => const SizedBox.shrink(),
-                        ),
-                      Text(data.currentLevel),
-                      if (data.previousLevel.isNotEmpty)
-                        Text('Previous: ${data.previousLevel}'),
-                      for (final benefit in data.benefits)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Text(benefit),
-                        ),
-                    ],
+                    if (data.levelImageUrl.isNotEmpty)
+                      Image.network(
+                        data.levelImageUrl,
+                        width: 64,
+                        height: 64,
+                        errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                      ),
+                    Text(data.currentLevel),
+                    if (data.previousLevel.isNotEmpty)
+                      Text('Previous: ${data.previousLevel}'),
+                    for (final benefit in data.benefits)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(benefit),
+                      ),
                   ],
                 ),
                 actions: [
@@ -84,12 +85,6 @@ class HomePopup {
                     onPressed: () => Navigator.pop(context, false),
                     child: const Text('Close'),
                   ),
-                  if (data.type == HomePopupType.appUpgrade &&
-                      data.targetUrl.isNotEmpty)
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      child: const Text('Update Now'),
-                    ),
                 ],
               ),
       );
@@ -116,5 +111,115 @@ class HomePopup {
     } finally {
       _showing = false;
     }
+  }
+}
+
+class _UpgradePopup extends StatelessWidget {
+  const _UpgradePopup({required this.data});
+
+  final HomePopupData data;
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final popupWidth = (screenWidth - 64).clamp(280.0, 343.0);
+    final backgroundHeight = popupWidth * (927 / 933);
+    final layout = AppLayout.of(context);
+
+    return Center(
+      child: Container(
+        padding: layout.edgeInsets(left: 26, right: 26, top: 46, bottom: 17),
+        width: popupWidth,
+        height: backgroundHeight,
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage(AppAssets.accountDialogPanel),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Column(
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: SizedBox(
+                height: layout.px(24),
+                child: Text(
+                  'New version released',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: layout.px(20),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: layout.px(35)),
+            Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 4,
+                ),
+                child: Text(
+                  data.version,
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: layout.px(14)),
+            SizedBox(
+              width: double.infinity,
+              child: Text(
+                data.message,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 15,
+                  height: 21 / 15,
+                ),
+              ),
+            ),
+            const Spacer(),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 34),
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.coral,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      side: const BorderSide(
+                        color: AppColors.white,
+                        width: 1,
+                      ),
+                    ),
+                    padding: EdgeInsets.zero,
+                  ),
+                  child: const Text(
+                    'Update Now',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

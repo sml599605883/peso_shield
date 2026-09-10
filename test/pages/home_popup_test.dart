@@ -29,11 +29,11 @@ void main() {
     await HomePopup.show(
       const HomePopupData(type: HomePopupType.appUpgrade, version: '3.0'),
     );
-    expect(find.byType(AlertDialog), findsOneWidget);
+    expect(find.text('Update Now'), findsOneWidget);
     expect(find.text('2.0'), findsOneWidget);
     expect(find.text('3.0'), findsNothing);
     expect(tester.takeException(), isNull);
-    await tester.tap(find.text('Close'));
+    await tester.tap(find.text('Update Now'));
     await tester.pumpAndSettle();
     await closed;
   });

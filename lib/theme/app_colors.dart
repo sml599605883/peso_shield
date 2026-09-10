@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 
 abstract final class AppColors {
+  static const primary = Color.fromRGBO(60, 108, 243, 1);
+  static const textPrimary = Color.fromRGBO(51, 51, 51, 1);
+  static const alert = Color.fromRGBO(246, 18, 18, 1);
+  static const surface = Color.fromRGBO(255, 255, 255, 1);
+  static const dialogBarrier = Color.fromRGBO(0, 0, 0, 0.45);
   static const orderAction = Color.fromRGBO(255, 51, 0, 1);
   static const orderPanel = Color.fromRGBO(255, 255, 255, 0.31);
   static const homePageIndicator = Color.fromRGBO(100, 122, 224, 1);

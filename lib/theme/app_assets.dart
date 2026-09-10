@@ -48,8 +48,6 @@ abstract final class AppAssets {
   static const identityShieldIllustration =
       'assets/identity_shield_illustration.png';
   static const identityUploadDemo = 'assets/identity_upload_demo.png';
-  static const identityUploadIllustrationAlt =
-      'assets/identity_upload_illustration_alt.png';
   static const identityUploadCheckmark = 'assets/identity_upload_checkmark.png';
   static const identityUploadAlbum = 'assets/identity_upload_album.png';
   static const identityUploadCamera = 'assets/identity_upload_camera.png';
@@ -67,6 +65,17 @@ abstract final class AppAssets {
       'assets/bind_card_suggestion_background.png';
   static const bindCardSuggestionClose =
       'assets/bind_card_suggestion_close.png';
+  static const accountCardBackground =
+      'assets/account/account_card_background.png';
+  static const accountSelected = 'assets/account/payment_method_selected.png';
+  static const accountUnselected =
+      'assets/account/payment_method_unselected.png';
+  static const accountAddPaymentMethod =
+      'assets/account/add_payment_method.png';
+
+  static const recreditIllustration = 'assets/recredit/recredit_illustration.png';
+  static const recreditProgressTrack =
+      'assets/recredit/recredit_progress_track.png';
 
   static const tabBarBackground = 'assets/navigation/tab_bar_background.png';
   static const homeActive = 'assets/navigation/home_active.png';

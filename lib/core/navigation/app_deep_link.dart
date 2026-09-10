@@ -67,6 +67,18 @@ class AppDeepLink {
     }
     return '';
   }
+
+  /// 获取订单筛选参数 segregate
+  String get segregate {
+    final fromQuery = uri?.queryParameters['segregate']?.trim() ?? '';
+    if (fromQuery.isNotEmpty) return fromQuery;
+
+    if (arguments is Map) {
+      final value = (arguments as Map)['segregate'];
+      return value?.toString().trim() ?? '';
+    }
+    return '';
+  }
 }
 
 /// DeepLink 解析器

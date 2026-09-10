@@ -11,11 +11,14 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/navigation/app_navigator.dart';
 import '../../core/navigation/app_deep_link.dart';
+import '../../core/ui/toast_helper.dart';
+import '../../data/models/certification_data.dart';
 import '../../providers/repository_provider.dart';
+import '../account_list_page.dart';
+import '../bind_card_page.dart';
 import '../../providers/report_provider.dart';
 import '../../providers/network_provider.dart';
 import '../../theme/app_colors.dart';
-import '../../widgets/loading_overlay.dart';
 import 'webview_action_coordinator.dart';
 import 'webview_contract.dart';
 
@@ -307,21 +310,41 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
       },
       reloadOrOpenWebView: _reloadOrOpenWebView,
       changeAccount: ({required productId, required orderNo}) async {
-        // TODO: 实现账号列表API后完成此功能
-        // 目前直接跳转到绑卡页面
-        debugPrint(
-          '[WebView] Change account: productId=$productId, orderNo=$orderNo',
-        );
-        await AppNavigator.toBindCard(productId: productId);
+        try {
+          final certRepo = await ref.read(certificationRepositoryProvider.future);
+          final response = await certRepo.getUserBankAccounts(
+            productId: productId,
+          );
+          if (!response.isSuccess) {
+            throw StateError(response.message);
+          }
+          
+          // 如果有账户列表，跳转到账户列表页面；否则直接跳转到绑卡页面
+          if (!response.data.isEmpty) {
+            await _navigateToAccountList(
+              productId: productId,
+              orderNo: orderNo,
+              accounts: response.data,
+            );
+          } else {
+            await _navigateToBindCard(
+              productId: productId,
+              orderNo: orderNo,
+            );
+          }
+        } catch (e) {
+          debugPrint('[WebView] Change account failed: $e');
+          rethrow;
+        }
       },
       showLoading: () async {
-        LoadingOverlay.show();
+        ToastHelper.showLoading();
       },
       dismissLoading: () async {
-        LoadingOverlay.dismiss();
+        ToastHelper.hideLoading();
       },
       showError: (message) async {
-        LoadingOverlay.showError(message);
+        ToastHelper.showError(message);
       },
       logger: (message) => debugPrint('[WebView] $message'),
     );
@@ -509,6 +532,118 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
       return;
     }
     await controller.loadUrl(urlRequest: URLRequest(url: WebUri.uri(uri)));
+  }
+
+  Future<void> _navigateToAccountList({
+    required String productId,
+    required String orderNo,
+    required BankAccountList accounts,
+  }) async {
+    final context = this.context;
+    if (!mounted) return;
+    
+    final result = await Navigator.of(context).push<AccountListResult>(
+      MaterialPageRoute(
+        builder: (_) => AccountListPage(groups: accounts.groups),
+      ),
+    );
+    
+    if (!mounted || result == null) return;
+    
+    if (result is AccountListAddPaymentMethod) {
+      // 用户选择添加新支付方式
+      await _navigateToBindCard(productId: productId, orderNo: orderNo);
+      return;
+    }
+    
+    if (result is AccountListSelection) {
+      // 用户选择了账户，账户列表页面已经pop了，现在提交并替换WebView
+      await _submitAccountChange(orderNo: orderNo, bindId: result.bindId);
+    }
+  }
+
+  Future<void> _navigateToBindCard({
+    required String productId,
+    required String orderNo,
+  }) async {
+    final context = this.context;
+    if (!mounted) return;
+    
+    final certRepo = await ref.read(certificationRepositoryProvider.future);
+    final resultUrl = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (pageContext) => BindCardPage(
+          productId: productId,
+          orderNo: orderNo,
+          isAccountChange: true,
+          changeAccount: (order, bindId) async {
+            final response = await certRepo.changeBindCard(
+              orderNo: order,
+              bindId: bindId,
+            );
+            if (!response.isSuccess || response.data.trim().isEmpty) {
+              throw StateError(response.message);
+            }
+            if (pageContext.mounted) {
+              Navigator.pop(pageContext, response.data);
+            }
+            return response.data;
+          },
+        ),
+      ),
+    );
+    
+    if (!mounted || resultUrl == null || resultUrl.trim().isEmpty) return;
+    
+    // 绑卡页面已经pop了，现在需要替换当前WebView
+    await _replaceCurrentWebView(resultUrl.trim());
+  }
+
+  Future<void> _submitAccountChange({
+    required String orderNo,
+    required String bindId,
+  }) async {
+    final cancelFunc = ToastHelper.showLoading();
+    try {
+      final certRepo = await ref.read(certificationRepositoryProvider.future);
+      final response = await certRepo.changeBindCard(
+        orderNo: orderNo,
+        bindId: bindId,
+      );
+      
+      if (!response.isSuccess || response.data.trim().isEmpty) {
+        throw StateError(response.message);
+      }
+      
+      cancelFunc();
+      
+      if (!mounted) return;
+      
+      // 替换当前WebView为新的WebView
+      await _replaceCurrentWebView(response.data.trim());
+    } catch (e) {
+      cancelFunc();
+      ToastHelper.showError(e.toString());
+      rethrow;
+    }
+  }
+
+  Future<void> _replaceCurrentWebView(String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri == null || (uri.scheme != 'http' && uri.scheme != 'https')) {
+      debugPrint('[WebView] Invalid result URL: $url');
+      return;
+    }
+    
+    if (!mounted) return;
+    final context = this.context;
+    
+    // 使用pushReplacement替换当前WebView
+    await Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => WebViewPage(initialUrl: url),
+      ),
+    );
   }
 
   @override

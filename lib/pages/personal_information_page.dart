@@ -430,9 +430,7 @@ class _PersonalInformationPageState
     } catch (_) {
       cancel();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Unable to load address options')),
-        );
+        ToastHelper.showError('Unable to load address options');
       }
     }
   }

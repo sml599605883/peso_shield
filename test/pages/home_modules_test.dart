@@ -78,6 +78,68 @@ void main() {
     expect(HomeData.fromJson({}).recommendations, isEmpty);
   });
 
+  test('prefers large card (Deoxy) over small card (MaximalsNatriureses)', () {
+    final data = HomeData.fromJson({
+      'applicants': [
+        {
+          'bellings': 'Deoxy',
+          'geochronologist': [
+            {
+              'ventral': 'large-1',
+              'reinters': 'Large Card',
+              'contexts': 'PHP 50,000',
+            },
+          ],
+        },
+        {
+          'bellings': 'MaximalsNatriureses',
+          'geochronologist': [
+            {
+              'ventral': 'small-1',
+              'reinters': 'Small Card',
+              'contexts': 'PHP 10,000',
+            },
+          ],
+        },
+      ],
+    });
+    expect(data.products.length, 1);
+    expect(data.products.first.id, 'large-1');
+    expect(data.products.first.name, 'Large Card');
+  });
+
+  test('uses small card (MaximalsNatriureses) when large card is absent', () {
+    final data = HomeData.fromJson({
+      'applicants': [
+        {
+          'bellings': 'MaximalsNatriureses',
+          'geochronologist': [
+            {
+              'ventral': 'small-1',
+              'reinters': 'Small Card',
+              'contexts': 'PHP 10,000',
+            },
+          ],
+        },
+      ],
+    });
+    expect(data.products.length, 1);
+    expect(data.products.first.id, 'small-1');
+    expect(data.products.first.name, 'Small Card');
+  });
+
+  test('returns empty products when neither card type exists', () {
+    final data = HomeData.fromJson({
+      'applicants': [
+        {
+          'bellings': 'SomeOtherType',
+          'geochronologist': [{}],
+        },
+      ],
+    });
+    expect(data.products, isEmpty);
+  });
+
   test(
     'repay uses card target, retry closes loading, errors release lock',
     () async {

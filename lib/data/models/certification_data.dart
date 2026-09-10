@@ -255,31 +255,96 @@ class ContactField {
   final List<FormField> fields;
 }
 
+class BankAccountList {
+  const BankAccountList({required this.groups});
+
+  factory BankAccountList.fromJson(Map<String, dynamic> json) {
+    final rawGroups = json['applicants'] as List<dynamic>? ?? const [];
+    return BankAccountList(
+      groups: rawGroups
+          .whereType<Map<String, dynamic>>()
+          .map(BankAccountGroup.fromJson)
+          .where((group) => group.accounts.isNotEmpty)
+          .toList(growable: false),
+    );
+  }
+
+  final List<BankAccountGroup> groups;
+
+  List<BankAccount> get accounts =>
+      groups.expand((group) => group.accounts).toList(growable: false);
+
+  bool get isEmpty => accounts.isEmpty;
+}
+
+class BankAccountGroup {
+  const BankAccountGroup({required this.title, required this.accounts});
+
+  factory BankAccountGroup.fromJson(Map<String, dynamic> json) {
+    final rawAccounts = json['geochronologist'] as List<dynamic>? ?? const [];
+    return BankAccountGroup(
+      title: json['burlesquer']?.toString().trim() ?? '',
+      accounts: rawAccounts
+          .whereType<Map<String, dynamic>>()
+          .map(BankAccount.fromJson)
+          .where((account) => account.id.isNotEmpty)
+          .toList(growable: false),
+    );
+  }
+
+  final String title;
+  final List<BankAccount> accounts;
+}
+
 class BankAccount {
   const BankAccount({
     required this.id,
+    required this.logoUrl,
+    required this.available,
     required this.bankName,
     required this.accountNumber,
-    required this.accountName,
+    required this.firstName,
+    required this.middleName,
+    required this.lastName,
+    required this.isMain,
+    required this.type,
+    required this.maintenanceMessage,
   });
 
   factory BankAccount.fromJson(Map<String, dynamic> json) {
     final names = json['rivieres'] as Map<String, dynamic>? ?? const {};
     return BankAccount(
       id: json['retraction']?.toString() ?? '',
+      logoUrl: json['week']?.toString().trim() ?? '',
+      available: json['barghests'] == 1,
       bankName: json['photoduplicated'] as String? ?? '',
       accountNumber: json['banisters'] as String? ?? '',
-      accountName: ['barehanded', 'unforced', 'unenlightened']
-          .map((key) => names[key]?.toString().trim() ?? '')
-          .where((name) => name.isNotEmpty)
-          .join(' '),
+      firstName: names['barehanded']?.toString().trim() ?? '',
+      middleName: names['unforced']?.toString().trim() ?? '',
+      lastName: names['unenlightened']?.toString().trim() ?? '',
+      isMain: json['premillenarian'] == 1,
+      type: json['bellings']?.toString() ?? '',
+      maintenanceMessage: json['lookalike']?.toString().trim() ?? '',
     );
   }
 
   final String id;
+  final String logoUrl;
+  final bool available;
   final String bankName;
   final String accountNumber;
-  final String accountName;
+  final String firstName;
+  final String middleName;
+  final String lastName;
+  final bool isMain;
+  final String type;
+  final String maintenanceMessage;
+
+  String get accountName => [
+    firstName,
+    middleName,
+    lastName,
+  ].where((name) => name.isNotEmpty).join(' ');
 }
 
 class AddressData {

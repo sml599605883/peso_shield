@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:peso_shield/core/config/runtime_config.dart';
 import 'package:peso_shield/core/device/device_name_sync.dart';
 import 'package:peso_shield/core/device/user_session.dart';
 import 'package:peso_shield/core/network/device_params.dart';
@@ -67,9 +68,16 @@ class _StartupNetworkGateState extends State<StartupNetworkGate>
       final httpClient = await widget.ref.read(httpClientProvider.future);
       var available = await httpClient.probeTransport();
       if (!available) {
-        final fallback = await _loadFallbackApi();
-        if (fallback != null) {
-          widget.ref.read(runtimeApiBaseProvider.notifier).state = fallback;
+        final fallback = await _loadFallbackConfig();
+        if (fallback != null && fallback.isValid) {
+          // 同时更新 API 和 Web 基础地址
+          widget.ref.read(runtimeApiBaseProvider.notifier).update(
+            Uri.tryParse(fallback.apiBase),
+          );
+          widget.ref.read(runtimeWebBaseProvider.notifier).update(
+            fallback.webBase,
+          );
+          
           widget.ref.invalidate(httpClientProvider);
           final fallbackClient = await widget.ref.read(
             httpClientProvider.future,
@@ -122,7 +130,7 @@ class _StartupNetworkGateState extends State<StartupNetworkGate>
     }
   }
 
-  Future<Uri?> _loadFallbackApi() async {
+  Future<RuntimeConfig?> _loadFallbackConfig() async {
     const source =
         'https://raw.githubusercontent.com/ninelife442/TulongPera/refs/heads/main/spareList';
     final client = HttpClient()
@@ -133,8 +141,11 @@ class _StartupNetworkGateState extends State<StartupNetworkGate>
       final body = await response.transform(utf8.decoder).join();
       final decoded = base64.decode(body.trim());
       final json = jsonDecode(utf8.decode(decoded));
-      final api = json is Map ? json['api'] : null;
-      return api is String ? Uri.tryParse(api) : null;
+      
+      if (json is! Map<String, dynamic>) return null;
+      
+      final config = RuntimeConfig.fromJson(json);
+      return config.isValid ? config : null;
     } catch (_) {
       return null;
     } finally {

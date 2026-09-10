@@ -89,4 +89,7 @@ abstract final class AppColors {
     198,
     1,
   );
+  static const accountMaintenance = Color.fromRGBO(252, 198, 40, 1);
+  static const accountSecondaryText = Color.fromRGBO(153, 153, 153, 1);
+  static const recreditText = Color.fromRGBO(24, 28, 23, 1);
 }

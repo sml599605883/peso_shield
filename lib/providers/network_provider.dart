@@ -29,6 +29,25 @@ final runtimeApiBaseProvider = NotifierProvider<RuntimeApiBaseNotifier, Uri?>(
 class RuntimeApiBaseNotifier extends Notifier<Uri?> {
   @override
   Uri? build() => null;
+  
+  void update(Uri? value) {
+    state = value;
+  }
+}
+
+/// 运行时 Web 基础地址 Provider
+/// 用于管理动态切换的 H5 页面基础 URL
+final runtimeWebBaseProvider = NotifierProvider<RuntimeWebBaseNotifier, String?>(
+  RuntimeWebBaseNotifier.new,
+);
+
+class RuntimeWebBaseNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
+  
+  void update(String? value) {
+    state = value;
+  }
 }
 
 final deviceMetadataStoreProvider = Provider<DeviceMetadataStore>((ref) {

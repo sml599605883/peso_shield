@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/product/product_providers.dart';
 import '../core/device/user_session.dart';
+import '../core/ui/toast_helper.dart';
 import '../providers/repository_provider.dart';
 import '../providers/report_provider.dart';
 import '../theme/app_assets.dart';
@@ -347,9 +348,7 @@ class _IdentityConfirmationPageState
     if (_name.text.trim().isEmpty ||
         _id.text.trim().isEmpty ||
         _birth.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please complete all fields')),
-      );
+      ToastHelper.showError('Please complete all fields');
       return;
     }
     setState(() => _submitting = true);
@@ -364,9 +363,7 @@ class _IdentityConfirmationPageState
       );
       if (!mounted) return;
       if (!result.isSuccess) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(result.message)));
+        ToastHelper.showError(result.message);
         return;
       }
       final startedAt = widget.startedAtSeconds;
@@ -390,9 +387,7 @@ class _IdentityConfirmationPageState
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Unable to submit. Please try again.')),
-        );
+        ToastHelper.showError('Unable to submit. Please try again.');
       }
     } finally {
       if (mounted) setState(() => _submitting = false);

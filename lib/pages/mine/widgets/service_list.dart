@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/config/app_urls.dart';
+import '../../../core/navigation/app_navigator.dart';
 import '../../../theme/app_assets.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/layout_adapter.dart';
 import 'service_row.dart';
 
-class MineServiceList extends StatelessWidget {
+class MineServiceList extends ConsumerWidget {
   const MineServiceList({this.onSettingTap, super.key});
 
   final VoidCallback? onSettingTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final layout = AppLayout.of(context);
     return Container(
       decoration: BoxDecoration(
@@ -31,6 +34,7 @@ class MineServiceList extends StatelessWidget {
             'Online Services',
             AppAssets.mineOnlineService,
             hasDivider: true,
+            onTap: () => AppNavigator.toWebView(url: AppUrls.customerService(ref)),
           ),
           MineServiceRow(
             'Setting',
@@ -38,7 +42,11 @@ class MineServiceList extends StatelessWidget {
             hasDivider: true,
             onTap: onSettingTap,
           ),
-          const MineServiceRow('Privacy Agreement', AppAssets.minePrivacy),
+          MineServiceRow(
+            'Privacy Agreement',
+            AppAssets.minePrivacy,
+            onTap: () => AppNavigator.toWebView(url: AppUrls.privacyPolicy(ref)),
+          ),
         ],
       ),
     );

@@ -83,7 +83,7 @@ class CertificationRepository {
         'misapprehend': cardType,
         'fumblers': ObfuscationHelper.randomParam(),
       },
-      parse: (_) => null,
+      parse: (_) {},
     );
   }
 
@@ -112,7 +112,7 @@ class CertificationRepository {
         'pulis': ObfuscationHelper.randomParam(),
         'brakiest': ObfuscationHelper.randomParam(),
       },
-      parse: (_) => null,
+      parse: (_) {},
     );
   }
 
@@ -142,7 +142,7 @@ class CertificationRepository {
         'shergottites': ObfuscationHelper.randomParam(),
         'dawt': ObfuscationHelper.randomParam(),
       },
-      parse: (_) => null,
+      parse: (_) {},
     );
   }
 
@@ -156,7 +156,8 @@ class CertificationRepository {
         'bombarder': productId,
         'columniation': ObfuscationHelper.randomParam(),
       },
-      parse: (json) => EmergencyContactData.fromJson(json as Map<String, dynamic>),
+      parse: (json) =>
+          EmergencyContactData.fromJson(json as Map<String, dynamic>),
     );
   }
 
@@ -172,7 +173,7 @@ class CertificationRepository {
         'mugg': jsonEncode(contacts),
         'spermatozoal': ObfuscationHelper.randomParam(),
       },
-      parse: (_) => null,
+      parse: (_) {},
     );
   }
 
@@ -187,9 +188,8 @@ class CertificationRepository {
         'openhearted': ObfuscationHelper.randomParam(),
         'revelation': ObfuscationHelper.randomParam(),
       },
-      parse: (json) => BindCardData.fromJson(
-        Json(json as Map<String, dynamic>),
-      ),
+      parse: (json) =>
+          BindCardData.fromJson(Json(json as Map<String, dynamic>)),
     );
   }
 
@@ -243,7 +243,7 @@ class CertificationRepository {
   }
 
   /// 用户账户列表
-  Future<ApiResponse<List<BankAccount>>> getUserBankAccounts({
+  Future<ApiResponse<BankAccountList>> getUserBankAccounts({
     required String productId,
   }) async {
     return _client.post(
@@ -253,19 +253,8 @@ class CertificationRepository {
         'mallet': ObfuscationHelper.randomParam(),
         'snugger': ObfuscationHelper.randomParam(),
       },
-      parse: (json) {
-        final mugg = json as Map<String, dynamic>?;
-        final applicants = mugg?['applicants'] as List<dynamic>? ?? [];
-        final accounts = <BankAccount>[];
-        for (final item in applicants) {
-          final itemMap = item as Map<String, dynamic>;
-          final list = itemMap['geochronologist'] as List<dynamic>? ?? [];
-          accounts.addAll(
-            list.map((e) => BankAccount.fromJson(e as Map<String, dynamic>)),
-          );
-        }
-        return accounts;
-      },
+      parse: (json) =>
+          BankAccountList.fromJson(json as Map<String, dynamic>? ?? const {}),
     );
   }
 

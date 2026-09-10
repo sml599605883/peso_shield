@@ -1,9 +1,9 @@
-import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/device/user_session.dart';
 import '../core/network/api_exception.dart';
+import '../core/ui/toast_helper.dart';
 import '../features/settings/account_action_coordinator.dart';
 import '../providers/network_provider.dart';
 import '../providers/repository_provider.dart';
@@ -403,7 +403,7 @@ Future<bool> _handleAccountAction(
   WidgetRef ref,
   AccountAction action,
 ) async {
-  final cancelFunc = BotToast.showLoading();
+  final cancelFunc = ToastHelper.showLoading();
   try {
     final authRepository = await ref.read(authRepositoryProvider.future);
 
@@ -424,10 +424,10 @@ Future<bool> _handleAccountAction(
 
     return true;
   } on ApiException catch (e) {
-    BotToast.showText(text: e.message);
+    ToastHelper.showError(e.message);
     return false;
   } catch (e) {
-    BotToast.showText(text: 'Unexpected error occurred');
+    ToastHelper.showError('Unexpected error occurred');
     return false;
   } finally {
     cancelFunc();

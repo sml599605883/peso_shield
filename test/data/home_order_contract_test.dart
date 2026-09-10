@@ -41,14 +41,16 @@ void main() {
         ..payload = {
           'applicants': [
             {
+              'burlesquer': 'Bank',
               'geochronologist': [
-                {
-                  'retraction': 555,
-                  'barghests': 0,
-                  'photoduplicated': 'Bank',
-                  'banisters': '123456',
-                  'rivieres': {'barehanded': 'First', 'unenlightened': 'Last'},
-                },
+              {
+                'retraction': '555',
+                'barghests': 0,
+                'photoduplicated': 'BDO',
+                'banisters': '123456',
+                'rivieres': {'barehanded': 'First', 'unenlightened': 'Last'},
+                'lookalike': 'Bank maintenance in progress',
+              },
               ],
             },
           ],
@@ -57,13 +59,14 @@ void main() {
       final response = await repository.getUserBankAccounts(productId: '12');
       expect(client.path, '/outsmelled/reinters');
       expect(client.params['bombarder'], '12');
-      expect(response.data.single.id, '555');
-      expect(response.data.single.accountNumber, '123456');
-      expect(response.data.single.accountName, 'First Last');
+      expect(response.data.groups.single.title, 'Bank');
+      expect(response.data.accounts.single.id, '555');
+      expect(response.data.accounts.single.accountNumber, '123456');
+      expect(response.data.accounts.single.accountName, 'First Last');
       client.payload = {'antineoplastic': 'https://example.com/changed'};
       final changed = await repository.changeBindCard(
         orderNo: 'order-1',
-        bindId: response.data.single.id,
+        bindId: response.data.accounts.single.id,
       );
       expect(client.path, '/outsmelled/crampfishes');
       expect(client.params['superparasitism'], 'order-1');

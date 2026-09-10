@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../providers/credit_orders_provider.dart';
 import '../product/product_providers.dart';
 import '../ui/toast_helper.dart';
 import 'app_deep_link.dart';
@@ -293,6 +294,22 @@ class AppNavigator {
     );
   }
 
+  /// 跳转到订单列表页面
+  static Future<void> toOrderList({OrderFilter? initialFilter}) async {
+    await toNamed<void>(
+      AppRoutes.mineOrderList,
+      arguments: initialFilter,
+    );
+  }
+
+  /// 跳转到重新授信页面
+  static Future<void> toRecredit({required String productId}) async {
+    await toNamed<void>(
+      AppRoutes.recredit,
+      arguments: {'productId': productId, 'highlands': productId},
+    );
+  }
+
   // ==================== 产品申请相关 ====================
 
   /// 执行产品申请流程（统一入口）
@@ -324,6 +341,31 @@ class AppNavigator {
     );
   }
 
+  /// 重新授信后的产品申请流程
+  ///
+  /// 当重新授信完成后，自动跳转到产品申请流程
+  static Future<void> applyProductAfterRecredit(String productId) async {
+    final context = _context;
+    if (context == null || !context.mounted) {
+      _log('Error: Context not available for applyProductAfterRecredit');
+      return;
+    }
+
+    // 需要从 context 获取 WidgetRef，暂时简化处理
+    // 实际应该通过 ProviderScope 或其他方式获取
+    _log('applyProductAfterRecredit called with productId: $productId');
+    
+    // 这里应该调用产品申请流程，暂时留空待后续实现
+    // TODO: 实现重新授信后的产品申请逻辑
+  }
+
+  /// 获取当前路由名称
+  static String get currentRoute {
+    final context = _context;
+    if (context == null) return '';
+    return ModalRoute.of(context)?.settings.name ?? '';
+  }
+
   // ==================== 工具方法 ====================
 
   static Future<void> navigateRawTarget({
@@ -350,6 +392,18 @@ class AppNavigator {
         await toNamed<void>(AppRoutes.settings);
       case AppDeepLinkKind.login:
         await toLogin();
+      case AppDeepLinkKind.order:
+        // 根据 segregate 参数跳转到对应的订单状态
+        final segregate = link.segregate;
+        OrderFilter? filter;
+        if (segregate.isNotEmpty) {
+          // 根据 segregate 值匹配对应的 OrderFilter
+          filter = OrderFilter.values.cast<OrderFilter?>().firstWhere(
+                (f) => f?.segregateValue == segregate,
+                orElse: () => null,
+              );
+        }
+        await toOrderList(initialFilter: filter);
       case AppDeepLinkKind.admission:
       case AppDeepLinkKind.productDetail:
         final productId = link.productId;
@@ -372,7 +426,12 @@ class AppNavigator {
           );
         }
       case AppDeepLinkKind.creditReview:
-      case AppDeepLinkKind.order:
+        final productId = link.productId;
+        if (productId.isEmpty) {
+          ToastHelper.showError('Invalid link');
+          return;
+        }
+        await toRecredit(productId: productId);
       case AppDeepLinkKind.unsupported:
         ToastHelper.showError('Unable to open link');
     }

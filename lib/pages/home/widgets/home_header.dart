@@ -11,7 +11,7 @@ class HomeHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final layout = AppLayout.of(context);
     return Padding(
-      padding: layout.edgeInsets(left: 20, top: 24, right: 20),
+      padding: layout.edgeInsets(left: 20, top: 19, right: 20),
       child: Row(
         children: [
           Expanded(
@@ -21,7 +21,7 @@ class HomeHeader extends StatelessWidget {
                 color: AppColors.black,
                 fontSize: layout.px(22),
                 fontWeight: FontWeight.w700,
-                height: 30 / 22,
+                height: 26 / 22,
               ),
             ),
           ),
@@ -30,7 +30,7 @@ class HomeHeader extends StatelessWidget {
             label: 'Messages',
             child: Image.asset(
               AppAssets.notification,
-              width: layout.px(30),
+              width: layout.px(32),
               height: layout.px(32),
             ),
           ),

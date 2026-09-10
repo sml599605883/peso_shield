@@ -14,6 +14,15 @@ class HomeData {
     final phoneIcon = json['satinwood'] as Map<String, dynamic>?;
     final applicants = json['applicants'] as List<dynamic>? ?? [];
 
+    // Extract large card (Deoxy) and small card (MaximalsNatriureses)
+    final largeCardProducts = _extractProductsByType(applicants, 'Deoxy');
+    final smallCardProducts = _extractProductsByType(applicants, 'MaximalsNatriureses');
+    
+    // Prefer large card, fallback to small card if large card is empty
+    final products = largeCardProducts.isNotEmpty 
+        ? largeCardProducts 
+        : smallCardProducts;
+
     return HomeData(
       phoneIcon: phoneIcon != null
           ? PhoneIcon.fromJson(phoneIcon)
@@ -22,7 +31,7 @@ class HomeData {
           .whereType<Map<String, dynamic>>()
           .map(HomeSection.fromJson)
           .toList(),
-      products: _extractProducts(applicants),
+      products: products,
       progressItems: _items(
         applicants,
         'Velarizing',
@@ -42,9 +51,12 @@ class HomeData {
     );
   }
 
-  static List<ProductCard> _extractProducts(List<dynamic> applicants) {
+  static List<ProductCard> _extractProductsByType(
+    List<dynamic> applicants,
+    String type,
+  ) {
     for (final section in applicants) {
-      if (section is Map<String, dynamic> && section['bellings'] == 'Deoxy') {
+      if (section is Map<String, dynamic> && section['bellings'] == type) {
         final products = section['geochronologist'] as List<dynamic>? ?? [];
         return products
             .map((e) => ProductCard.fromJson(e as Map<String, dynamic>))

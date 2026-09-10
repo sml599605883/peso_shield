@@ -14,6 +14,7 @@ import '../../pages/emergency_contact_page.dart';
 import '../../pages/bind_card_page.dart';
 import '../../pages/webview/webview_page.dart';
 import '../../pages/order_list_page.dart';
+import '../../pages/recredit/recredit_page.dart';
 import '../../providers/credit_orders_provider.dart';
 import 'app_routes.dart';
 
@@ -217,6 +218,12 @@ class AppRouteGenerator {
         return MaterialPageRoute<void>(
           builder: (_) =>
               WebViewPage(initialUrl: args.url, initialTitle: args.title),
+          settings: settings,
+        );
+
+      case AppRoutes.recredit:
+        return NoSwipePageRoute<void>(
+          builder: (_) => const RecreditPage(),
           settings: settings,
         );
 

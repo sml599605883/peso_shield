@@ -41,4 +41,14 @@ class ProductRepository {
       parse: (json) => ProductDetail.fromJson(json as Map<String, dynamic>),
     );
   }
+
+  Future<ApiResponse<Map<String, dynamic>>> reCredit() async {
+    return _client.get(
+      '/outsmelled/recredit',
+      params: {
+        'marksmanship': ObfuscationHelper.randomParam(),
+      },
+      parse: (json) => json as Map<String, dynamic>,
+    );
+  }
 }

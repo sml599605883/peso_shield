@@ -19,6 +19,8 @@ import '../bind_card_page.dart';
 import '../../providers/report_provider.dart';
 import '../../providers/network_provider.dart';
 import '../../theme/app_colors.dart';
+import '../../data/models/retention_popup_data.dart';
+import '../widgets/retention_popup_dialog.dart';
 import 'webview_action_coordinator.dart';
 import 'webview_contract.dart';
 
@@ -206,6 +208,8 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
   late String _title;
   bool _loading = true;
   bool _loadFailed = false;
+  RetentionPopupData? _retentionData;
+  bool _isLoadingRetention = false;
 
   Uri? get _initialUri {
     final uri = Uri.tryParse(widget.initialUrl.trim());
@@ -419,6 +423,9 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
   }
 
   Future<void> _handleBack() async {
+    // 如果正在加载挽留弹窗，阻止返回
+    if (_isLoadingRetention) return;
+
     final controller = _controller;
     var canGoBack = false;
     if (controller != null &&
@@ -437,7 +444,94 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
       }
     }
 
+    // 检查是否需要显示挽留弹窗
+    final shouldShowRetention = await _checkAndShowRetentionPopup(controller);
+    if (shouldShowRetention) {
+      return; // 用户选择继续，不执行返回
+    }
+
     await _completeBack(controller: controller, canGoBack: canGoBack);
+  }
+
+  /// 检查当前URL是否需要显示挽留弹窗，返回true表示用户选择继续留下
+  Future<bool> _checkAndShowRetentionPopup(
+    InAppWebViewController? controller,
+  ) async {
+    // 如果已经加载过挽留数据且不需要展示，直接返回false（允许返回）
+    if (_retentionData != null && !_retentionData!.shouldShow) {
+      return false;
+    }
+
+    // 获取当前URL
+    if (controller == null ||
+        !canUseWebViewController(
+          mounted: mounted,
+          activeController: _controller,
+          controller: controller,
+        )) {
+      return false;
+    }
+
+    final currentUrl = await controller.getUrl();
+    if (!canUseWebViewController(
+      mounted: mounted,
+      activeController: _controller,
+      controller: controller,
+    )) {
+      return false;
+    }
+
+    final urlString = currentUrl?.toString() ?? '';
+    
+    // 检查URL是否包含 AmalgamatorsMarqueterie
+    if (!urlString.contains('AmalgamatorsMarqueterie')) {
+      return false;
+    }
+
+    // 首次返回时请求挽留弹窗配置
+    if (_retentionData == null) {
+      setState(() => _isLoadingRetention = true);
+      try {
+        // 从URL中提取productId参数
+        final uri = Uri.tryParse(urlString);
+        final productId = uri?.queryParameters['polarimetric'] ?? 
+                         uri?.queryParameters['productId'] ?? '';
+        
+        if (productId.isEmpty) {
+          // 没有productId，不展示挽留弹窗
+          return false;
+        }
+
+        final repository = await ref.read(certificationRepositoryProvider.future);
+        final response = await repository.getRetentionPopup(
+          productId: productId,
+          popupType: '1', // 1=认证流程WebView页面
+        );
+
+        if (response.isSuccess && mounted) {
+          _retentionData = response.data;
+          
+          // 如果需要展示挽留弹窗
+          if (_retentionData!.shouldShow) {
+            final shouldStay = await RetentionPopupDialog.show(
+              context,
+              _retentionData!,
+            );
+            setState(() => _isLoadingRetention = false);
+            return shouldStay; // true=留下, false=离开
+          }
+        }
+      } catch (e) {
+        debugPrint('[WebView] Load retention popup failed: $e');
+        // 请求失败，允许返回
+      } finally {
+        if (mounted) {
+          setState(() => _isLoadingRetention = false);
+        }
+      }
+    }
+
+    return false;
   }
 
   Future<void> _completeBack({

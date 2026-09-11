@@ -566,6 +566,17 @@ class _BindCardPageState extends ConsumerState<BindCardPage> {
     try {
       var response = await _save(group.type, fields);
       while (response.code == 20000) {
+        loading();
+        if (mounted) setState(() => _submitting = false);
+        final shouldRetry = await PermissionHelper.showRetryPhotoDialog(context);
+        if (!mounted) return;
+        if (!shouldRetry) {
+          // User cancelled
+          return;
+        }
+        // User chose to retry, continue with liveness check
+        setState(() => _submitting = true);
+        ToastHelper.showLoading();
         final livenessResponse = await _completeLiveness(group.type, fields);
         if (livenessResponse == null) return;
         response = livenessResponse;

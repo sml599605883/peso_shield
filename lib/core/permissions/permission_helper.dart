@@ -40,7 +40,7 @@ class PermissionHelper {
     return showCupertinoDialog<void>(
       context: context,
       builder: (dialogContext) => CupertinoAlertDialog(
-        title: const Text('Allow Camera Access'),
+        title: const Text('Enable Camera to Continue'),
         content: const Text(
           "We can't complete identity verification without camera access. "
           'Enable the permission to continue your application securely.',
@@ -49,7 +49,7 @@ class PermissionHelper {
           CupertinoDialogAction(
             textStyle: TextStyle(color: AppColors.dialogCancel),
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancel'),
+            child: const Text('Not Now'),
           ),
           CupertinoDialogAction(
             textStyle: TextStyle(color: AppColors.dialogConfirm),
@@ -58,7 +58,7 @@ class PermissionHelper {
               await openAppSettings();
             },
             isDefaultAction: true,
-            child: const Text('Settings'),
+            child: const Text('Allow'),
           ),
         ],
       ),
@@ -106,23 +106,21 @@ class PermissionHelper {
           context: context,
           barrierDismissible: false,
           builder: (dialogContext) => CupertinoAlertDialog(
-            title: const Text('Turn On Location Services'),
+            title: const Text('Location Required'),
             content: const Text(
-              'To help us confirm your identity and safeguard your account '
-              'against unauthorized access, please enable Location Services '
-              'on your device to continue.',
+              'System location is disabled. Enable it to authenticate your identity and satisfy core risk assessment.',
             ),
             actions: [
               CupertinoDialogAction(
                 textStyle: TextStyle(color: AppColors.dialogCancel),
                 onPressed: () => Navigator.of(dialogContext).pop(false),
-                child: const Text('Cancel'),
+                child: const Text('Skip'),
               ),
               CupertinoDialogAction(
                 textStyle: TextStyle(color: AppColors.dialogConfirm),
                 onPressed: () => Navigator.of(dialogContext).pop(true),
                 isDefaultAction: true,
-                child: const Text('Settings'),
+                child: const Text('Enable Location Services'),
               ),
             ],
           ),
@@ -137,11 +135,39 @@ class PermissionHelper {
           context: context,
           barrierDismissible: false,
           builder: (dialogContext) => CupertinoAlertDialog(
-            title: const Text('Allow Location Access'),
+            title: const Text('Enable Location Permission'),
             content: const Text(
-              "We couldn't verify your location because permission is disabled. "
-              'Please allow location access in your device settings to continue '
-              'your application.',
+              'Without location, we can\'t authenticate your identity during credit assessment or support fraud prevention.',
+            ),
+            actions: [
+              CupertinoDialogAction(
+                textStyle: TextStyle(color: AppColors.dialogCancel),
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: const Text('Not Now'),
+              ),
+              CupertinoDialogAction(
+                textStyle: TextStyle(color: AppColors.dialogConfirm),
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                isDefaultAction: true,
+                child: const Text('Go to Settings'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  /// Show retry photo dialog when ID photo verification fails
+  static Future<bool> showRetryPhotoDialog(
+    BuildContext context,
+  ) async {
+    return await showCupertinoDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (dialogContext) => CupertinoAlertDialog(
+            title: const Text("Let's Try a New Photo"),
+            content: const Text(
+              "That photo didn't quite work. No worries - just snap a new one with your ID well-lit and flat, or upload a clearer picture to finish verification.",
             ),
             actions: [
               CupertinoDialogAction(
@@ -153,7 +179,7 @@ class PermissionHelper {
                 textStyle: TextStyle(color: AppColors.dialogConfirm),
                 onPressed: () => Navigator.of(dialogContext).pop(true),
                 isDefaultAction: true,
-                child: const Text('Settings'),
+                child: const Text('Retake ID'),
               ),
             ],
           ),

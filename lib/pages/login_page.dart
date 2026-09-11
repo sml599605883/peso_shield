@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/config/app_urls.dart';
 import '../core/device/user_session.dart';
 import '../core/navigation/app_navigator.dart';
 import '../core/network/http_exception.dart';
@@ -303,9 +304,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             selected: loginState.agreementAccepted,
             onChanged: (selected) =>
                 ref.read(loginStateProvider.notifier).toggleAgreement(),
-            onPrivacyPolicyTap:
-                widget.onPrivacyPolicyTap ??
-                () => debugPrint('Privacy Policy tapped'),
+            onPrivacyPolicyTap: widget.onPrivacyPolicyTap ??
+                () => AppNavigator.toWebView(url: AppUrls.privacyPolicy(ref)),
           ),
         ),
       ),

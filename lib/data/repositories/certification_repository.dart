@@ -9,6 +9,7 @@ import '../models/face_token_result.dart';
 import '../models/certification_data.dart';
 import '../models/emergency_contact_data.dart';
 import '../models/bind_card_data.dart';
+import '../models/retention_popup_data.dart';
 
 class CertificationRepository {
   const CertificationRepository(this._client);
@@ -304,6 +305,22 @@ class CertificationRepository {
       code: response.code,
       message: response.message,
       data: null,
+    );
+  }
+
+  /// 获取认证流程返回挽留弹窗配置
+  Future<ApiResponse<RetentionPopupData>> getRetentionPopup({
+    required String productId,
+    required String popupType,
+  }) async {
+    return _client.post(
+      '/outsmelled/haunts',
+      params: {
+        'forgets': popupType,
+        'polarimetric': productId,
+        'rethought': ObfuscationHelper.randomParam(),
+      },
+      parse: (json) => RetentionPopupData.fromJson(json as Map<String, dynamic>),
     );
   }
 }

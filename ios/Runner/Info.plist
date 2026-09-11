@@ -32,13 +32,13 @@
 		<true/>
 	</dict>
 	<key>NSCameraUsageDescription</key>
-	<string>Allow camera access to upload your ID and complete identity verification for a fast and secure application process.</string>
+	<string>We need camera access to scan your government-issued ID and capture a selfie for secure identity verification. This protects your account.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>A location check during approval helps confirm who you are and protects your account from unauthorized access.</string>
+	<string>Location information is used to authenticate your identity during credit assessment and support fraud prevention.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>A location check during approval helps confirm who you are and protects your account from unauthorized access.</string>
+	<string>Location information is used to authenticate your identity during credit assessment and support fraud prevention.</string>
 	<key>NSUserTrackingUsageDescription</key>
-	<string>Identifies your device, prevents fraud, and personalizes loan offers while keeping your information protected.</string>
+	<string>Tracking permission helps improve fraud prevention, increase account security, and deliver a more personalized app experience.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

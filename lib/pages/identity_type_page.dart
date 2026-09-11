@@ -10,10 +10,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/report_provider.dart';
 import '../providers/repository_provider.dart';
 import '../data/models/certification_data.dart';
+import '../data/models/retention_popup_data.dart';
 import '../theme/app_assets.dart';
 import '../theme/app_colors.dart';
 import '../theme/layout_adapter.dart';
 import '../widgets/app_back_button.dart';
+import 'widgets/retention_popup_dialog.dart';
 
 /// Static identity document selection shown before document capture.
 class IdentityTypePage extends ConsumerStatefulWidget {
@@ -29,12 +31,58 @@ class _IdentityTypePageState extends ConsumerState<IdentityTypePage> {
   bool _showOtherOptions = false;
   IdentityTypeList? _identityTypeList;
   late final int _sceneStartTime;
+  RetentionPopupData? _retentionData;
+  bool _isLoadingRetention = false;
 
   @override
   void initState() {
     super.initState();
     _sceneStartTime = PesoReportService.nowSeconds();
     _loadIdentityTypes();
+  }
+
+  Future<bool> _handleWillPop() async {
+    // 如果正在加载挽留弹窗，阻止返回
+    if (_isLoadingRetention) return false;
+
+    // 如果已经加载过挽留数据且不需要展示，直接返回
+    if (_retentionData != null && !_retentionData!.shouldShow) {
+      return true;
+    }
+
+    // 首次返回时请求挽留弹窗配置
+    if (_retentionData == null) {
+      setState(() => _isLoadingRetention = true);
+      try {
+        final repository = await ref.read(certificationRepositoryProvider.future);
+        final response = await repository.getRetentionPopup(
+          productId: widget.productId,
+          popupType: '0', // 0=身份认证页面
+        );
+
+        if (response.isSuccess && mounted) {
+          _retentionData = response.data;
+          
+          // 如果需要展示挽留弹窗
+          if (_retentionData!.shouldShow) {
+            final shouldStay = await RetentionPopupDialog.show(
+              context,
+              _retentionData!,
+            );
+            setState(() => _isLoadingRetention = false);
+            return !shouldStay; // true=离开, false=留下
+          }
+        }
+      } catch (_) {
+        // 请求失败，允许返回
+      } finally {
+        if (mounted) {
+          setState(() => _isLoadingRetention = false);
+        }
+      }
+    }
+
+    return true;
   }
 
   Future<void> _loadIdentityTypes() async {
@@ -59,128 +107,138 @@ class _IdentityTypePageState extends ConsumerState<IdentityTypePage> {
         ? (_identityTypeList?.otherIdTypes ?? [])
         : (_identityTypeList?.recommendedIdTypes ?? []);
 
-    return Scaffold(
-      body: SizedBox.expand(
-        child: DecoratedBox(
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage(AppAssets.homeBackground),
-              fit: BoxFit.fill,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final shouldPop = await _handleWillPop();
+        if (shouldPop && context.mounted) {
+          Navigator.of(context).pop();
+        }
+      },
+      child: Scaffold(
+        body: SizedBox.expand(
+          child: DecoratedBox(
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage(AppAssets.homeBackground),
+                fit: BoxFit.fill,
+              ),
             ),
-          ),
-          child: SafeArea(
-            bottom: false,
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  SizedBox(height: layout.px(21)),
-                  SizedBox(
-                    height: layout.px(24),
-                    child: Stack(
-                      children: [
-                        Positioned(
-                          left: layout.px(20),
-                          child: const AppBackButton(),
-                        ),
-                        Center(
-                          child: Text(
-                            'Identity verification',
-                            style: TextStyle(
-                              color: AppColors.black,
-                              fontFamily: 'Helvetica',
-                              fontSize: layout.px(20),
-                              fontWeight: FontWeight.w700,
-                              height: 24 / 20,
-                            ),
+            child: SafeArea(
+              bottom: false,
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    SizedBox(height: layout.px(21)),
+                    SizedBox(
+                      height: layout.px(24),
+                      child: Stack(
+                        children: [
+                          Positioned(
+                            left: layout.px(20),
+                            child: const AppBackButton(),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: layout.px(29)),
-                  SizedBox(
-                    height: layout.px(117),
-                    child: Stack(
-                      children: [
-                        Positioned(
-                          top: layout.px(14),
-                          left: layout.px(20),
-                          child: DecoratedBox(
-                            decoration: const BoxDecoration(
-                              color: AppColors.white,
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(15),
-                              ),
-                            ),
-                            child: Padding(
-                              padding: EdgeInsets.fromLTRB(
-                                layout.px(9),
-                                layout.px(5),
-                                layout.px(10),
-                                layout.px(6),
-                              ),
-                              child: Text(
-                                'Maximum Credit Amount',
-                                style: TextStyle(
-                                  color: AppColors.black,
-                                  fontFamily: 'Helvetica',
-                                  fontSize: layout.px(12),
-                                  fontWeight: FontWeight.w300,
-                                  height: 14 / 12,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          top: layout.px(76),
-                          left: 0,
-                          child: Container(
-                            width: layout.px(226),
-                            height: layout.px(24),
-                            color: AppColors.identityHighlight,
-                          ),
-                        ),
-                        Positioned(
-                          top: layout.px(39),
-                          left: layout.px(20),
-                          child: RichText(
-                            text: TextSpan(
+                          Center(
+                            child: Text(
+                              'Identity verification',
                               style: TextStyle(
                                 color: AppColors.black,
                                 fontFamily: 'Helvetica',
+                                fontSize: layout.px(20),
                                 fontWeight: FontWeight.w700,
-                                height: 43 / 36,
+                                height: 24 / 20,
                               ),
-                              children: [
-                                TextSpan(
-                                  text: '₱',
-                                  style: TextStyle(fontSize: layout.px(36)),
-                                ),
-                                TextSpan(
-                                  text: ' 60,000',
-                                  style: TextStyle(fontSize: layout.px(50)),
-                                ),
-                              ],
                             ),
                           ),
-                        ),
-                        Positioned(
-                          right: layout.px(20),
-                          child: Image.asset(
-                            AppAssets.identityShieldIllustration,
-                            width: layout.px(113),
-                            height: layout.px(117),
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  SizedBox(height: layout.px(7)),
-                  _buildTabs(layout),
-                  SizedBox(height: layout.px(7)),
-                  _buildOptions(layout, options),
-                ],
+                    SizedBox(height: layout.px(29)),
+                    SizedBox(
+                      height: layout.px(117),
+                      child: Stack(
+                        children: [
+                          Positioned(
+                            top: layout.px(14),
+                            left: layout.px(20),
+                            child: DecoratedBox(
+                              decoration: const BoxDecoration(
+                                color: AppColors.white,
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(15),
+                                ),
+                              ),
+                              child: Padding(
+                                padding: EdgeInsets.fromLTRB(
+                                  layout.px(9),
+                                  layout.px(5),
+                                  layout.px(10),
+                                  layout.px(6),
+                                ),
+                                child: Text(
+                                  'Maximum Credit Amount',
+                                  style: TextStyle(
+                                    color: AppColors.black,
+                                    fontFamily: 'Helvetica',
+                                    fontSize: layout.px(12),
+                                    fontWeight: FontWeight.w300,
+                                    height: 14 / 12,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            top: layout.px(76),
+                            left: 0,
+                            child: Container(
+                              width: layout.px(226),
+                              height: layout.px(24),
+                              color: AppColors.identityHighlight,
+                            ),
+                          ),
+                          Positioned(
+                            top: layout.px(39),
+                            left: layout.px(20),
+                            child: RichText(
+                              text: TextSpan(
+                                style: TextStyle(
+                                  color: AppColors.black,
+                                  fontFamily: 'Helvetica',
+                                  fontWeight: FontWeight.w700,
+                                  height: 43 / 36,
+                                ),
+                                children: [
+                                  TextSpan(
+                                    text: '₱',
+                                    style: TextStyle(fontSize: layout.px(36)),
+                                  ),
+                                  TextSpan(
+                                    text: ' 60,000',
+                                    style: TextStyle(fontSize: layout.px(50)),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            right: layout.px(20),
+                            child: Image.asset(
+                              AppAssets.identityShieldIllustration,
+                              width: layout.px(113),
+                              height: layout.px(117),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: layout.px(7)),
+                    _buildTabs(layout),
+                    SizedBox(height: layout.px(7)),
+                    _buildOptions(layout, options),
+                  ],
+                ),
               ),
             ),
           ),

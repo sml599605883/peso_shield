@@ -97,4 +97,10 @@ abstract final class AppColors {
   static const accountMaintenance = Color.fromRGBO(252, 198, 40, 1);
   static const accountSecondaryText = Color.fromRGBO(153, 153, 153, 1);
   static const recreditText = Color.fromRGBO(24, 28, 23, 1);
+
+  // Retention popup colors
+  static const retentionSecondary = Color.fromRGBO(248, 70, 84, 1);
+  static const retentionGradientStart = Color.fromRGBO(255, 158, 123, 1);
+  static const retentionGradientMiddle = Color.fromRGBO(255, 100, 104, 1);
+  static const retentionGradientEnd = Color.fromRGBO(250, 88, 129, 1);
 }

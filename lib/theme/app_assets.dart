@@ -73,7 +73,8 @@ abstract final class AppAssets {
   static const accountAddPaymentMethod =
       'assets/account/add_payment_method.png';
 
-  static const recreditIllustration = 'assets/recredit/recredit_illustration.png';
+  static const recreditIllustration =
+      'assets/recredit/recredit_illustration.png';
   static const recreditProgressTrack =
       'assets/recredit/recredit_progress_track.png';
 

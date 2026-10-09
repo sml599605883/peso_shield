@@ -11,6 +11,11 @@ final class ClientBridgeRegistrar: NSObject {
   private static let channelName = "peso_shield/client_bridge"
   private let trustDecisionPartnerCode = "boqin_ph"
   private let trustDecisionAppKey = "1dc25522f2adc77f5347816c0f7fa31b"
+  /// TrustDecision invokes the success block with a non-zero code for some
+  /// failures (for example, capture succeeded but the result was rejected).
+  /// Only a zero code means the liveness verification actually completed, so
+  /// the bridge must derive `success` from `code` instead of trusting the block.
+  private static let livenessSuccessCode = 0
   private var hasActivatedTrustDecision = false
   private lazy var trustDecisionManager = TDMobRiskManager.sharedManager()
 
@@ -101,19 +106,25 @@ final class ClientBridgeRegistrar: NSObject {
       viewController,
       license,
       TDLivenessShowStylePresent,
-      { payload in result(self.livenessResult(success: true, payload: payload)) },
-      { payload in result(self.livenessResult(success: false, payload: payload)) }
+      { payload in result(self.livenessResult(payload: payload)) },
+      { payload in result(self.livenessResult(payload: payload)) }
     )
   }
 
-  private func livenessResult(
-    success: Bool,
-    payload: [AnyHashable: Any]?
-  ) -> [String: Any] {
+  private func livenessResult(payload: [AnyHashable: Any]?) -> [String: Any] {
     let raw = (payload as? [String: Any]) ?? [:]
+    let code: Int
+    if let number = raw["code"] as? NSNumber {
+      code = number.intValue
+    } else if let string = raw["code"] as? String, let parsed = Int(string) {
+      code = parsed
+    } else {
+      code = -1
+    }
+    let success = code == Self.livenessSuccessCode
     return [
       "success": success,
-      "code": (raw["code"] as? NSNumber)?.intValue ?? (success ? 0 : -1),
+      "code": code,
       "message": raw["message"] as? String ?? "",
       "image": raw["image"] as? String ?? "",
       "sequence_id": raw["sequence_id"] as? String ?? "",

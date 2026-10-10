@@ -13,9 +13,9 @@ final class ClientBridgeRegistrar: NSObject {
   private let trustDecisionAppKey = "1dc25522f2adc77f5347816c0f7fa31b"
   /// TrustDecision invokes the success block with a non-zero code for some
   /// failures (for example, capture succeeded but the result was rejected).
-  /// Only a zero code means the liveness verification actually completed, so
-  /// the bridge must derive `success` from `code` instead of trusting the block.
-  private static let livenessSuccessCode = 0
+  /// Only a code of 200 means the liveness actually completed, regardless of
+  /// which block fires.
+  private static let livenessSuccessCode = 200
   private var hasActivatedTrustDecision = false
   private lazy var trustDecisionManager = TDMobRiskManager.sharedManager()
 

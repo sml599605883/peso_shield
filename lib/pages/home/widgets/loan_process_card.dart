@@ -6,15 +6,24 @@ import '../../../theme/app_colors.dart';
 import '../../../theme/layout_adapter.dart';
 
 class LoanProcessCard extends StatelessWidget {
-  const LoanProcessCard({super.key, this.steps = const []});
+  const LoanProcessCard({super.key, this.steps = const [], this.onTap});
 
   final List<LoanProcessStep> steps;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final layout = AppLayout.of(context);
+    final VoidCallback? onTap = this.onTap;
     if (steps.isNotEmpty) {
-      return _LoanProcessStatusCard(layout: layout, steps: steps);
+      final card = _LoanProcessStatusCard(layout: layout, steps: steps);
+      if (onTap == null) return card;
+      return GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        key: const Key('loan-process-tap'),
+        onTap: onTap,
+        child: card,
+      );
     }
     return Container(
       key: const Key('loan-process-card'),

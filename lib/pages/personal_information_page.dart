@@ -18,6 +18,7 @@ import 'widgets/personal_information_address_sheet.dart';
 import 'widgets/personal_information_input_field.dart';
 import 'widgets/personal_information_option_sheet.dart';
 import 'widgets/personal_information_payday_sheet.dart';
+import 'widgets/retention_popup_guard.dart';
 
 enum InformationPageKind { personal, work }
 
@@ -39,11 +40,19 @@ class PersonalInformationPage extends ConsumerStatefulWidget {
 }
 
 class _PersonalInformationPageState
-    extends ConsumerState<PersonalInformationPage> {
+    extends ConsumerState<PersonalInformationPage>
+    with RetentionPopupGuard<PersonalInformationPage> {
+  @override
+  String get retentionProductId => widget.productId;
+
+  @override
+  String get retentionPopupType => widget.isWork ? '3' : '2';
+
   model.PersonalInfoData? _data;
   final _values = <String, String>{};
   final _controllers = <String, TextEditingController>{};
   List<model.PersonalAddressNode>? _addressNodes;
+  Future<List<model.PersonalAddressNode>>? _addressRequest;
   bool _loading = true;
   String? _error;
   late final int _sceneStartTime;
@@ -57,7 +66,18 @@ class _PersonalInformationPageState
   void initState() {
     super.initState();
     _sceneStartTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    // 进入认证项时即预取地址初始化数据，避免用户点击地址选择时再等待接口。
+    if (!widget.isWork) _prefetchAddressChoices();
     _load();
+  }
+
+  void _prefetchAddressChoices() {
+    final request = _addressRequest ??= _loadAddressChoices();
+    // 预取失败时消费异常并丢弃缓存，等用户真正点击时再重试。
+    request.catchError((Object _) {
+      _addressRequest = null;
+      return const <model.PersonalAddressNode>[];
+    });
   }
 
   Future<void> _load() async {
@@ -170,7 +190,16 @@ class _PersonalInformationPageState
   Widget build(BuildContext context) {
     final layout = AppLayout.of(context);
     final prompt = _data?.tips.trim();
-    return AnnotatedRegion<SystemUiOverlayStyle>(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final shouldPop = await handleRetentionExit();
+        if (shouldPop && context.mounted) {
+          Navigator.of(context).pop();
+        }
+      },
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
       child: Scaffold(
         backgroundColor: AppColors.white,
@@ -269,7 +298,7 @@ class _PersonalInformationPageState
           ),
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildContent(AppLayout layout) {
@@ -414,7 +443,8 @@ class _PersonalInformationPageState
   Future<void> _pickAddress(model.PersonalInformationField field) async {
     final cancel = ToastHelper.showLoading();
     try {
-      _addressNodes ??= await _loadAddressChoices();
+      _addressNodes ??=
+          await (_addressRequest ??= _loadAddressChoices());
       cancel();
       if (!mounted) return;
       final address = await showPersonalInformationAddressSheet(
@@ -428,6 +458,7 @@ class _PersonalInformationPageState
         });
       }
     } catch (_) {
+      _addressRequest = null;
       cancel();
       if (mounted) {
         ToastHelper.showError('Unable to load address options');

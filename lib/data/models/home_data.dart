@@ -140,6 +140,9 @@ class ProductCard {
     required this.id,
     required this.name,
     required this.maxAmount,
+    required this.amountLabel,
+    required this.termLabel,
+    required this.rateLabel,
     required this.interestRate,
     required this.loanTerm,
     required this.buttonText,
@@ -156,6 +159,9 @@ class ProductCard {
       id: json['ventral']?.toString() ?? '',
       name: json['reinters'] as String? ?? '',
       maxAmount: json['contexts'] as String? ?? '',
+      amountLabel: json['corporeally'] as String? ?? '',
+      termLabel: json['akinetic'] as String? ?? '',
+      rateLabel: json['quinellas'] as String? ?? '',
       interestRate: json['amoebaean'] as String? ?? '',
       loanTerm: json['weakness'] as String? ?? '',
       buttonText: json['soreness'] as String? ?? '',
@@ -179,6 +185,9 @@ class ProductCard {
   final String id;
   final String name;
   final String maxAmount;
+  final String amountLabel;
+  final String termLabel;
+  final String rateLabel;
   final String interestRate;
   final String loanTerm;
   final String buttonText;
@@ -213,7 +222,7 @@ class LoanTermRow {
   const LoanTermRow({required this.label, required this.value});
   factory LoanTermRow.fromJson(Map<String, dynamic> json) => LoanTermRow(
     label: json['strove']?.toString() ?? '',
-    value: json['amoebaean']?.toString() ?? '',
+    value: json['discommoding']?.toString() ?? '',
   );
   final String label;
   final String value;

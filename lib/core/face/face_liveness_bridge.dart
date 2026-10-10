@@ -20,6 +20,13 @@ class FaceLivenessResult {
   final String sequenceId;
 }
 
+/// 同盾活体是否返回了可用于上传的数据。
+///
+/// 以回调是否带回图片和 liveness_id 作为识别成功的依据，不依赖返回码推导的
+/// [FaceLivenessResult.success]，避免 code 判定偏差导致上传接口未被调用。
+bool hasUploadableLivenessData(FaceLivenessResult result) =>
+    result.image.isNotEmpty && result.livenessId.isNotEmpty;
+
 class FaceLivenessBridge {
   FaceLivenessBridge({MethodChannel? channel})
     : _channel = channel ?? const MethodChannel(channelName);

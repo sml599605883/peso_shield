@@ -4,13 +4,11 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/navigation/app_navigator.dart';
-import '../../core/navigation/app_deep_link.dart';
 import '../../core/ui/toast_helper.dart';
 import '../../data/models/certification_data.dart';
 import '../../providers/repository_provider.dart';
@@ -261,8 +259,11 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
         await AppNavigator.toWebView(url: url);
       },
       navigateInternal: (rawTarget) async {
-        final target = AppDeepLinkParser().parse(rawTarget.trim());
-        await _handleDeepLink(target);
+        await AppNavigator.navigateRawTarget(
+          context: context,
+          ref: ref,
+          target: rawTarget.trim(),
+        );
       },
       openExternal: (uri) async {
         try {
@@ -285,10 +286,7 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
       requestAppReview: () async {
         // 使用原生桥接调用应用评分
         try {
-          if (defaultTargetPlatform == TargetPlatform.iOS) {
-            await MethodChannel('peso_shield/client_bridge')
-                .invokeMethod<void>('requestAppReview');
-          }
+          await ref.read(clientBridgeProvider).requestAppReview();
         } catch (e) {
           debugPrint('[WebView] Request app review failed: $e');
         }
@@ -314,6 +312,7 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
       },
       reloadOrOpenWebView: _reloadOrOpenWebView,
       changeAccount: ({required productId, required orderNo}) async {
+        final closeLoading = ToastHelper.showLoading();
         try {
           final certRepo = await ref.read(certificationRepositoryProvider.future);
           final response = await certRepo.getUserBankAccounts(
@@ -322,7 +321,9 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
           if (!response.isSuccess) {
             throw StateError(response.message);
           }
-          
+          // 数据请求完成后立即关闭 loading，避免遮罩覆盖账户列表/绑卡页面。
+          closeLoading();
+
           // 如果有账户列表，跳转到账户列表页面；否则直接跳转到绑卡页面
           if (!response.data.isEmpty) {
             await _navigateToAccountList(
@@ -339,6 +340,8 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
         } catch (e) {
           debugPrint('[WebView] Change account failed: $e');
           rethrow;
+        } finally {
+          closeLoading();
         }
       },
       showLoading: () async {
@@ -352,36 +355,6 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
       },
       logger: (message) => debugPrint('[WebView] $message'),
     );
-  }
-
-  Future<void> _handleDeepLink(AppDeepLink target) async {
-    switch (target.kind) {
-      case AppDeepLinkKind.webView:
-        if (target.uri != null) {
-          await AppNavigator.toWebView(url: target.uri.toString());
-        }
-      case AppDeepLinkKind.home:
-        await AppNavigator.toRoot();
-      case AppDeepLinkKind.creditReview:
-        // 授信审核页
-        debugPrint('[WebView] Navigate to credit review');
-      case AppDeepLinkKind.admission:
-        // 准入流程
-        debugPrint('[WebView] Navigate to admission');
-      case AppDeepLinkKind.login:
-        await AppNavigator.toLogin();
-      case AppDeepLinkKind.order:
-        // 订单列表
-        debugPrint('[WebView] Navigate to order list');
-      case AppDeepLinkKind.productDetail:
-        // 产品详情
-        debugPrint('[WebView] Navigate to product detail');
-      case AppDeepLinkKind.settings:
-        // 设置页
-        debugPrint('[WebView] Navigate to settings');
-      case AppDeepLinkKind.unsupported:
-        debugPrint('[WebView] Unsupported deep link: ${target.rawTarget}');
-    }
   }
 
   @override

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:peso_shield/pages/webview/webview_contract.dart';
 
@@ -137,5 +139,15 @@ void main() {
 
       expect(json['data'], <String, dynamic>{});
     });
+  });
+
+  test('webview page reuses the shared deep link navigator', () {
+    final source = File(
+      'lib/pages/webview/webview_page.dart',
+    ).readAsStringSync();
+
+    expect(source, contains('AppNavigator.navigateRawTarget('));
+    expect(source, isNot(contains('AppDeepLinkParser')));
+    expect(source, isNot(contains('[WebView] Navigate to order list')));
   });
 }

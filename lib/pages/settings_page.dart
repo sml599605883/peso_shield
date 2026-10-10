@@ -291,30 +291,28 @@ class _AccountDialogState extends State<_AccountDialog> {
                   SizedBox(height: layout.px(16)),
                   SizedBox(
                     height: layout.px(48),
-                    child: Expanded(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _DialogAction(
-                            label: isDelete ? 'Delete' : 'Logout',
-                            layout: layout,
-                            enabled: !_submitting,
-                            onPressed: () => _handleAction(
-                              isDelete
-                                  ? AccountAction.deleteAccount
-                                  : AccountAction.logout,
-                            ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _DialogAction(
+                          label: isDelete ? 'Delete' : 'Logout',
+                          layout: layout,
+                          enabled: !_submitting,
+                          onPressed: () => _handleAction(
+                            isDelete
+                                ? AccountAction.deleteAccount
+                                : AccountAction.logout,
                           ),
-                          SizedBox(width: layout.px(10)),
-                          _DialogAction(
-                            label: isDelete ? 'Stay Here' : 'Stay',
-                            layout: layout,
-                            primary: true,
-                            enabled: !_submitting,
-                            onPressed: () => Navigator.of(context).pop(),
-                          ),
-                        ],
-                      ),
+                        ),
+                        SizedBox(width: layout.px(10)),
+                        _DialogAction(
+                          label: isDelete ? 'Stay Here' : 'Stay',
+                          layout: layout,
+                          primary: true,
+                          enabled: !_submitting,
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                      ],
                     ),
                   ),
                 ],

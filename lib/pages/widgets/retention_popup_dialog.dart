@@ -1,24 +1,32 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 import '../../data/models/retention_popup_data.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/layout_adapter.dart';
 
-/// 认证流程返回挽留弹窗
-/// 设计稿: 背景图由服务端完整下发，底部两个按钮需要客户端实现
+/// 认证流程返回挽留弹窗。
+///
+/// 设计稿：上方为服务端下发的完整弹窗插画，下方为“退出 / 继续”两个按钮。
+/// 两个按钮固定在图片下方，避免像旧实现那样叠加在插画文案上造成遮挡。
 class RetentionPopupDialog extends StatelessWidget {
   const RetentionPopupDialog({
     required this.data,
+    this.imageProvider,
     super.key,
   });
 
   final RetentionPopupData data;
 
-  static const _designWidth = 343.0;
-  static const _designHeight = 332.0;
+  /// 测试时可注入本地图片，避免依赖网络。
+  final ImageProvider<Object>? imageProvider;
 
-  /// 显示挽留弹窗，返回 true 表示用户选择继续认证，false 表示离开
+  /// 设计稿（375pt 宽）尺寸。
+  static const _imageWidth = 330.0;
+  static const _buttonRowWidth = 266.0;
+  static const _buttonHeight = 48.0;
+  static const _buttonGap = 10.0;
+
+  /// 显示挽留弹窗，返回 true 表示用户选择继续认证，false 表示离开。
   static Future<bool> show(
     BuildContext context,
     RetentionPopupData data,
@@ -40,94 +48,94 @@ class RetentionPopupDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.sizeOf(context).width;
-    final availableWidth = screenWidth - 32;
-    final scale = math.min(availableWidth / _designWidth, 1.0);
-    final cardWidth = _designWidth * scale;
-    final cardHeight = _designHeight * scale;
-
-    return Center(
-      child: SizedBox(
-        width: cardWidth,
-        height: cardHeight,
-        child: Stack(
-          children: [
-            // 背景图片（服务端下发的完整内容）
-            Positioned.fill(
-              child: Image.network(
-                data.imageUrl,
-                fit: BoxFit.fill,
-                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+    final layout = AppLayout.of(context);
+    return SafeArea(
+      child: Center(
+        child: SingleChildScrollView(
+          padding: layout.edgeInsets(top: 24, bottom: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image(
+                image: imageProvider ?? NetworkImage(data.imageUrl),
+                width: layout.px(_imageWidth),
+                fit: BoxFit.fitWidth,
+                errorBuilder: (_, _, _) => const SizedBox.shrink(),
               ),
-            ),
-
-            // 继续按钮（渐变按钮）
-            Positioned(
-              left: 12 * scale,
-              right: 12 * scale,
-              top: 237 * scale,
-              height: 40 * scale,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => Navigator.of(context).pop(true),
-                child: Container(
-                  alignment: Alignment.center,
-                  padding: EdgeInsets.symmetric(horizontal: 8 * scale),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        AppColors.retentionGradientStart,
-                        AppColors.retentionGradientMiddle,
-                        AppColors.retentionGradientEnd,
-                      ],
-                      stops: [0, 0.47929414, 1],
+              SizedBox(height: layout.px(4)),
+              SizedBox(
+                width: layout.px(_buttonRowWidth),
+                height: layout.px(_buttonHeight),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _RetentionButton(
+                        text: data.cancelText.isNotEmpty
+                            ? data.cancelText
+                            : 'Exit',
+                        background: AppColors.white,
+                        foreground: AppColors.retentionExitText,
+                        onTap: () => Navigator.of(context).pop(false),
+                      ),
                     ),
-                    borderRadius: BorderRadius.circular(20 * scale),
-                  ),
-                  child: Text(
-                    data.confirmText.isNotEmpty ? data.confirmText : 'Continue',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 15 * scale,
-                      fontWeight: FontWeight.w700,
-                      height: 18 / 15,
+                    SizedBox(width: layout.px(_buttonGap)),
+                    Expanded(
+                      child: _RetentionButton(
+                        text: data.confirmText.isNotEmpty
+                            ? data.confirmText
+                            : 'Continue',
+                        background: AppColors.retentionPrimary,
+                        foreground: AppColors.white,
+                        onTap: () => Navigator.of(context).pop(true),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ),
-            ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 
-            // 退出按钮（纯文字）
-            Positioned(
-              left: 12 * scale,
-              right: 12 * scale,
-              top: 293 * scale,
-              height: 18 * scale,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () {
-                  Navigator.of(context).pop(false);
-                },
-                child: Center(
-                  child: Text(
-                    data.cancelText.isNotEmpty ? data.cancelText : 'Exit',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: AppColors.retentionSecondary,
-                      fontSize: 15 * scale,
-                      fontWeight: FontWeight.w700,
-                      height: 18 / 15,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
+class _RetentionButton extends StatelessWidget {
+  const _RetentionButton({
+    required this.text,
+    required this.background,
+    required this.foreground,
+    required this.onTap,
+  });
+
+  final String text;
+  final Color background;
+  final Color foreground;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final layout = AppLayout.of(context);
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        alignment: Alignment.center,
+        padding: layout.edgeInsets(left: 12, right: 12),
+        decoration: BoxDecoration(
+          color: background,
+          borderRadius: layout.radius(24),
+        ),
+        child: Text(
+          text,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: foreground,
+            fontSize: layout.px(18),
+            fontWeight: FontWeight.w700,
+            height: 22 / 18,
+          ),
         ),
       ),
     );

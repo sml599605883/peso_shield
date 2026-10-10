@@ -5,6 +5,7 @@ import 'package:peso_shield/core/device/session_store.dart';
 import 'package:peso_shield/core/device/user_session.dart';
 import 'package:peso_shield/core/navigation/app_deep_link.dart';
 import 'package:peso_shield/core/navigation/app_navigator.dart';
+import 'package:peso_shield/core/navigation/app_routes.dart';
 import 'package:peso_shield/core/permissions/permission_helper.dart';
 import 'package:peso_shield/core/report/peso_report_service.dart';
 import 'package:peso_shield/core/ui/toast_helper.dart';
@@ -172,10 +173,22 @@ class ProductApplicationFlow {
     ProductApplyResult result,
     String productId,
   ) async {
-    // 使用 DeepLink 解析器统一处理所有跳转
+    // 复贷弹窗：两个按钮各自带跳转地址，按用户选择跳转。
+    final dialog = result.dialog;
+    if (dialog != null &&
+        (dialog.leftButton != null || dialog.rightButton != null)) {
+      await _showApplyDialog(context, dialog, productId);
+      return;
+    }
+
+    // 有 jumpUrl：按 jumpType（0 原生 / 1 H5）分发，避免只靠地址协议猜测。
     if (result.jumpUrl.isNotEmpty) {
-      // 有 jumpUrl，通过 DeepLink 机制统一处理
-      await _navigateRawTarget(context, result.jumpUrl, productId);
+      await _navigateRawTarget(
+        context,
+        result.jumpUrl,
+        productId,
+        jumpType: result.jumpType,
+      );
       return;
     }
 
@@ -201,15 +214,59 @@ class ProductApplicationFlow {
     );
   }
 
+  /// 复贷弹窗：展示服务端下发的标题/文案与两个按钮，点击后按按钮地址跳转。
+  Future<void> _showApplyDialog(
+    BuildContext context,
+    ApplyDialog dialog,
+    String productId,
+  ) async {
+    final left = dialog.leftButton;
+    final right = dialog.rightButton;
+    final target = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: dialog.title.isNotEmpty ? Text(dialog.title) : null,
+        content: dialog.content.isNotEmpty ? Text(dialog.content) : null,
+        actions: [
+          if (left != null)
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(left.url),
+              child: Text(left.text),
+            ),
+          if (right != null)
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(right.url),
+              child: Text(right.text),
+            ),
+        ],
+      ),
+    );
+    if (target == null || target.trim().isEmpty || !context.mounted) return;
+    await _navigateRawTarget(context, target, productId);
+  }
+
   /// 通过 DeepLink 统一导航（参考 dali_cash）
   Future<void> _navigateRawTarget(
     BuildContext context,
     String rawTarget,
-    String productId,
-  ) async {
+    String productId, {
+    int jumpType = 0,
+  }) async {
     ToastHelper.hideLoading();
 
     final deepLink = _deepLinkParser.parse(rawTarget);
+    // 下发地址自带的 productId 优先（推荐流可能指向另一个产品）。
+    final resolvedProductId = deepLink.productId.isNotEmpty
+        ? deepLink.productId
+        : productId;
+
+    // jumpType == 1 表示 H5：即使地址不是 http(s) 也按 H5 打开，
+    // 避免被误判为不支持的深链而放弃跳转。
+    if (jumpType == 1 || deepLink.kind == AppDeepLinkKind.webView) {
+      debugPrint('Open WebView: $rawTarget');
+      await AppNavigator.toWebView(url: rawTarget);
+      return;
+    }
 
     switch (deepLink.kind) {
       case AppDeepLinkKind.webView:
@@ -219,9 +276,9 @@ class ProductApplicationFlow {
         break;
 
       case AppDeepLinkKind.creditReview:
-        // ph://peso-shield/ios/Umbrages?bombarder=123 → 打开授信审核页
+        // ph://peso-shield/ios/Umbrages / gold://pocket/recredit → 重新授信 loading 页
         debugPrint('Open credit review: $rawTarget');
-        // TODO: await AppNavigator.toCreditReview(productId: productId);
+        await AppNavigator.toRecredit(productId: resolvedProductId);
         break;
 
       case AppDeepLinkKind.productDetail:
@@ -229,10 +286,10 @@ class ProductApplicationFlow {
         debugPrint('Open product detail: $rawTarget');
         final detail = await fetchProductDetail(
           context: context,
-          productId: productId,
+          productId: resolvedProductId,
         );
         if (context.mounted && detail != null) {
-          await _continueFromDetail(context, detail, productId);
+          await _continueFromDetail(context, detail, resolvedProductId);
         }
         break;
 
@@ -245,13 +302,13 @@ class ProductApplicationFlow {
       case AppDeepLinkKind.settings:
         // ph://peso-shield/ios/Tweet → 跳转到设置页
         debugPrint('Navigate to settings');
-        // TODO: await AppNavigator.toSettings();
+        await AppNavigator.toNamed<void>(AppRoutes.settings);
         break;
 
       case AppDeepLinkKind.order:
         // ph://peso-shield/ios/PermutesLinotypes → 跳转到订单列表
         debugPrint('Navigate to orders');
-        // TODO: await AppNavigator.toOrders();
+        await AppNavigator.toOrderList();
         break;
 
       case AppDeepLinkKind.login:
@@ -262,7 +319,7 @@ class ProductApplicationFlow {
 
       case AppDeepLinkKind.admission:
         // ph://peso-shield/ios/Equisetum → 准入流程
-        debugPrint('Start admission flow: productId=$productId');
+        debugPrint('Start admission flow: productId=$resolvedProductId');
         // 递归调用准入流程（通常不会到这里）
         break;
 
@@ -371,8 +428,12 @@ class ProductApplicationFlow {
       startedAtSeconds: DateTime.now().millisecondsSinceEpoch ~/ 1000,
     );
 
-    // 跳转到借款确认页面
-    await AppNavigator.toWebView(url: jumpUrl);
+    // 跳转到借款确认页面，并移除已完成的认证页面，
+    // 避免用户退出确认页后又回到绑卡等认证页。
+    await AppNavigator.toWebView(
+      url: jumpUrl,
+      removeCertificationPages: true,
+    );
   }
 
   /// 检查并请求定位权限（matching dali_cash）

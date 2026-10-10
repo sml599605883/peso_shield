@@ -113,6 +113,13 @@ class ClientBridge {
     }
   }
 
+  Future<void> requestAppReview() async {
+    if (!supportsNativeBridge) {
+      throw UnsupportedError('App review is currently implemented for iOS.');
+    }
+    await _channel.invokeMethod<void>('requestAppReview');
+  }
+
   Future<String> getTrackingStatus() => _safeInvokeString('getTrackingStatus');
 
   Stream<Json> reportEvents() {

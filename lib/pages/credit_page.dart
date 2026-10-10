@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/config/app_urls.dart';
 import '../core/navigation/app_navigator.dart';
 import '../core/navigation/app_route_observer.dart';
 import '../core/ui/toast_helper.dart';
@@ -32,9 +33,11 @@ class _CreditPageState extends ConsumerState<CreditPage> with RouteAware {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    // Load orders on init
+    // 仅在当前 Tab 可见时加载，未访问的 Tab 不应触发订单列表接口。
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(creditOrdersProvider.notifier).loadOrders();
+      if (mounted && widget.isActive) {
+        ref.read(creditOrdersProvider.notifier).loadOrders();
+      }
     });
   }
 
@@ -208,11 +211,21 @@ class _CreditPageState extends ConsumerState<CreditPage> with RouteAware {
                                   ),
                                 ),
                               ),
-                              Image.asset(
-                                AppAssets.notification,
-                                width: layout.px(32),
-                                height: layout.px(32),
-                                semanticLabel: 'Messages',
+                              Semantics(
+                                button: true,
+                                label: 'Customer Service',
+                                child: GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  key: const Key('credit-customer-service'),
+                                  onTap: () => AppNavigator.toWebView(
+                                    url: AppUrls.customerService(ref),
+                                  ),
+                                  child: Image.asset(
+                                    AppAssets.notification,
+                                    width: layout.px(32),
+                                    height: layout.px(32),
+                                  ),
+                                ),
                               ),
                             ],
                           ),

@@ -167,9 +167,9 @@ class WebViewActionCoordinator {
     if (productId.isEmpty || orderNo.isEmpty) {
       return const WebViewResult.failure('Missing account information');
     }
-    await showLoading?.call();
+    // Loading 由 changeAccount 回调自行管理：需要在进入账户列表/绑卡页面
+    // 之前关闭遮罩，否则用户会在遮罩下无法操作后续页面。
     await changeAccount?.call(productId: productId, orderNo: orderNo);
-    await dismissLoading?.call();
     return const WebViewResult.success();
   }
 

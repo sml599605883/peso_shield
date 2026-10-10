@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/config/app_urls.dart';
 import '../core/navigation/app_navigator.dart';
 import '../core/navigation/app_route_observer.dart';
 import '../data/models/home_data.dart';
@@ -48,6 +49,14 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
       ref: ref,
       item: item,
       navigate: (target) => _openOrderTarget(target, item),
+      replaceTarget: (pageContext, target) => AppNavigator.navigateRawTarget(
+        context: pageContext,
+        ref: ref,
+        target: target,
+        productId: item.productId,
+        apiRemind: 0,
+        replace: true,
+      ),
     ),
     showLoading: ToastHelper.showLoading,
     showError: ToastHelper.showError,
@@ -161,7 +170,11 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
                     ),
                     child: Column(
                       children: [
-                        const HomeHeader(),
+                        HomeHeader(
+                          onTap: () => AppNavigator.toWebView(
+                            url: AppUrls.customerService(ref),
+                          ),
+                        ),
                         SizedBox(height: layout.px(5)),
                         Padding(
                           padding: layout.edgeInsets(left: 10, right: 10),
@@ -213,6 +226,9 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
                         if (progress.isEmpty)
                           LoanProcessSection(
                             grummer: product?.grummer ?? widget.grummer,
+                            onTap: product == null
+                                ? null
+                                : () => _handleApply(context, product.id),
                           ),
                       ],
                     ),

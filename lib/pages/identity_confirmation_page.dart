@@ -13,6 +13,7 @@ import '../theme/app_assets.dart';
 import '../theme/app_colors.dart';
 import '../theme/layout_adapter.dart';
 import 'widgets/identity_upload_prompt.dart';
+import 'widgets/retention_popup_guard.dart';
 
 class IdentityConfirmationPage extends ConsumerStatefulWidget {
   const IdentityConfirmationPage({
@@ -32,7 +33,14 @@ class IdentityConfirmationPage extends ConsumerStatefulWidget {
 }
 
 class _IdentityConfirmationPageState
-    extends ConsumerState<IdentityConfirmationPage> {
+    extends ConsumerState<IdentityConfirmationPage>
+    with RetentionPopupGuard<IdentityConfirmationPage> {
+  @override
+  String get retentionProductId => widget.productId;
+
+  @override
+  String get retentionPopupType => '0';
+
   late final TextEditingController _name;
   late final TextEditingController _id;
   late final TextEditingController _birth;
@@ -77,7 +85,16 @@ class _IdentityConfirmationPageState
   @override
   Widget build(BuildContext context) {
     final l = AppLayout.of(context);
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final shouldPop = await handleRetentionExit();
+        if (shouldPop && context.mounted) {
+          Navigator.of(context).pop();
+        }
+      },
+      child: Scaffold(
       extendBody: true,
       backgroundColor: Colors.transparent,
       body: GestureDetector(
@@ -114,7 +131,13 @@ class _IdentityConfirmationPageState
                 ),
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: l.edgeInsets(bottom: 20),
+                    padding: l
+                        .edgeInsets(bottom: 80)
+                        .add(
+                          EdgeInsets.only(
+                            bottom: MediaQuery.viewPaddingOf(context).bottom,
+                          ),
+                        ),
                     child: Column(
                       children: [
                         SizedBox(height: l.px(16)),
@@ -211,7 +234,7 @@ class _IdentityConfirmationPageState
           ),
         ),
       ),
-    );
+    ));
   }
 
   Widget _field(

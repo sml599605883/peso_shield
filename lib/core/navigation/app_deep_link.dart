@@ -79,6 +79,18 @@ class AppDeepLink {
     }
     return '';
   }
+
+  /// 获取来源标识 parliament（0 默认，1 首页banner，2 首页弹窗 ...）
+  String get apiRemind {
+    final fromQuery = uri?.queryParameters['parliament']?.trim() ?? '';
+    if (fromQuery.isNotEmpty) return fromQuery;
+
+    if (arguments is Map) {
+      final value = (arguments as Map)['parliament'];
+      return value?.toString().trim() ?? '';
+    }
+    return '';
+  }
 }
 
 /// DeepLink 解析器
@@ -111,6 +123,19 @@ class AppDeepLinkParser {
     final uri = Uri.tryParse(target);
     if (uri == null) {
       return AppDeepLink(kind: AppDeepLinkKind.unsupported, rawTarget: target);
+    }
+
+    // gold://pocket/recredit → 重新授信 loading 页
+    if (uri.scheme == 'gold' &&
+        uri.host == 'pocket' &&
+        uri.pathSegments.isNotEmpty &&
+        uri.pathSegments.last == 'recredit') {
+      return AppDeepLink(
+        kind: AppDeepLinkKind.creditReview,
+        rawTarget: target,
+        uri: uri,
+        arguments: arguments,
+      );
     }
 
     // HTTP/HTTPS → WebView

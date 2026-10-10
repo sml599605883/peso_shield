@@ -10,7 +10,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/report_provider.dart';
 import '../providers/repository_provider.dart';
 import '../data/models/certification_data.dart';
-import '../data/models/retention_popup_data.dart';
 import '../theme/app_assets.dart';
 import '../theme/app_colors.dart';
 import '../theme/layout_adapter.dart';
@@ -31,7 +30,6 @@ class _IdentityTypePageState extends ConsumerState<IdentityTypePage> {
   bool _showOtherOptions = false;
   IdentityTypeList? _identityTypeList;
   late final int _sceneStartTime;
-  RetentionPopupData? _retentionData;
   bool _isLoadingRetention = false;
 
   @override
@@ -45,40 +43,27 @@ class _IdentityTypePageState extends ConsumerState<IdentityTypePage> {
     // 如果正在加载挽留弹窗，阻止返回
     if (_isLoadingRetention) return false;
 
-    // 如果已经加载过挽留数据且不需要展示，直接返回
-    if (_retentionData != null && !_retentionData!.shouldShow) {
-      return true;
-    }
+    // 每次点击返回都重新请求挽留弹窗配置，用户点“继续”后再次返回仍会请求
+    setState(() => _isLoadingRetention = true);
+    try {
+      final repository = await ref.read(certificationRepositoryProvider.future);
+      final response = await repository.getRetentionPopup(
+        productId: widget.productId,
+        popupType: '0', // 0=身份认证页面
+      );
 
-    // 首次返回时请求挽留弹窗配置
-    if (_retentionData == null) {
-      setState(() => _isLoadingRetention = true);
-      try {
-        final repository = await ref.read(certificationRepositoryProvider.future);
-        final response = await repository.getRetentionPopup(
-          productId: widget.productId,
-          popupType: '0', // 0=身份认证页面
-        );
-
-        if (response.isSuccess && mounted) {
-          _retentionData = response.data;
-          
-          // 如果需要展示挽留弹窗
-          if (_retentionData!.shouldShow) {
-            final shouldStay = await RetentionPopupDialog.show(
-              context,
-              _retentionData!,
-            );
-            setState(() => _isLoadingRetention = false);
-            return !shouldStay; // true=离开, false=留下
-          }
+      if (response.isSuccess && mounted) {
+        final data = response.data;
+        if (data.shouldShow) {
+          final shouldStay = await RetentionPopupDialog.show(context, data);
+          return !shouldStay; // true=离开, false=留下
         }
-      } catch (_) {
-        // 请求失败，允许返回
-      } finally {
-        if (mounted) {
-          setState(() => _isLoadingRetention = false);
-        }
+      }
+    } catch (_) {
+      // 请求失败，允许返回
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingRetention = false);
       }
     }
 

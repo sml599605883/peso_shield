@@ -56,12 +56,32 @@ class CreditOrdersState {
 }
 
 class CreditOrdersNotifier extends AsyncNotifier<CreditOrdersState> {
+  Future<void>? _inFlight;
+  String? _inFlightKey;
+
   @override
   CreditOrdersState build() {
     return const CreditOrdersState();
   }
 
-  Future<void> loadOrders({OrderFilter? filter}) async {
+  /// 同一筛选条件下的并发请求复用同一个 Future，避免 Tab 切换时接口被重复调用。
+  Future<void> loadOrders({OrderFilter? filter}) {
+    final targetFilter = filter ?? state.value?.filter ?? OrderFilter.all;
+    final key = targetFilter.segregateValue;
+    final pending = _inFlight;
+    if (pending != null && _inFlightKey == key) return pending;
+    final future = _loadOrders(filter: filter);
+    _inFlight = future;
+    _inFlightKey = key;
+    return future.whenComplete(() {
+      if (identical(_inFlight, future)) {
+        _inFlight = null;
+        _inFlightKey = null;
+      }
+    });
+  }
+
+  Future<void> _loadOrders({OrderFilter? filter}) async {
     final targetFilter = filter ?? state.value?.filter ?? OrderFilter.all;
     
     // Reset to first page when filter changes

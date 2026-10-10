@@ -5,9 +5,10 @@ import '../../../data/models/home_data.dart';
 import 'loan_process_card.dart';
 
 class LoanProcessSection extends StatelessWidget {
-  const LoanProcessSection({super.key, this.grummer = const []});
+  const LoanProcessSection({super.key, this.grummer = const [], this.onTap});
 
   final List<LoanProcessStep> grummer;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +17,7 @@ class LoanProcessSection extends StatelessWidget {
       children: [
         SizedBox(height: layout.px(15)),
         MineServiceTitle(title: 'Loan Process'),
-        LoanProcessCard(steps: grummer),
+        LoanProcessCard(steps: grummer, onTap: onTap),
       ],
     );
   }

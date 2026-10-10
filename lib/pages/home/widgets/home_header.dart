@@ -5,7 +5,9 @@ import '../../../theme/app_colors.dart';
 import '../../../theme/layout_adapter.dart';
 
 class HomeHeader extends StatelessWidget {
-  const HomeHeader({super.key});
+  const HomeHeader({super.key, this.onTap});
+
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -27,11 +29,16 @@ class HomeHeader extends StatelessWidget {
           ),
           Semantics(
             button: true,
-            label: 'Messages',
-            child: Image.asset(
-              AppAssets.notification,
-              width: layout.px(32),
-              height: layout.px(32),
+            label: 'Customer Service',
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              key: const Key('home-customer-service'),
+              onTap: onTap,
+              child: Image.asset(
+                AppAssets.notification,
+                width: layout.px(32),
+                height: layout.px(32),
+              ),
             ),
           ),
         ],

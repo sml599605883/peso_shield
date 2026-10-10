@@ -9,12 +9,16 @@ class LoanTerms extends StatelessWidget {
   const LoanTerms({
     required this.loanTerm,
     required this.interestRate,
+    this.termLabel = '',
+    this.rateLabel = '',
     this.rows = const [],
     super.key,
   });
 
   final String loanTerm;
   final String interestRate;
+  final String termLabel;
+  final String rateLabel;
   final List<LoanTermRow> rows;
 
   @override
@@ -28,22 +32,33 @@ class LoanTerms extends StatelessWidget {
         borderRadius: layout.radius(15),
       ),
       child: rows.isNotEmpty
-          ? Column(
+          ? Row(
               children: [
-                for (final row in rows)
+                for (var index = 0; index < rows.length; index++) ...[
+                  if (index > 0) SizedBox(width: layout.px(12)),
                   Expanded(
-                    child: LoanTerm(label: row.label, value: row.value),
+                    child: LoanTerm(
+                      label: rows[index].label,
+                      value: rows[index].value,
+                    ),
                   ),
+                ],
               ],
             )
           : Row(
               children: [
                 Expanded(
-                  child: LoanTerm(label: 'Loan Term', value: loanTerm),
+                  child: LoanTerm(
+                    label: termLabel.isEmpty ? 'Loan Term' : termLabel,
+                    value: loanTerm,
+                  ),
                 ),
                 SizedBox(width: layout.px(12)),
                 Expanded(
-                  child: LoanTerm(label: 'Low Interest', value: interestRate),
+                  child: LoanTerm(
+                    label: rateLabel.isEmpty ? 'Low Interest' : rateLabel,
+                    value: interestRate,
+                  ),
                 ),
               ],
             ),

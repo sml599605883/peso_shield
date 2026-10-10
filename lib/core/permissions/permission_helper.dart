@@ -42,8 +42,9 @@ class PermissionHelper {
       builder: (dialogContext) => CupertinoAlertDialog(
         title: const Text('Enable Camera to Continue'),
         content: const Text(
-          "We can't complete identity verification without camera access. "
-          'Enable the permission to continue your application securely.',
+          'Camera access protects your account by allowing secure ID '
+          'scanning and identity verification. Please enable it in Settings '
+          'to continue.',
         ),
         actions: [
           CupertinoDialogAction(

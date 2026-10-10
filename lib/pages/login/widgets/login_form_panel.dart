@@ -37,6 +37,10 @@ class LoginFormPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final layout = AppLayout.of(context);
+    // The login scaffold keeps resizeToAvoidBottomInset=false so the background
+    // stays anchored; add the keyboard inset as bottom padding so the panel can
+    // scroll the verification code field above the keyboard on small screens.
+    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
     return DecoratedBox(
       decoration: BoxDecoration(
         color: AppColors.white,
@@ -53,7 +57,9 @@ class LoginFormPanel extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, panelConstraints) {
           return SingleChildScrollView(
-            padding: layout.edgeInsets(left: 20, right: 20),
+            padding: layout
+                .edgeInsets(left: 20, right: 20)
+                .add(EdgeInsets.only(bottom: keyboardInset)),
             child: ConstrainedBox(
               constraints: BoxConstraints(
                 minHeight: panelConstraints.maxHeight,

@@ -22,9 +22,12 @@ class HomeBanner extends StatefulWidget {
 }
 
 class _HomeBannerState extends State<HomeBanner> with WidgetsBindingObserver {
-  final _controller = PageController();
+  // Start deep into an infinite page range so the carousel can always advance
+  // forward (+1) and wrap around via modulo without a backward jump.
+  static const int _initialPage = 10000;
+  final _controller = PageController(initialPage: _initialPage);
   Timer? _timer;
-  int _page = 0;
+  int _page = _initialPage;
   bool _foreground = true;
 
   @override
@@ -41,8 +44,8 @@ class _HomeBannerState extends State<HomeBanner> with WidgetsBindingObserver {
   void didUpdateWidget(HomeBanner oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.banners?.length != widget.banners?.length) {
-      _page = 0;
-      if (_controller.hasClients) _controller.jumpToPage(0);
+      _page = _initialPage;
+      if (_controller.hasClients) _controller.jumpToPage(_initialPage);
     }
     _syncTimer();
   }
@@ -58,7 +61,7 @@ class _HomeBannerState extends State<HomeBanner> with WidgetsBindingObserver {
       }
       unawaited(
         _controller.animateToPage(
-          (_page + 1) % count,
+          _page + 1,
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOut,
         ),
@@ -114,9 +117,8 @@ class _HomeBannerState extends State<HomeBanner> with WidgetsBindingObserver {
           ? _item(banners.single)
           : PageView.builder(
               controller: _controller,
-              itemCount: banners.length,
               onPageChanged: (page) => _page = page,
-              itemBuilder: (_, index) => _item(banners[index]),
+              itemBuilder: (_, index) => _item(banners[index % banners.length]),
             ),
     );
   }

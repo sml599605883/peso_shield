@@ -16,7 +16,8 @@ class AppUrls {
   /// 
   /// 优先使用运行时动态地址，如果没有则使用默认地址
   static String webBaseUrl(WidgetRef ref) {
-    return ref.watch(runtimeWebBaseProvider) ?? _defaultWebBaseUrl;
+    // Called from tap callbacks, so read the latest value instead of watching.
+    return ref.read(runtimeWebBaseProvider) ?? _defaultWebBaseUrl;
   }
 
   /// 在线客服页面

@@ -18,6 +18,7 @@ import '../theme/layout_adapter.dart';
 import '../widgets/app_back_button.dart';
 import 'widgets/identity_upload_prompt.dart';
 import 'widgets/personal_information_option_sheet.dart';
+import 'widgets/retention_popup_guard.dart';
 
 class EmergencyContactPage extends ConsumerStatefulWidget {
   const EmergencyContactPage({super.key, required this.productId});
@@ -31,7 +32,14 @@ class EmergencyContactPage extends ConsumerStatefulWidget {
 
 enum _LoadState { loading, content, empty, error }
 
-class _EmergencyContactPageState extends ConsumerState<EmergencyContactPage> {
+class _EmergencyContactPageState extends ConsumerState<EmergencyContactPage>
+    with RetentionPopupGuard<EmergencyContactPage> {
+  @override
+  String get retentionProductId => widget.productId;
+
+  @override
+  String get retentionPopupType => '4';
+
   static const _defaultPrompt =
       'Please provide your emergency contact information for identity verification.';
 
@@ -59,9 +67,11 @@ class _EmergencyContactPageState extends ConsumerState<EmergencyContactPage> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
       child: PopScope(
-        canPop: !busy,
-        onPopInvokedWithResult: (didPop, _) {
-          if (!didPop && !busy) Navigator.of(context).pop();
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) async {
+          if (didPop || busy) return;
+          final shouldPop = await handleRetentionExit();
+          if (shouldPop && context.mounted) Navigator.of(context).pop();
         },
         child: Stack(
           children: [
@@ -473,7 +483,7 @@ class _ContactGroupView extends StatelessWidget {
         SizedBox(height: layout.px(18)),
         Padding(
           padding: layout.edgeInsets(left: 20),
-          child: _Label(layout: layout, text: 'City You Work'),
+          child: _Label(layout: layout, text: 'Contact Information'),
         ),
         SizedBox(height: layout.px(7)),
         _FieldBox(

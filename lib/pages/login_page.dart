@@ -10,7 +10,6 @@ import '../core/navigation/app_navigator.dart';
 import '../core/network/http_exception.dart';
 import '../core/report/peso_report_service.dart';
 import '../core/ui/toast_helper.dart';
-import '../providers/home_provider.dart';
 import '../providers/report_provider.dart';
 import '../providers/repository_provider.dart';
 import '../theme/app_assets.dart';
@@ -32,6 +31,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _phoneController = TextEditingController();
   final _codeController = TextEditingController();
   final _codeFocusNode = FocusNode();
+  int _previousCodeLength = 0;
   late final int _sceneStartTime;
 
   bool get _canSubmit =>
@@ -51,7 +51,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   void _onCodeChanged() {
     setState(() {});
-    if (_codeController.text.length == 6) {
+    // Only auto-submit once the agreement is accepted; otherwise checking the
+    // agreement afterwards could still trigger a login with an incomplete code.
+    final loginState = ref.read(loginStateProvider);
+    final wasComplete = _previousCodeLength == 6;
+    _previousCodeLength = _codeController.text.length;
+    if (_codeController.text.length == 6 &&
+        !wasComplete &&
+        loginState.agreementAccepted) {
       unawaited(_submitAutomatically());
     }
   }
@@ -182,7 +189,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
       if (!mounted) return true;
 
-      unawaited(ref.read(homeDataProvider.notifier).refresh());
+      // Dismiss the keyboard once the code completes and login succeeds.
+      FocusManager.instance.primaryFocus?.unfocus();
+      // Home is refreshed by HomePage.didPopNext when this login route pops,
+      // so refreshing here as well causes duplicate home + popup requests.
       if (widget.onLoginSuccess != null) {
         await widget.onLoginSuccess!();
       } else if (mounted) {

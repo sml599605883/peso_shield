@@ -48,7 +48,9 @@ class LoanOfferCard extends StatelessWidget {
                 ),
                 SizedBox(height: layout.px(16)),
                 Text(
-                  'Maximum Credit Amount',
+                  product.amountLabel.isEmpty
+                      ? 'Maximum Credit Amount'
+                      : product.amountLabel,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: AppColors.black,
@@ -65,6 +67,8 @@ class LoanOfferCard extends StatelessWidget {
                 LoanTerms(
                   loanTerm: product.loanTerm,
                   interestRate: product.interestRate,
+                  termLabel: product.termLabel,
+                  rateLabel: product.rateLabel,
                   rows: product.shaved,
                 ),
                 const Spacer(),

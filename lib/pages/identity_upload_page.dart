@@ -16,6 +16,7 @@ import '../widgets/app_back_button.dart';
 import 'widgets/identity_upload_prompt.dart';
 import 'widgets/identity_upload_method_dialog.dart';
 import 'widgets/identity_upload_services.dart';
+import 'widgets/retention_popup_guard.dart';
 
 /// ID upload page with camera/album integration and OCR upload
 class IdentityUploadPage extends ConsumerStatefulWidget {
@@ -36,7 +37,14 @@ class IdentityUploadPage extends ConsumerStatefulWidget {
   ConsumerState<IdentityUploadPage> createState() => _IdentityUploadPageState();
 }
 
-class _IdentityUploadPageState extends ConsumerState<IdentityUploadPage> {
+class _IdentityUploadPageState extends ConsumerState<IdentityUploadPage>
+    with RetentionPopupGuard<IdentityUploadPage> {
+  @override
+  String get retentionProductId => widget.productId;
+
+  @override
+  String get retentionPopupType => '0';
+
   late final IdentityUploadImagePicker _imagePicker =
       DefaultIdentityUploadImagePicker();
   late final IdentityUploadImageCompressor _imageCompressor =
@@ -54,7 +62,16 @@ class _IdentityUploadPageState extends ConsumerState<IdentityUploadPage> {
         ? cachedPrompt
         : IdentityUploadPage.defaultPrompt;
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final shouldPop = await handleRetentionExit();
+        if (shouldPop && context.mounted) {
+          Navigator.of(context).pop();
+        }
+      },
+      child: Scaffold(
       extendBody: true,
       backgroundColor: Colors.transparent,
       body: SizedBox.expand(
@@ -147,7 +164,7 @@ class _IdentityUploadPageState extends ConsumerState<IdentityUploadPage> {
           ),
         ),
       ),
-    );
+    ));
   }
 
   Future<void> _showIdentityUploadMethodDialog(BuildContext context) async {

@@ -21,10 +21,23 @@ class AccountListAddPaymentMethod extends AccountListResult {
   const AccountListAddPaymentMethod();
 }
 
+/// 用户点击提交时的处理回调。
+///
+/// 传入 [BuildContext] 让调用方可以在提交成功后直接替换当前账户列表页面，
+/// 避免先返回上一页再跳转造成页面闪烁。回调内部负责 loading 与错误提示，
+/// 失败时保持当前页面不退出。
+typedef AccountListSubmit = Future<void> Function(
+  BuildContext context,
+  String bindId,
+);
+
 class AccountListPage extends StatefulWidget {
-  const AccountListPage({super.key, required this.groups});
+  const AccountListPage({super.key, required this.groups, this.onSubmit});
 
   final List<BankAccountGroup> groups;
+
+  /// 为 null 时保持旧行为：直接 pop 返回 [AccountListSelection]。
+  final AccountListSubmit? onSubmit;
 
   @override
   State<AccountListPage> createState() => _AccountListPageState();
@@ -32,18 +45,35 @@ class AccountListPage extends StatefulWidget {
 
 class _AccountListPageState extends State<AccountListPage> {
   late String _selectedId;
+  bool _submitting = false;
 
   @override
   void initState() {
     super.initState();
     final accounts = widget.groups.expand((group) => group.accounts).toList();
-    if (accounts.isEmpty) {
-      _selectedId = '';
+    // 仅主卡默认勾选；没有主卡时不预选任何账户。
+    _selectedId = '';
+    for (final account in accounts) {
+      if (account.isMain) {
+        _selectedId = account.id;
+        break;
+      }
+    }
+  }
+
+  Future<void> _handleSubmit() async {
+    final onSubmit = widget.onSubmit;
+    if (onSubmit == null) {
+      Navigator.pop(context, AccountListSelection(_selectedId));
       return;
     }
-    _selectedId = accounts
-        .firstWhere((account) => account.isMain, orElse: () => accounts.first)
-        .id;
+    if (_submitting) return;
+    setState(() => _submitting = true);
+    try {
+      await onSubmit(context, _selectedId);
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
   }
 
   @override
@@ -123,12 +153,9 @@ class _AccountListPageState extends State<AccountListPage> {
                       height: layout.px(50),
                       child: FilledButton(
                         key: const Key('account-list-submit'),
-                        onPressed: _selectedId.isEmpty
+                        onPressed: _selectedId.isEmpty || _submitting
                             ? null
-                            : () => Navigator.pop(
-                                context,
-                                AccountListSelection(_selectedId),
-                              ),
+                            : _handleSubmit,
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.coral,
                           disabledBackgroundColor: AppColors.coral,

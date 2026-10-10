@@ -75,6 +75,27 @@ void main() {
     expect(result, isA<AccountListSelection>());
     expect((result as AccountListSelection).bindId, 'wallet-1');
   });
+
+  testWidgets('does not preselect non-main accounts', (tester) async {
+    _useDesignViewport(tester);
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: AccountListPage(
+          groups: [
+            BankAccountGroup(title: 'E-wallet', accounts: [wallet]),
+          ],
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final submit = find.byKey(const Key('account-list-submit'));
+    expect(tester.widget<FilledButton>(submit).onPressed, isNull);
+
+    await tester.tap(find.byKey(const Key('account-wallet-1')));
+    await tester.pump();
+    expect(tester.widget<FilledButton>(submit).onPressed, isNotNull);
+  });
 }
 
 void _useDesignViewport(WidgetTester tester) {

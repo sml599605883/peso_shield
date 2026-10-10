@@ -18,10 +18,13 @@ class AppRepository {
     );
   }
 
-  Future<ApiResponse<HomePopupData>> getHomePopup() {
+  /// 首页/个人中心弹窗接口。
+  ///
+  /// [feting] 场景：1=首页，2=个人中心。
+  Future<ApiResponse<HomePopupData>> getHomePopup({int feting = 1}) {
     return _client.get(
       '/outsmelled/picture',
-      params: {'feting': 1},
+      params: {'feting': feting},
       parse: (json) => HomePopupData.fromJson(json as Map<String, dynamic>),
     );
   }

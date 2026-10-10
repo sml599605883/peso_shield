@@ -137,7 +137,7 @@ class _BindCardPageState extends ConsumerState<BindCardPage> {
                                 ),
                                 Center(
                                   child: Text(
-                                    'Work Information',
+                                    'Account Information',
                                     style: TextStyle(
                                       color: AppColors.black,
                                       fontFamily: 'Helvetica',
@@ -546,13 +546,10 @@ class _BindCardPageState extends ConsumerState<BindCardPage> {
       (item) => item.type == _selectedType,
       orElse: () => _data!.groups.first,
     );
+    // 不完整信息也提交给服务端，由“提交绑卡”接口返回判断是否完成认证。
     final fields = <String, String>{};
     for (final field in group.fields) {
       final value = (_values[_fieldKey(group, field)] ?? '').trim();
-      if (field.required && value.isEmpty) {
-        ToastHelper.showError('${field.title} is required');
-        return;
-      }
       fields[field.key] = value;
     }
     final account = fields['cardNo'];

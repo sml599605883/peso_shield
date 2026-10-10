@@ -1,6 +1,7 @@
 import AdSupport
 import AppTrackingTransparency
 import Flutter
+import StoreKit
 import TDMobRisk
 import UIKit
 
@@ -57,6 +58,8 @@ final class ClientBridgeRegistrar: NSObject {
         result(self.currentTrackingStatus())
       case "getPushToken":
         result(self.pushToken)
+      case "requestAppReview":
+        self.requestAppReview(result: result)
       default:
         result(FlutterMethodNotImplemented)
       }
@@ -64,6 +67,24 @@ final class ClientBridgeRegistrar: NSObject {
     
     // Register event channel for reporting
     registerReportingMethods(with: binaryMessenger)
+  }
+
+  private func requestAppReview(result: @escaping FlutterResult) {
+    DispatchQueue.main.async {
+      if #available(iOS 14.0, *) {
+        guard let scene = UIApplication.shared.connectedScenes
+          .compactMap({ $0 as? UIWindowScene })
+          .first(where: { $0.activationState == .foregroundActive })
+        else {
+          result(nil)
+          return
+        }
+        SKStoreReviewController.requestReview(in: scene)
+      } else {
+        SKStoreReviewController.requestReview()
+      }
+      result(nil)
+    }
   }
 
   /// Activates device-risk collection at application launch.

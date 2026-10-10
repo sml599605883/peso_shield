@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/navigation/app_navigator.dart';
 import '../../core/navigation/app_routes.dart';
+import '../../core/product/product_providers.dart';
 import '../../providers/network_provider.dart';
 import '../../core/network/api_response.dart';
 import '../../providers/home_provider.dart';
@@ -28,7 +29,8 @@ class RecreditPollingCoordinator {
         _currentRoute = currentRoute ?? _defaultCurrentRoute,
         _homeRefresher = homeRefresher ?? (() => _defaultHomeRefresher(ref)),
         _admissionRunner =
-            admissionRunner ?? ((productId) => _defaultAdmissionRunner(productId)),
+            admissionRunner ??
+                ((productId) => _defaultAdmissionRunner(ref, productId)),
         _logger = logger ?? _defaultLogger;
 
   final WidgetRef _ref;
@@ -145,8 +147,23 @@ class RecreditPollingCoordinator {
     ref.invalidate(homeDataProvider);
   }
 
-  static Future<void> _defaultAdmissionRunner(String productId) {
-    return AppNavigator.applyProductAfterRecredit(productId);
+  static Future<void> _defaultAdmissionRunner(
+    WidgetRef ref,
+    String productId,
+  ) async {
+    final context = AppNavigator.navigatorKey.currentContext;
+    if (context == null || !context.mounted) {
+      return;
+    }
+    final flow = await ref.read(productApplicationFlowProvider.future);
+    if (!context.mounted) {
+      return;
+    }
+    await flow.applyProduct(
+      context: context,
+      productId: productId,
+      checkLocationAccess: false,
+    );
   }
 
   static void _defaultLogger(String message) {

@@ -103,4 +103,6 @@ abstract final class AppColors {
   static const retentionGradientStart = Color.fromRGBO(255, 158, 123, 1);
   static const retentionGradientMiddle = Color.fromRGBO(255, 100, 104, 1);
   static const retentionGradientEnd = Color.fromRGBO(250, 88, 129, 1);
+  static const retentionPrimary = Color.fromRGBO(106, 209, 255, 1);
+  static const retentionExitText = Color.fromRGBO(163, 185, 206, 1);
 }

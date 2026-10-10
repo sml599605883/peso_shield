@@ -287,10 +287,42 @@ class AppNavigator {
   }
 
   /// 跳转到 WebView 页面
-  static Future<void> toWebView({required String url, String? title}) async {
-    await toNamed<void>(
+  ///
+  /// [removeCertificationPages] 为 true 时会先移除路由栈中的认证流程页面
+  /// （如绑卡页），避免用户从 WebView 返回时又回到已完成的认证页。
+  static Future<void> toWebView({
+    required String url,
+    String? title,
+    bool removeCertificationPages = false,
+    bool replace = false,
+  }) async {
+    final arguments = WebViewPageArguments(url: url, title: title);
+    if (replace && !removeCertificationPages) {
+      await toNamedAndReplace<void, void>(
+        AppRoutes.webView,
+        arguments: arguments,
+      );
+      return;
+    }
+    if (!removeCertificationPages) {
+      await toNamed<void>(AppRoutes.webView, arguments: arguments);
+      return;
+    }
+    final navigator = _navigator;
+    if (navigator == null) {
+      _log('Error: Navigator not available');
+      return;
+    }
+    _log('Replacing certification pages with WebView');
+    await navigator.pushNamedAndRemoveUntil(
       AppRoutes.webView,
-      arguments: WebViewPageArguments(url: url, title: title),
+      (route) {
+        final name = route.settings.name;
+        return name == null ||
+            name.isEmpty ||
+            !_certificationRoutes.contains(name);
+      },
+      arguments: arguments,
     );
   }
 
@@ -341,24 +373,6 @@ class AppNavigator {
     );
   }
 
-  /// 重新授信后的产品申请流程
-  ///
-  /// 当重新授信完成后，自动跳转到产品申请流程
-  static Future<void> applyProductAfterRecredit(String productId) async {
-    final context = _context;
-    if (context == null || !context.mounted) {
-      _log('Error: Context not available for applyProductAfterRecredit');
-      return;
-    }
-
-    // 需要从 context 获取 WidgetRef，暂时简化处理
-    // 实际应该通过 ProviderScope 或其他方式获取
-    _log('applyProductAfterRecredit called with productId: $productId');
-    
-    // 这里应该调用产品申请流程，暂时留空待后续实现
-    // TODO: 实现重新授信后的产品申请逻辑
-  }
-
   /// 获取当前路由名称
   static String get currentRoute {
     final context = _context;
@@ -374,6 +388,7 @@ class AppNavigator {
     required String target,
     String productId = '',
     int apiRemind = 1,
+    bool replace = false,
   }) async {
     final link = const AppDeepLinkParser().parse(
       target,
@@ -385,7 +400,7 @@ class AppNavigator {
           ToastHelper.showError('Invalid link');
           return;
         }
-        await toWebView(url: link.rawTarget);
+        await toWebView(url: link.rawTarget, replace: replace);
       case AppDeepLinkKind.home:
         await toRoot();
       case AppDeepLinkKind.settings:
@@ -414,10 +429,12 @@ class AppNavigator {
         final flow = await ref.read(productApplicationFlowProvider.future);
         if (!context.mounted) return;
         if (link.kind == AppDeepLinkKind.admission) {
+          // 下发链接里带 parliament 时优先使用，保证弹窗(2)/banner(1)等来源正确。
+          final remind = int.tryParse(link.apiRemind) ?? apiRemind;
           await flow.applyProduct(
             context: context,
             productId: productId,
-            apiRemind: apiRemind,
+            apiRemind: remind,
           );
         } else {
           await flow.continueProductDetailFlow(

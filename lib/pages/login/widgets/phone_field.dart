@@ -16,7 +16,7 @@ class LoginPhoneField extends StatelessWidget {
       child: Row(
         children: [
           Text(
-            '+ 62',
+            '+ 63',
             style: TextStyle(
               color: AppColors.coral,
               fontSize: layout.px(20),

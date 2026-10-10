@@ -107,4 +107,18 @@ void main() {
       expect(result.data, {'value': 'result'});
     },
   );
+
+  test('grade action requests an app review once', () async {
+    var reviews = 0;
+    final coordinator = WebViewActionCoordinator(
+      requestAppReview: () async => reviews++,
+    );
+
+    final result = await coordinator.dispatch(
+      request('peso_shield_bfhPVzF4iYNTXuF', null),
+    );
+
+    expect(result.code, 0);
+    expect(reviews, 1);
+  });
 }

@@ -19,6 +19,7 @@ import '../theme/app_colors.dart';
 import '../theme/layout_adapter.dart';
 import '../widgets/app_back_button.dart';
 import 'widgets/identity_upload_prompt.dart';
+import 'widgets/retention_popup_guard.dart';
 
 /// Face verification page with backend integration
 class FaceRecognitionPage extends ConsumerStatefulWidget {
@@ -31,7 +32,14 @@ class FaceRecognitionPage extends ConsumerStatefulWidget {
       _FaceRecognitionPageState();
 }
 
-class _FaceRecognitionPageState extends ConsumerState<FaceRecognitionPage> {
+class _FaceRecognitionPageState extends ConsumerState<FaceRecognitionPage>
+    with RetentionPopupGuard<FaceRecognitionPage> {
+  @override
+  String get retentionProductId => widget.productId;
+
+  @override
+  String get retentionPopupType => '1';
+
   bool _isProcessing = false;
   late final int _sceneStartTime;
 
@@ -51,7 +59,16 @@ class _FaceRecognitionPageState extends ConsumerState<FaceRecognitionPage> {
         ? cachedPrompt
         : 'Step 1 to fast cash! Upload ID for the express approval channel.';
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final shouldPop = await handleRetentionExit();
+        if (shouldPop && context.mounted) {
+          Navigator.of(context).pop();
+        }
+      },
+      child: Scaffold(
       extendBody: true,
       backgroundColor: Colors.transparent,
       body: SizedBox.expand(
@@ -142,7 +159,7 @@ class _FaceRecognitionPageState extends ConsumerState<FaceRecognitionPage> {
           ),
         ),
       ),
-    );
+    ));
   }
 
   Future<void> _startFaceVerification() async {
@@ -194,7 +211,9 @@ class _FaceRecognitionPageState extends ConsumerState<FaceRecognitionPage> {
       final result = await FaceLivenessBridge.instance.start(token);
       unawaited(ref.read(reportServiceProvider).reportTrustDecisionResult(result));
 
-      if (!result.success) {
+      // 同盾活体只要回调返回了图片和 liveness_id 即视为识别成功并上传，
+      // 不再依据返回码推导的 success 判定，避免 code 判定偏差导致上传接口未被调用。
+      if (!hasUploadableLivenessData(result)) {
         ToastHelper.showError(
           result.message.isNotEmpty
               ? result.message
@@ -203,23 +222,29 @@ class _FaceRecognitionPageState extends ConsumerState<FaceRecognitionPage> {
         return;
       }
 
-      if (result.image.isEmpty || result.livenessId.isEmpty) {
-        ToastHelper.showError('Face verification returned incomplete data');
-        return;
-      }
-
       // Step 5: Write face image to temporary file
       faceImagePath = await _writeFaceImage(result.image);
 
       // Step 6: Upload face image to backend
       final uploadLoading = ToastHelper.showLoading();
-      await repository.uploadFaceLiveness(
-        filePath: faceImagePath,
-        license: token,
-        livenessId: result.livenessId,
-        livenessType: 0,
-      );
-      uploadLoading();
+      final uploadResponse = await repository
+          .uploadFaceLiveness(
+            filePath: faceImagePath,
+            license: token,
+            livenessId: result.livenessId,
+            livenessType: 0,
+          )
+          .whenComplete(uploadLoading);
+
+      // 上传接口业务失败时不继续下一步，避免误报场景或跳过认证。
+      if (!uploadResponse.isSuccess) {
+        ToastHelper.showError(
+          uploadResponse.message.isNotEmpty
+              ? uploadResponse.message
+              : 'Face upload failed, please try again',
+        );
+        return;
+      }
 
       // 上报人脸识别场景
       try {

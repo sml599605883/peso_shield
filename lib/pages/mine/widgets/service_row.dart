@@ -25,6 +25,7 @@ class MineServiceRow extends StatelessWidget {
       button: true,
       label: label,
       child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: onTap,
         child: DecoratedBox(
           decoration: BoxDecoration(

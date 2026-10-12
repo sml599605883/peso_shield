@@ -205,7 +205,12 @@ class AppNavigator {
     });
   }
 
-  static Future<bool?> _pushLogin(Future<void> Function()? onLoginSuccess) {
+  static Future<bool?> _pushLogin(
+    Future<void> Function()? onLoginSuccess,
+  ) async {
+    // 会话失效时栈上可能残留触发登录的 H5/认证等页面，先把它们清理回根路由：
+    // 这样登录页返回键回到首页，登录成功后也不会再回退到过期的 H5 页面。
+    popToRoot();
     return toNamed<bool>(
       AppRoutes.login,
       arguments: LoginPageArguments(onLoginSuccess: onLoginSuccess),

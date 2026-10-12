@@ -181,6 +181,35 @@ class _SettingsButton extends StatelessWidget {
   }
 }
 
+/// 注销 / 退出账号弹窗相对底图 `assets/settings/account_dialog_panel.png` 的几何。
+///
+/// 底图 933x927px 按 @3x 折算为 [width]x[height] pt。实测：可见面板上边缘
+/// y=[panelTop]pt，内层浅色框 y=89..227.7pt（高 138.7pt），右上角星球装饰
+/// 在标题所在高度上占据 x>=[decorationLeft]pt。标题必须收窄到装饰左侧，
+/// 否则文字会压在装饰上与面板上边缘之外。
+abstract final class AccountDialogMetrics {
+  static const double width = 311;
+  static const double height = 309;
+  static const double sidePadding = 14;
+  static const double titleLeftPadding = 12;
+  static const double titleLeft = sidePadding + titleLeftPadding;
+  static const double panelTop = 27;
+  static const double titleBandHeight = 62;
+  static const double titleMaxWidth = 160;
+  static const double titleFontSize = 20;
+  static const double titleLineHeight = 1.03;
+  static const int titleMaxLines = 3;
+  static const double decorationLeft = 192.7;
+  static const double contentWidth = 283;
+  static const double contentHeight = 139;
+  static const double contentTop = panelTop + titleBandHeight;
+  static const double contentGap = 17;
+  static const double buttonHeight = 48;
+  static const double bottomPadding = 16;
+  static const double totalHeight =
+      contentTop + contentHeight + contentGap + buttonHeight + bottomPadding;
+}
+
 Future<void> _showAccountDialog(
   BuildContext context,
   WidgetRef ref, {
@@ -243,41 +272,48 @@ class _AccountDialogState extends State<_AccountDialog> {
             ),
             Padding(
               padding: layout.edgeInsets(
-                left: 14,
-                right: 14,
-                // 与底图内层浅色框对齐：标题栏固定两行高度，正文框居中于
-                // 底图的浅色区域，按钮落在下方蓝色区域，避免整体下移溢出。
-                top: 20,
-                bottom: 19,
+                left: AccountDialogMetrics.sidePadding,
+                right: AccountDialogMetrics.sidePadding,
+                // 标题栏从底图可见面板上边缘（y=27）开始并铺满浅色框上方的
+                // 整条区域，正文框正好落在浅色框内，按钮落在下方蓝色区域。
+                top: AccountDialogMetrics.panelTop,
+                bottom: AccountDialogMetrics.bottomPadding,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(
-                    height: layout.px(48),
+                    height: layout.px(AccountDialogMetrics.titleBandHeight),
                     child: Padding(
-                      padding: layout.edgeInsets(left: 12),
+                      padding: layout.edgeInsets(
+                        left: AccountDialogMetrics.titleLeftPadding,
+                      ),
                       child: Align(
                         alignment: Alignment.centerLeft,
-                        child: Text(
-                          isDelete
-                              ? 'Permanently Delete Your Account?'
-                              : 'Log out?',
-                          style: TextStyle(
-                            color: AppColors.black,
-                            fontSize: layout.px(20),
-                            fontFamily: 'Helvetica',
-                            fontWeight: FontWeight.w700,
-                            height: 1.2,
+                        child: SizedBox(
+                          width: layout.px(AccountDialogMetrics.titleMaxWidth),
+                          child: Text(
+                            isDelete
+                                ? 'Permanently Delete Your Account?'
+                                : 'Log out?',
+                            maxLines: AccountDialogMetrics.titleMaxLines,
+                            style: TextStyle(
+                              color: AppColors.black,
+                              fontSize: layout.px(
+                                AccountDialogMetrics.titleFontSize,
+                              ),
+                              fontFamily: 'Helvetica',
+                              fontWeight: FontWeight.w700,
+                              height: AccountDialogMetrics.titleLineHeight,
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                  SizedBox(height: layout.px(18)),
                   Container(
-                    width: layout.px(283),
-                    height: layout.px(139),
+                    width: layout.px(AccountDialogMetrics.contentWidth),
+                    height: layout.px(AccountDialogMetrics.contentHeight),
                     padding: layout.edgeInsets(
                       left: 28,
                       right: 27,
@@ -298,9 +334,9 @@ class _AccountDialogState extends State<_AccountDialog> {
                       ),
                     ),
                   ),
-                  SizedBox(height: layout.px(17)),
+                  SizedBox(height: layout.px(AccountDialogMetrics.contentGap)),
                   SizedBox(
-                    height: layout.px(48),
+                    height: layout.px(AccountDialogMetrics.buttonHeight),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [

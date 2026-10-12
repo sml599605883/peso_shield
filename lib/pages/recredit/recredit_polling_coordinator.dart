@@ -24,13 +24,13 @@ class RecreditPollingCoordinator {
     RecreditAdmissionRunner? admissionRunner,
     RecreditLogger? logger,
     this.interval = const Duration(seconds: 10),
-  })  : _request = request ?? (() => _defaultRequest(ref)),
-        _currentRoute = currentRoute ?? _defaultCurrentRoute,
-        _homeRefresher = homeRefresher ?? (() => _defaultHomeRefresher(ref)),
-        _admissionRunner =
-            admissionRunner ??
-                ((productId) => _defaultAdmissionRunner(ref, productId)),
-        _logger = logger ?? _defaultLogger;
+  }) : _request = request ?? (() => _defaultRequest(ref)),
+       _currentRoute = currentRoute ?? _defaultCurrentRoute,
+       _homeRefresher = homeRefresher ?? (() => _defaultHomeRefresher(ref)),
+       _admissionRunner =
+           admissionRunner ??
+           ((productId) => _defaultAdmissionRunner(ref, productId)),
+       _logger = logger ?? _defaultLogger;
 
   final RecreditRequest _request;
   final RecreditRouteProvider _currentRoute;
@@ -132,7 +132,9 @@ class RecreditPollingCoordinator {
     return _isRunning && generation == _generation;
   }
 
-  static Future<ApiResponse<Map<String, dynamic>>> _defaultRequest(Ref ref) async {
+  static Future<ApiResponse<Map<String, dynamic>>> _defaultRequest(
+    Ref ref,
+  ) async {
     final apiService = await ref.read(apiServiceProvider.future);
     return apiService.product.reCredit();
   }
@@ -142,13 +144,12 @@ class RecreditPollingCoordinator {
   }
 
   static Future<void> _defaultHomeRefresher(Ref ref) async {
-    ref.invalidate(homeDataProvider);
+    // 必须走 notifier.refresh()：invalidate 只会重建 build()，而 build() 返回
+    // null，会清空首页数据（大小卡直接消失）且不会重新请求首页+弹窗接口。
+    await ref.read(homeDataProvider.notifier).refresh();
   }
 
-  static Future<void> _defaultAdmissionRunner(
-    Ref ref,
-    String productId,
-  ) async {
+  static Future<void> _defaultAdmissionRunner(Ref ref, String productId) async {
     final context = AppNavigator.navigatorKey.currentContext;
     if (context == null || !context.mounted) {
       return;

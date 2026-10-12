@@ -121,4 +121,81 @@ void main() {
     expect(result.code, 0);
     expect(reviews, 1);
   });
+
+  // 回归：reczz28MQkQuGeem / reczz28MR5WnN12R
+  // H5 页面通过桥接 openUrl 下发 http(s) 地址时，必须走 H5→H5 跳转路径
+  // （openWebView → openH5WebView → toWebView(removeWebViewPages: true)），
+  // 由 AppNavigator 移除来源 H5 路由；否则退出新页面会回到推荐列表页/订单详情页。
+  test('openUrl routes http URLs to the H5-to-H5 webview entry', () async {
+    final opened = <String>[];
+    var internalCalls = 0;
+    final coordinator = WebViewActionCoordinator(
+      openWebView: (url) async => opened.add(url),
+      navigateInternal: (url) async => internalCalls++,
+    );
+
+    final result = await coordinator.dispatch(
+      request(
+        WebViewActions.openUrl,
+        'http://8.212.131.176/#/AmalgamatorsMarqueterie'
+        '?cointerring=1&polarimetric=3&changeAccount=1',
+      ),
+    );
+
+    expect(result.code, 0);
+    expect(opened, [
+      'http://8.212.131.176/#/AmalgamatorsMarqueterie'
+          '?cointerring=1&polarimetric=3&changeAccount=1',
+    ]);
+    expect(internalCalls, 0);
+  });
+
+  test('openUrl routes https URLs to the H5-to-H5 webview entry', () async {
+    final opened = <String>[];
+    final coordinator = WebViewActionCoordinator(
+      openWebView: (url) async => opened.add(url),
+    );
+
+    final result = await coordinator.dispatch(
+      request(WebViewActions.openUrl, 'https://example.com/order/detail'),
+    );
+
+    expect(result.code, 0);
+    expect(opened, ['https://example.com/order/detail']);
+  });
+
+  test('openUrl routes ph scheme URLs to the internal navigator', () async {
+    final opened = <String>[];
+    final internal = <String>[];
+    final coordinator = WebViewActionCoordinator(
+      openWebView: (url) async => opened.add(url),
+      navigateInternal: (url) async => internal.add(url),
+    );
+
+    const target = 'ph://peso-shield/ios/Equisetum?bombarder=3';
+    final result = await coordinator.dispatch(
+      request(WebViewActions.openUrl, target),
+    );
+
+    expect(result.code, 0);
+    expect(internal, [target]);
+    expect(opened, isEmpty);
+  });
+
+  test(
+    'openUrl rejects a malformed http URL without opening a webview',
+    () async {
+      final opened = <String>[];
+      final coordinator = WebViewActionCoordinator(
+        openWebView: (url) async => opened.add(url),
+      );
+
+      final result = await coordinator.dispatch(
+        request(WebViewActions.openUrl, 'http://'),
+      );
+
+      expect(result.code, isNot(0));
+      expect(opened, isEmpty);
+    },
+  );
 }

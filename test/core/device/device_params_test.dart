@@ -1,8 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:peso_shield/core/device/device_name_data.dart';
+import 'package:peso_shield/core/device/device_name_sync.dart';
 import 'package:peso_shield/core/device/device_metadata_store.dart';
 import 'package:peso_shield/core/network/device_params.dart';
 
 class MockDeviceMetadataPersistence implements DeviceMetadataPersistence {
+  int readDeviceNameCalls = 0;
   String? _deviceId;
   String? _deviceName;
   String? _physicalSize;
@@ -11,7 +14,10 @@ class MockDeviceMetadataPersistence implements DeviceMetadataPersistence {
   Future<String?> readDeviceId() async => _deviceId;
 
   @override
-  Future<String?> readDeviceName() async => _deviceName;
+  Future<String?> readDeviceName() async {
+    readDeviceNameCalls++;
+    return _deviceName;
+  }
 
   @override
   Future<String?> readPhysicalSize() async => _physicalSize;
@@ -73,6 +79,34 @@ void main() {
       final name = await store.deviceName();
       expect(name, 'iPhone 13 Pro');
     });
+
+    test(
+      'cachedDeviceName exposes the latest name without re-reading',
+      () async {
+        final persistence = MockDeviceMetadataPersistence();
+        final store = DeviceMetadataStore(persistence);
+
+        await store.loadCachedDeviceName();
+        expect(store.cachedDeviceName, '');
+
+        await store.saveDeviceName('iPhone 13 Pro');
+
+        expect(store.cachedDeviceName, 'iPhone 13 Pro');
+        expect(persistence.readDeviceNameCalls, 1);
+      },
+    );
+
+    test('cachedDeviceName reads storage only once', () async {
+      final persistence = MockDeviceMetadataPersistence();
+      await persistence.writeDeviceName('iPhone 12');
+      final store = DeviceMetadataStore(persistence);
+
+      await store.loadCachedDeviceName();
+      await store.loadCachedDeviceName();
+
+      expect(store.cachedDeviceName, 'iPhone 12');
+      expect(persistence.readDeviceNameCalls, 1);
+    });
   });
 
   group('DeviceDeviceParamsProvider', () {
@@ -89,7 +123,8 @@ void main() {
 
       expect(params.appVersion, '1.0.0');
       expect(params.modelCode, 'iPhone14,2');
-      expect(params.modelName, 'iPhone14,2');
+      // 机型标识只用于查询设备名，不能作为公参里的设备名。
+      expect(params.modelName, '');
       expect(params.deviceId, 'test-vendor-id-12345');
       expect(params.systemVersion, '17.0');
       expect(params.advertisingId, 'test-vendor-id-12345');
@@ -109,5 +144,39 @@ void main() {
       final params = await provider.fetch();
       expect(params.modelName, 'My iPhone');
     });
+
+    test(
+      'fetch returns the synced device name within the same process',
+      () async {
+        final persistence = MockDeviceMetadataPersistence();
+        final store = DeviceMetadataStore(persistence);
+        final provider = DeviceDeviceParamsProvider(
+          source: MockIosMetadataSource(),
+          metadataStore: store,
+        );
+
+        // 首次启动：本地没有缓存，公参设备名为空而不是 iPhone14,2。
+        final before = await provider.fetch();
+        expect(before.modelName, '');
+
+        final synced = await DeviceNameSync.withLookup(
+          paramsProvider: StaticDeviceParamsProvider(before),
+          metadataStore: store,
+          lookup: (deviceCode) async {
+            expect(deviceCode, 'iPhone14,2');
+            return const DeviceNameData(
+              deviceName: 'iPhone 13 Pro',
+              screenSize: 6.1,
+            );
+          },
+        ).sync();
+        expect(synced, true);
+
+        // 同步成功后无需重启，重新取参数即为服务端设备名。
+        final after = await provider.fetch();
+        expect(after.modelName, 'iPhone 13 Pro');
+        expect(after.modelCode, 'iPhone14,2');
+      },
+    );
   });
 }

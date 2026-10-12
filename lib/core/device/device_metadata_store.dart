@@ -59,6 +59,23 @@ class DeviceMetadataStore {
 
   final DeviceMetadataPersistence _persistence;
 
+  String _deviceName = '';
+  bool _deviceNameLoaded = false;
+
+  /// 服务端返回的设备展示名，供公共参数等同步读取方实时取值。
+  ///
+  /// 未同步成功时保持为空，不会回落到机型标识（如 `iPhone14,2`）。
+  String get cachedDeviceName => _deviceName;
+
+  /// 从本地存储预热设备名，重复调用不会重复读取。
+  Future<void> loadCachedDeviceName() async {
+    if (_deviceNameLoaded) {
+      return;
+    }
+    _deviceName = _normalize(await _persistence.readDeviceName()) ?? '';
+    _deviceNameLoaded = true;
+  }
+
   Future<String> resolveStableDeviceId(String currentIdfv) async {
     final stored = _normalize(await _persistence.readDeviceId());
     if (stored != null) {
@@ -74,7 +91,8 @@ class DeviceMetadataStore {
   }
 
   Future<String?> deviceName() async {
-    return _normalize(await _persistence.readDeviceName());
+    await loadCachedDeviceName();
+    return _normalize(_deviceName);
   }
 
   Future<void> saveDeviceName(String value) async {
@@ -83,6 +101,8 @@ class DeviceMetadataStore {
       return;
     }
     await _persistence.writeDeviceName(normalized);
+    _deviceName = normalized;
+    _deviceNameLoaded = true;
   }
 
   Future<String?> physicalSize() async {

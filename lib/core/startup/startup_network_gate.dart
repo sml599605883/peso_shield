@@ -99,8 +99,8 @@ class _StartupNetworkGateState extends State<StartupNetworkGate>
             paramsProvider: StaticDeviceParamsProvider(deviceParams),
             metadataStore: metadataStore,
           ).sync();
-          // The client captures public parameters when it is created. Rebuild
-          // it so subsequent requests use the newly cached server device name.
+          // The client snapshots device params when it is created. Rebuild it so
+          // the snapshot reflects the freshly cached device name.
           widget.ref.invalidate(httpClientProvider);
           await widget.ref.read(httpClientProvider.future);
         } catch (_) {

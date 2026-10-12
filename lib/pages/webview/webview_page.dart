@@ -12,6 +12,7 @@ import '../../core/navigation/app_navigator.dart';
 import '../../core/ui/toast_helper.dart';
 import '../../core/device/user_session.dart';
 import '../../data/models/certification_data.dart';
+import '../../data/repositories/certification_repository.dart';
 import '../../providers/repository_provider.dart';
 import '../account_list_page.dart';
 import '../bind_card_page.dart';
@@ -153,6 +154,59 @@ String? webViewCallbackScript(
 Future<void> openH5WebView(String url) =>
     AppNavigator.toWebView(url: url, removeWebViewPages: true);
 
+/// 确认用款页在 H5 中的路由别名（API 文档 Scheme: confirmUrl =>
+/// '/#/AmalgamatorsMarqueterie'，即待确认用款页）。
+const String confirmPagePathSegment = 'AmalgamatorsMarqueterie';
+
+/// 确认用款页返回时的挽留弹窗类型（获取挽留弹窗 forgets: 5=确认用款）。
+const String confirmPageRetentionPopupType = '5';
+
+/// 从 H5 地址中解析确认用款页的产品 ID，非确认用款页或缺少产品 ID 时返回空串。
+///
+/// 该页面地址形如
+/// `http://host/#/AmalgamatorsMarqueterie?cointerring=1&polarimetric=3&...`，
+/// 路由与查询参数都在 `#` 之后，因此别名既可能出现在路径段也可能出现在
+/// fragment 中，产品 ID 需要依次从直接查询和 fragment 查询中读取。
+String confirmProductIdFromUrl(String rawUrl) {
+  final uri = Uri.tryParse(rawUrl.trim());
+  if (uri == null) return '';
+
+  final fragment = uri.fragment.isEmpty ? null : Uri.tryParse(uri.fragment);
+  final isConfirmPage =
+      uri.pathSegments.contains(confirmPagePathSegment) ||
+      (fragment != null
+          ? fragment.pathSegments.contains(confirmPagePathSegment)
+          : uri.fragment.contains(confirmPagePathSegment));
+  if (!isConfirmPage) return '';
+
+  for (final key in _confirmProductIdKeys) {
+    final direct = uri.queryParameters[key]?.trim() ?? '';
+    if (direct.isNotEmpty) return direct;
+    final nested = fragment?.queryParameters[key]?.trim() ?? '';
+    if (nested.isNotEmpty) return nested;
+  }
+  return '';
+}
+
+const List<String> _confirmProductIdKeys = <String>['polarimetric', 'productId'];
+
+/// 请求确认用款页返回时的挽留弹窗数据。
+///
+/// 接口失败、非确认用款页或缺少产品 ID 时返回 null，由调用方放行返回。
+Future<RetentionPopupData?> fetchConfirmPageRetentionPopup({
+  required CertificationRepository repository,
+  required String rawUrl,
+}) async {
+  final productId = confirmProductIdFromUrl(rawUrl);
+  if (productId.isEmpty) return null;
+
+  final response = await repository.getRetentionPopup(
+    productId: productId,
+    popupType: confirmPageRetentionPopupType,
+  );
+  return response.isSuccess ? response.data : null;
+}
+
 class WebViewBridgeGate {
   WebViewBridgeGate({required this.addHandler, required this.removeHandler});
 
@@ -214,7 +268,6 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
   late String _title;
   bool _loading = true;
   bool _loadFailed = false;
-  RetentionPopupData? _retentionData;
   bool _isLoadingRetention = false;
 
   Uri? get _initialUri {
@@ -434,23 +487,48 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
     await _completeBack(controller: controller, canGoBack: canGoBack);
   }
 
-  /// 检查当前URL是否需要显示挽留弹窗，返回true表示用户选择继续留下
+  /// 检查当前 URL 是否需要展示挽留弹窗，返回 true 表示用户选择继续留下。
+  ///
+  /// 每次返回都会重新请求挽留弹窗配置（不做负缓存）；请求失败或接口不可用时
+  /// 不阻塞返回。
   Future<bool> _checkAndShowRetentionPopup(
     InAppWebViewController? controller,
   ) async {
-    // 如果已经加载过挽留数据且不需要展示，直接返回false（允许返回）
-    if (_retentionData != null && !_retentionData!.shouldShow) {
-      return false;
+    // 正在请求或弹窗已展示时不再重复触发，避免连续点击返回叠加弹窗。
+    if (_isLoadingRetention) return false;
+    _isLoadingRetention = true;
+
+    RetentionPopupData? popupData;
+    try {
+      popupData = await _loadConfirmPageRetentionPopup(controller);
+    } catch (e) {
+      debugPrint('[WebView] Load retention popup failed: $e');
+    } finally {
+      _isLoadingRetention = false;
     }
 
-    // 获取当前URL
+    if (!mounted || popupData == null || !popupData.shouldShow) return false;
+
+    _isLoadingRetention = true;
+    try {
+      // true=继续留下，false=退出并放行返回。
+      return await RetentionPopupDialog.show(context, popupData);
+    } finally {
+      _isLoadingRetention = false;
+    }
+  }
+
+  /// 请求确认用款页的挽留弹窗配置，非确认用款页直接跳过（返回 null）。
+  Future<RetentionPopupData?> _loadConfirmPageRetentionPopup(
+    InAppWebViewController? controller,
+  ) async {
     if (controller == null ||
         !canUseWebViewController(
           mounted: mounted,
           activeController: _controller,
           controller: controller,
         )) {
-      return false;
+      return null;
     }
 
     final currentUrl = await controller.getUrl();
@@ -459,60 +537,23 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
       activeController: _controller,
       controller: controller,
     )) {
-      return false;
+      return null;
     }
 
     final urlString = currentUrl?.toString() ?? '';
-    
-    // 检查URL是否包含 AmalgamatorsMarqueterie
-    if (!urlString.contains('AmalgamatorsMarqueterie')) {
-      return false;
+    if (confirmProductIdFromUrl(urlString).isEmpty) return null;
+
+    // 接口返回前先展示 loading，避免点击返回后页面看起来无响应。
+    final closeLoading = ToastHelper.showLoading();
+    try {
+      final repository = await ref.read(certificationRepositoryProvider.future);
+      return await fetchConfirmPageRetentionPopup(
+        repository: repository,
+        rawUrl: urlString,
+      );
+    } finally {
+      closeLoading();
     }
-
-    // 首次返回时请求挽留弹窗配置
-    if (_retentionData == null) {
-      setState(() => _isLoadingRetention = true);
-      try {
-        // 从URL中提取productId参数
-        final uri = Uri.tryParse(urlString);
-        final productId = uri?.queryParameters['polarimetric'] ?? 
-                         uri?.queryParameters['productId'] ?? '';
-        
-        if (productId.isEmpty) {
-          // 没有productId，不展示挽留弹窗
-          return false;
-        }
-
-        final repository = await ref.read(certificationRepositoryProvider.future);
-        final response = await repository.getRetentionPopup(
-          productId: productId,
-          popupType: '1', // 1=认证流程WebView页面
-        );
-
-        if (response.isSuccess && mounted) {
-          _retentionData = response.data;
-          
-          // 如果需要展示挽留弹窗
-          if (_retentionData!.shouldShow) {
-            final shouldStay = await RetentionPopupDialog.show(
-              context,
-              _retentionData!,
-            );
-            setState(() => _isLoadingRetention = false);
-            return shouldStay; // true=留下, false=离开
-          }
-        }
-      } catch (e) {
-        debugPrint('[WebView] Load retention popup failed: $e');
-        // 请求失败，允许返回
-      } finally {
-        if (mounted) {
-          setState(() => _isLoadingRetention = false);
-        }
-      }
-    }
-
-    return false;
   }
 
   Future<void> _completeBack({

@@ -58,12 +58,14 @@ class DeviceDeviceParamsProvider implements DeviceParamsProvider {
     final deviceId = await metadataStore.resolveStableDeviceId(
       metadata.vendorId,
     );
-    final deviceName = await metadataStore.deviceName() ?? metadata.model;
+    // 设备名只使用服务端返回的展示名，未同步成功时保持为空；
+    // 机型标识（如 iPhone14,2）仅作为查询入参，不作为公参里的设备名。
+    await metadataStore.loadCachedDeviceName();
 
     return DeviceParams(
       appVersion: metadata.version,
       modelCode: metadata.model,
-      modelName: deviceName,
+      modelName: metadataStore.cachedDeviceName,
       deviceId: deviceId,
       systemVersion: metadata.systemVersion,
       advertisingId: deviceId,

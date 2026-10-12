@@ -79,6 +79,7 @@ final sessionExpiryCoordinatorProvider = Provider<SessionExpiryCoordinator>((
 
 final httpClientProvider = FutureProvider<HttpClient>((ref) async {
   final config = ref.watch(networkConfigProvider);
+  final metadataStore = ref.watch(deviceMetadataStoreProvider);
 
   // 等待设备参数加载完成
   final deviceParams = await ref.watch(deviceParamsProvider.future);
@@ -89,7 +90,8 @@ final httpClientProvider = FutureProvider<HttpClient>((ref) async {
     config: config,
     getDeviceId: () => deviceParams.deviceId,
     getAppVersion: () => deviceParams.appVersion,
-    getDeviceName: () => deviceParams.modelName,
+    // 实时读取设备名：DeviceNameSync 同步成功后，下一次请求即生效。
+    getDeviceName: () => metadataStore.cachedDeviceName,
     getOsVersion: () => deviceParams.systemVersion,
     getGpsAdId: () => deviceParams.advertisingId,
     getUserToken: () {

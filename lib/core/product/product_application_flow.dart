@@ -65,6 +65,15 @@ class ProductApplicationFlow {
     }
   }
 
+  /// 派发页面跳转（不等待目标页面关闭）。
+  ///
+  /// 跳转是准入流程的终点：若 await 目标路由，[applyProduct] 的防重复提交锁
+  /// 会一直被持有到用户离开该页面（例如重新授信 loading 页），导致该页面内部
+  /// 再次发起的准入请求被静默丢弃。
+  void _dispatchPage(Future<void> navigation) {
+    unawaited(navigation.catchError((Object _) {}));
+  }
+
   /// 准入流程实际执行体（不含重复点击保护）。
   ///
   /// 供 [applyProduct] 及准入下发链接递归调用（参考 dali_cash：
@@ -78,7 +87,7 @@ class ProductApplicationFlow {
     try {
       // 1. 检查登录状态
       if (!userSession.isLoggedIn) {
-        await AppNavigator.toLogin();
+        _dispatchPage(AppNavigator.toLogin());
         return; // 跳转登录后直接返回，不继续准入流程（参考 dali_cash）
       }
 
@@ -291,9 +300,11 @@ class ProductApplicationFlow {
     // 避免被误判为不支持的深链而放弃跳转。
     if (jumpType == 1 || deepLink.kind == AppDeepLinkKind.webView) {
       debugPrint('Open WebView: $rawTarget');
-      await AppNavigator.toWebView(
-        url: rawTarget,
-        removeWebViewPages: removeWebViewPages,
+      _dispatchPage(
+        AppNavigator.toWebView(
+          url: rawTarget,
+          removeWebViewPages: removeWebViewPages,
+        ),
       );
       return;
     }
@@ -302,16 +313,18 @@ class ProductApplicationFlow {
       case AppDeepLinkKind.webView:
         // HTTP/HTTPS → 打开 WebView
         debugPrint('Open WebView: ${deepLink.uri}');
-        await AppNavigator.toWebView(
-          url: rawTarget,
-          removeWebViewPages: removeWebViewPages,
+        _dispatchPage(
+          AppNavigator.toWebView(
+            url: rawTarget,
+            removeWebViewPages: removeWebViewPages,
+          ),
         );
         break;
 
       case AppDeepLinkKind.creditReview:
         // ph://peso-shield/ios/Umbrages / gold://pocket/recredit → 重新授信 loading 页
         debugPrint('Open credit review: $rawTarget');
-        await AppNavigator.toRecredit(productId: resolvedProductId);
+        _dispatchPage(AppNavigator.toRecredit(productId: resolvedProductId));
         break;
 
       case AppDeepLinkKind.productDetail:
@@ -329,25 +342,25 @@ class ProductApplicationFlow {
       case AppDeepLinkKind.home:
         // ph://peso-shield/ios/Refineries → 回到首页
         debugPrint('Navigate to home');
-        await AppNavigator.toHome();
+        _dispatchPage(AppNavigator.toHome());
         break;
 
       case AppDeepLinkKind.settings:
         // ph://peso-shield/ios/Tweet → 跳转到设置页
         debugPrint('Navigate to settings');
-        await AppNavigator.toNamed<void>(AppRoutes.settings);
+        _dispatchPage(AppNavigator.toNamed<void>(AppRoutes.settings));
         break;
 
       case AppDeepLinkKind.order:
         // ph://peso-shield/ios/PermutesLinotypes → 跳转到订单列表
         debugPrint('Navigate to orders');
-        await AppNavigator.toOrderList();
+        _dispatchPage(AppNavigator.toOrderList());
         break;
 
       case AppDeepLinkKind.login:
         // ph://peso-shield/ios/UndertaxGrain → 跳转到登录页
         debugPrint('Navigate to login');
-        await AppNavigator.toLogin();
+        _dispatchPage(AppNavigator.toLogin());
         break;
 
       case AppDeepLinkKind.admission:
@@ -405,27 +418,29 @@ class ProductApplicationFlow {
 
         case 'ViscosimeterDollop':
           // 人脸识别/活体认证
-          await AppNavigator.toFaceRecognition(productId: productId);
+          _dispatchPage(AppNavigator.toFaceRecognition(productId: productId));
           break;
 
         case 'Unconcernedness':
           // 个人信息
-          await AppNavigator.toPersonalInformation(productId: productId);
+          _dispatchPage(
+            AppNavigator.toPersonalInformation(productId: productId),
+          );
           break;
 
         case 'Jammable':
           // 工作信息
-          await AppNavigator.toWorkInformation(productId: productId);
+          _dispatchPage(AppNavigator.toWorkInformation(productId: productId));
           break;
 
         case 'Pip':
           // 紧急联系人
-          await AppNavigator.toEmergencyContact(productId: productId);
+          _dispatchPage(AppNavigator.toEmergencyContact(productId: productId));
           break;
 
         case 'Reentrance':
           // 绑卡
-          await AppNavigator.toBindCard(productId: productId);
+          _dispatchPage(AppNavigator.toBindCard(productId: productId));
           break;
 
         default:
@@ -474,10 +489,12 @@ class ProductApplicationFlow {
 
     // 跳转到借款确认页面，并移除已完成的认证页面与来源 WebView，
     // 避免用户退出确认页后又回到绑卡等认证页或订单详情/推荐列表等 H5。
-    await AppNavigator.toWebView(
-      url: jumpUrl,
-      removeCertificationPages: true,
-      removeWebViewPages: true,
+    _dispatchPage(
+      AppNavigator.toWebView(
+        url: jumpUrl,
+        removeCertificationPages: true,
+        removeWebViewPages: true,
+      ),
     );
   }
 

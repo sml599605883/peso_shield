@@ -1,10 +1,22 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:peso_shield/core/network/api_response.dart';
+import 'package:peso_shield/core/navigation/app_routes.dart';
 import 'package:peso_shield/pages/recredit/recredit_polling_coordinator.dart';
+import 'package:peso_shield/providers/home_provider.dart';
 
 /// 从真实的 ProviderContainer 中取一个 [Ref]，用于构造协调器。
 final _refProvider = Provider<Ref>((ref) => ref);
+
+/// 记录默认首页刷新器是否走 notifier.refresh()（而不是 invalidate 清空首页）。
+class _SpyHomeNotifier extends HomeDataNotifier {
+  int refreshCount = 0;
+
+  @override
+  Future<void> refresh() async {
+    refreshCount += 1;
+  }
+}
 
 ({ProviderContainer container, Ref ref}) _createRef() {
   final container = ProviderContainer();
@@ -99,6 +111,34 @@ void main() {
 
     expect(refreshed, 1);
     expect(admissions, isEmpty);
+    expect(coordinator.isRunning, isFalse);
+  });
+
+  testWidgets('默认首页刷新走 notifier.refresh 而不是 invalidate', (tester) async {
+    final container = ProviderContainer(
+      overrides: [homeDataProvider.overrideWith(_SpyHomeNotifier.new)],
+    );
+    addTearDown(container.dispose);
+    final spy = container.read(homeDataProvider.notifier) as _SpyHomeNotifier;
+    final coordinator = RecreditPollingCoordinator(
+      ref: container.read(_refProvider),
+      interval: const Duration(milliseconds: 5),
+      request: () async => const ApiResponse<Map<String, dynamic>>(
+        code: 0,
+        message: 'success',
+        data: {'recklessly': 1},
+      ),
+      currentRoute: () => AppRoutes.root,
+      logger: (_) {},
+    );
+
+    coordinator.start('p1');
+    await tester.pump(const Duration(milliseconds: 30));
+    await tester.pump();
+
+    // invalidate 会重建 build() 返回 null，导致首页大小卡直接消失且不请求
+    // 首页+弹窗接口；这里必须调用 refresh() 重新拉取数据。
+    expect(spy.refreshCount, 1);
     expect(coordinator.isRunning, isFalse);
   });
 }

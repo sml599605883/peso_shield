@@ -25,8 +25,11 @@ class HomeOrderStatus extends StatefulWidget {
 
 class _HomeOrderStatusState extends State<HomeOrderStatus>
     with WidgetsBindingObserver {
-  int _page = 0;
-  final _controller = PageController();
+  // Start deep into an infinite page range so the carousel can always advance
+  // forward (+1) and wrap around via modulo without a backward jump.
+  static const int _initialPage = 10000;
+  late final PageController _controller;
+  late int _page;
   Timer? _timer;
   bool _foreground = true;
 
@@ -34,10 +37,19 @@ class _HomeOrderStatusState extends State<HomeOrderStatus>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _page = _alignedStartPage(widget.items.length);
+    _controller = PageController(initialPage: _page);
     _foreground =
         WidgetsBinding.instance.lifecycleState == null ||
         WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
     _syncTimer();
+  }
+
+  /// Align the deep starting page to the first item so the indicator and the
+  /// visible card start at index 0 regardless of how many items are dispatched.
+  static int _alignedStartPage(int length) {
+    if (length <= 0) return _initialPage;
+    return _initialPage - (_initialPage % length);
   }
 
   void _syncTimer() {
@@ -50,7 +62,7 @@ class _HomeOrderStatusState extends State<HomeOrderStatus>
       }
       unawaited(
         _controller.animateToPage(
-          (_page + 1) % widget.items.length,
+          _page + 1,
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOut,
         ),
@@ -76,8 +88,8 @@ class _HomeOrderStatusState extends State<HomeOrderStatus>
   void didUpdateWidget(HomeOrderStatus oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.items.length != widget.items.length) {
-      _page = 0;
-      if (_controller.hasClients) _controller.jumpToPage(0);
+      _page = _alignedStartPage(widget.items.length);
+      if (_controller.hasClients) _controller.jumpToPage(_page);
     }
     _syncTimer();
   }
@@ -96,13 +108,15 @@ class _HomeOrderStatusState extends State<HomeOrderStatus>
             child: PageView.builder(
               controller: _controller,
               key: ValueKey('order-pages-${widget.items.length}'),
-              itemCount: widget.items.length,
               onPageChanged: (value) => setState(() => _page = value),
               itemBuilder: (_, index) => HomeOrderStatusCard(
-                item: widget.items[index],
-                onTap: () => widget.onTap(widget.items[index]),
-                onAction: (action) =>
-                    widget.onAction(widget.items[index], action),
+                item: widget.items[index % widget.items.length],
+                onTap: () =>
+                    widget.onTap(widget.items[index % widget.items.length]),
+                onAction: (action) => widget.onAction(
+                  widget.items[index % widget.items.length],
+                  action,
+                ),
               ),
             ),
           ),
@@ -116,10 +130,12 @@ class _HomeOrderStatusState extends State<HomeOrderStatus>
                 children: [
                   for (var index = 0; index < widget.items.length; index++)
                     Container(
-                      width: layout.px(index == _page ? 28 : 12),
+                      width: layout.px(
+                        index == _page % widget.items.length ? 28 : 12,
+                      ),
                       height: layout.px(4),
                       decoration: BoxDecoration(
-                        color: index == _page
+                        color: index == _page % widget.items.length
                             ? AppColors.homePageIndicator
                             : AppColors.white,
                         borderRadius: layout.radius(2),

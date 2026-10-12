@@ -307,21 +307,25 @@ class AppNavigator {
   ///
   /// [removeCertificationPages] 为 true 时会先移除路由栈中的认证流程页面
   /// （如绑卡页），避免用户从 WebView 返回时又回到已完成的认证页。
+  /// [removeWebViewPages] 为 true 时会移除路由栈中已存在的 WebView 页面，
+  /// 用于从订单详情页/推荐列表等 H5 页面进入借款确认页时关闭来源 H5，
+  /// 避免来源页面在后台继续轮询、且用户退出确认页后又回到该 H5。
   static Future<void> toWebView({
     required String url,
     String? title,
     bool removeCertificationPages = false,
+    bool removeWebViewPages = false,
     bool replace = false,
   }) async {
     final arguments = WebViewPageArguments(url: url, title: title);
-    if (replace && !removeCertificationPages) {
-      await toNamedAndReplace<void, void>(
-        AppRoutes.webView,
-        arguments: arguments,
-      );
-      return;
-    }
-    if (!removeCertificationPages) {
+    if (!removeCertificationPages && !removeWebViewPages) {
+      if (replace) {
+        await toNamedAndReplace<void, void>(
+          AppRoutes.webView,
+          arguments: arguments,
+        );
+        return;
+      }
       await toNamed<void>(AppRoutes.webView, arguments: arguments);
       return;
     }
@@ -330,16 +334,42 @@ class AppNavigator {
       _log('Error: Navigator not available');
       return;
     }
-    _log('Replacing certification pages with WebView');
+    _log('Replacing flow pages with WebView');
     await navigator.pushNamedAndRemoveUntil(
       AppRoutes.webView,
       (route) {
         final name = route.settings.name;
-        return name == null ||
-            name.isEmpty ||
-            !_certificationRoutes.contains(name);
+        if (name == null || name.isEmpty) return true;
+        if (removeCertificationPages && _certificationRoutes.contains(name)) {
+          return false;
+        }
+        if (removeWebViewPages && name == AppRoutes.webView) {
+          return false;
+        }
+        return true;
       },
       arguments: arguments,
+    );
+  }
+
+  /// 直接以新的 WebView 结束当前业务流程。
+  ///
+  /// 移除路由栈中直到根页面的所有流程页面（如更换银行卡时的账户列表、旧订单
+  /// 详情 WebView），避免退出新 WebView 时回退到旧的中间页面。
+  static Future<void> toWebViewResettingFlow({
+    required String url,
+    String? title,
+  }) async {
+    final navigator = _navigator;
+    if (navigator == null) {
+      _log('Error: Navigator not available');
+      return;
+    }
+    _log('Resetting flow with WebView');
+    await navigator.pushNamedAndRemoveUntil(
+      AppRoutes.webView,
+      (route) => route.isFirst,
+      arguments: WebViewPageArguments(url: url, title: title),
     );
   }
 
@@ -410,6 +440,7 @@ class AppNavigator {
     String productId = '',
     int apiRemind = 1,
     bool replace = false,
+    bool removeWebViewPages = false,
   }) async {
     final link = const AppDeepLinkParser().parse(
       target,
@@ -421,7 +452,11 @@ class AppNavigator {
           ToastHelper.showError('Invalid link');
           return;
         }
-        await toWebView(url: link.rawTarget, replace: replace);
+        await toWebView(
+          url: link.rawTarget,
+          replace: replace,
+          removeWebViewPages: removeWebViewPages,
+        );
       case AppDeepLinkKind.home:
         await toRoot();
       case AppDeepLinkKind.settings:

@@ -208,6 +208,7 @@ class ProductApplicationFlow {
         result.jumpUrl,
         productId,
         jumpType: result.jumpType,
+        removeWebViewPages: true,
       );
       return;
     }
@@ -262,7 +263,12 @@ class ProductApplicationFlow {
       ),
     );
     if (target == null || target.trim().isEmpty || !context.mounted) return;
-    await _navigateRawTarget(context, target, productId);
+    await _navigateRawTarget(
+      context,
+      target,
+      productId,
+      removeWebViewPages: true,
+    );
   }
 
   /// 通过 DeepLink 统一导航（参考 dali_cash）
@@ -271,6 +277,7 @@ class ProductApplicationFlow {
     String rawTarget,
     String productId, {
     int jumpType = 0,
+    bool removeWebViewPages = false,
   }) async {
     ToastHelper.hideLoading();
 
@@ -284,7 +291,10 @@ class ProductApplicationFlow {
     // 避免被误判为不支持的深链而放弃跳转。
     if (jumpType == 1 || deepLink.kind == AppDeepLinkKind.webView) {
       debugPrint('Open WebView: $rawTarget');
-      await AppNavigator.toWebView(url: rawTarget);
+      await AppNavigator.toWebView(
+        url: rawTarget,
+        removeWebViewPages: removeWebViewPages,
+      );
       return;
     }
 
@@ -292,7 +302,10 @@ class ProductApplicationFlow {
       case AppDeepLinkKind.webView:
         // HTTP/HTTPS → 打开 WebView
         debugPrint('Open WebView: ${deepLink.uri}');
-        await AppNavigator.toWebView(url: rawTarget);
+        await AppNavigator.toWebView(
+          url: rawTarget,
+          removeWebViewPages: removeWebViewPages,
+        );
         break;
 
       case AppDeepLinkKind.creditReview:
@@ -459,11 +472,12 @@ class ProductApplicationFlow {
       startedAtSeconds: DateTime.now().millisecondsSinceEpoch ~/ 1000,
     );
 
-    // 跳转到借款确认页面，并移除已完成的认证页面，
-    // 避免用户退出确认页后又回到绑卡等认证页。
+    // 跳转到借款确认页面，并移除已完成的认证页面与来源 WebView，
+    // 避免用户退出确认页后又回到绑卡等认证页或订单详情/推荐列表等 H5。
     await AppNavigator.toWebView(
       url: jumpUrl,
       removeCertificationPages: true,
+      removeWebViewPages: true,
     );
   }
 

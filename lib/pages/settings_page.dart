@@ -245,26 +245,36 @@ class _AccountDialogState extends State<_AccountDialog> {
               padding: layout.edgeInsets(
                 left: 14,
                 right: 14,
-                top: 46,
-                bottom: 17,
+                // 与底图内层浅色框对齐：标题栏固定两行高度，正文框居中于
+                // 底图的浅色区域，按钮落在下方蓝色区域，避免整体下移溢出。
+                top: 20,
+                bottom: 19,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: layout.edgeInsets(left: 12),
-                    child: Text(
-                      isDelete ? 'Permanently Delete Your Account?' : 'Log out?',
-                      style: TextStyle(
-                        color: AppColors.black,
-                        fontSize: layout.px(20),
-                        fontFamily: 'Helvetica',
-                        fontWeight: FontWeight.w700,
-                        height: 1.2,
+                  SizedBox(
+                    height: layout.px(48),
+                    child: Padding(
+                      padding: layout.edgeInsets(left: 12),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          isDelete
+                              ? 'Permanently Delete Your Account?'
+                              : 'Log out?',
+                          style: TextStyle(
+                            color: AppColors.black,
+                            fontSize: layout.px(20),
+                            fontFamily: 'Helvetica',
+                            fontWeight: FontWeight.w700,
+                            height: 1.2,
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                  SizedBox(height: layout.px(19)),
+                  SizedBox(height: layout.px(18)),
                   Container(
                     width: layout.px(283),
                     height: layout.px(139),
@@ -288,7 +298,7 @@ class _AccountDialogState extends State<_AccountDialog> {
                       ),
                     ),
                   ),
-                  SizedBox(height: layout.px(16)),
+                  SizedBox(height: layout.px(17)),
                   SizedBox(
                     height: layout.px(48),
                     child: Row(

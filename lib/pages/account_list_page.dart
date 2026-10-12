@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/ui/toast_helper.dart';
 import '../data/models/certification_data.dart';
 import '../theme/app_assets.dart';
 import '../theme/app_colors.dart';
@@ -62,6 +63,10 @@ class _AccountListPageState extends State<AccountListPage> {
   }
 
   Future<void> _handleSubmit() async {
+    if (_selectedId.isEmpty) {
+      ToastHelper.showMessage('Please select a payment method');
+      return;
+    }
     final onSubmit = widget.onSubmit;
     if (onSubmit == null) {
       Navigator.pop(context, AccountListSelection(_selectedId));
@@ -153,9 +158,7 @@ class _AccountListPageState extends State<AccountListPage> {
                       height: layout.px(50),
                       child: FilledButton(
                         key: const Key('account-list-submit'),
-                        onPressed: _selectedId.isEmpty || _submitting
-                            ? null
-                            : _handleSubmit,
+                        onPressed: _submitting ? null : _handleSubmit,
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.coral,
                           disabledBackgroundColor: AppColors.coral,

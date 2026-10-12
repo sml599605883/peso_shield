@@ -74,6 +74,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   Future<void> _submitAutomatically() async {
+    // Dismiss the keyboard as soon as the code completes so it does not linger
+    // on screen while the auto-login request is in flight.
+    _codeFocusNode.unfocus();
     final loginState = ref.read(loginStateProvider);
     final shouldResetOnFailure = loginState.agreementAccepted;
     final success = await _submit(showAgreementError: false);

@@ -635,7 +635,13 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
     
     final result = await Navigator.of(context).push<AccountListResult>(
       MaterialPageRoute(
-        builder: (_) => AccountListPage(groups: accounts.groups),
+        builder: (_) => AccountListPage(
+          groups: accounts.groups,
+          // 提交时保持账户列表页可见，成功后再替换为新的 WebView，
+          // 避免先短暂露出旧的订单详情页再跳转。
+          onSubmit: (pageContext, bindId) =>
+              _submitAccountChange(orderNo: orderNo, bindId: bindId),
+        ),
       ),
     );
     
@@ -644,12 +650,6 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
     if (result is AccountListAddPaymentMethod) {
       // 用户选择添加新支付方式
       await _navigateToBindCard(productId: productId, orderNo: orderNo);
-      return;
-    }
-    
-    if (result is AccountListSelection) {
-      // 用户选择了账户，账户列表页面已经pop了，现在提交并替换WebView
-      await _submitAccountChange(orderNo: orderNo, bindId: result.bindId);
     }
   }
 
@@ -703,19 +703,24 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
       );
       
       if (!response.isSuccess || response.data.trim().isEmpty) {
-        throw StateError(response.message);
+        throw StateError(
+          response.message.isNotEmpty
+              ? response.message
+              : 'Unable to change account, please try again',
+        );
       }
       
       cancelFunc();
       
       if (!mounted) return;
       
-      // 替换当前WebView为新的WebView
+      // 账户列表页仍在栈顶，这里将其替换为新的 WebView。
       await _replaceCurrentWebView(response.data.trim());
     } catch (e) {
       cancelFunc();
-      ToastHelper.showError(e.toString());
-      rethrow;
+      ToastHelper.showError(
+        e is StateError ? e.message : 'Unable to change account, please try again',
+      );
     }
   }
 
@@ -727,14 +732,9 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
     }
     
     if (!mounted) return;
-    final context = this.context;
-    
-    // 使用pushReplacement替换当前WebView
-    await Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => WebViewPage(initialUrl: url),
-      ),
-    );
+    // 清空当前业务流程页面（账户列表/旧订单详情 WebView），直接以新的
+    // WebView 作为终点，避免退出时回退到旧的订单详情页。
+    await AppNavigator.toWebViewResettingFlow(url: url);
   }
 
   @override

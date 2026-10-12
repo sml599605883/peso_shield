@@ -17,15 +17,14 @@ typedef RecreditLogger = void Function(String message);
 
 class RecreditPollingCoordinator {
   RecreditPollingCoordinator({
-    required WidgetRef ref,
+    required Ref ref,
     RecreditRequest? request,
     RecreditRouteProvider? currentRoute,
     RecreditHomeRefresher? homeRefresher,
     RecreditAdmissionRunner? admissionRunner,
     RecreditLogger? logger,
     this.interval = const Duration(seconds: 10),
-  })  : _ref = ref,
-        _request = request ?? (() => _defaultRequest(ref)),
+  })  : _request = request ?? (() => _defaultRequest(ref)),
         _currentRoute = currentRoute ?? _defaultCurrentRoute,
         _homeRefresher = homeRefresher ?? (() => _defaultHomeRefresher(ref)),
         _admissionRunner =
@@ -33,7 +32,6 @@ class RecreditPollingCoordinator {
                 ((productId) => _defaultAdmissionRunner(ref, productId)),
         _logger = logger ?? _defaultLogger;
 
-  final WidgetRef _ref;
   final RecreditRequest _request;
   final RecreditRouteProvider _currentRoute;
   final RecreditHomeRefresher _homeRefresher;
@@ -86,9 +84,9 @@ class RecreditPollingCoordinator {
     if (!_isActive(generation)) {
       return;
     }
-    // Check if recredit is complete (tucking == 1)
-    final tucking = response.data?['tucking'];
-    if (tucking == 1 || tucking == '1') {
+    // 重新授信完成标记：服务端在 mugg.recklessly 返回 1 表示授信成功。
+    final recklessly = response.data['recklessly'];
+    if (recklessly == 1 || recklessly == '1') {
       await _complete(generation);
       return;
     }
@@ -134,7 +132,7 @@ class RecreditPollingCoordinator {
     return _isRunning && generation == _generation;
   }
 
-  static Future<ApiResponse<Map<String, dynamic>>> _defaultRequest(WidgetRef ref) async {
+  static Future<ApiResponse<Map<String, dynamic>>> _defaultRequest(Ref ref) async {
     final apiService = await ref.read(apiServiceProvider.future);
     return apiService.product.reCredit();
   }
@@ -143,12 +141,12 @@ class RecreditPollingCoordinator {
     return AppNavigator.currentRoute;
   }
 
-  static Future<void> _defaultHomeRefresher(WidgetRef ref) async {
+  static Future<void> _defaultHomeRefresher(Ref ref) async {
     ref.invalidate(homeDataProvider);
   }
 
   static Future<void> _defaultAdmissionRunner(
-    WidgetRef ref,
+    Ref ref,
     String productId,
   ) async {
     final context = AppNavigator.navigatorKey.currentContext;
@@ -170,3 +168,11 @@ class RecreditPollingCoordinator {
     // Log recredit events if needed
   }
 }
+
+/// 重新授信轮询协调器（常驻单例）。
+///
+/// 与 dali_cash 一致：协调器不随重新授信页面销毁，用户返回首页后仍会继续轮询，
+/// 完成时若已回到首页/根页则刷新首页数据，仍在重新授信页则自动触发准入流程。
+final recreditPollingCoordinatorProvider = Provider<RecreditPollingCoordinator>(
+  (ref) => RecreditPollingCoordinator(ref: ref),
+);

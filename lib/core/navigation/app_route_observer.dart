@@ -8,28 +8,49 @@ class AppRouteObserver extends RouteObserver<PageRoute<dynamic>> {
     debugPrint('[AppRouteObserver] Route observer initialized');
   }
 
+  String _currentRouteName = '';
+
+  /// 栈顶路由名称；导航栈不可用时返回空字符串。
+  String get currentRouteName => _currentRouteName;
+
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
     super.didPush(route, previousRoute);
+    _recordRoute(route.settings.name);
     _logRouteChange('PUSH', route, previousRoute);
   }
 
   @override
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
     super.didPop(route, previousRoute);
+    if (previousRoute != null) {
+      _recordRoute(previousRoute.settings.name);
+    }
     _logRouteChange('POP', route, previousRoute);
   }
 
   @override
   void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
     super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
+    if (newRoute != null) {
+      _recordRoute(newRoute.settings.name);
+    }
     _logRouteChange('REPLACE', newRoute, oldRoute);
   }
 
   @override
   void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
     super.didRemove(route, previousRoute);
+    if (previousRoute != null) {
+      _recordRoute(previousRoute.settings.name);
+    }
     _logRouteChange('REMOVE', route, previousRoute);
+  }
+
+  void _recordRoute(String? name) {
+    if (name != null && name.isNotEmpty) {
+      _currentRouteName = name;
+    }
   }
 
   void _logRouteChange(

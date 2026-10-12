@@ -31,7 +31,6 @@ class _RecreditPageState extends ConsumerState<RecreditPage> {
 
   Timer? _progressTimer;
   int _progress = 0;
-  RecreditPollingCoordinator? _coordinator;
   bool _hasStartedRecredit = false;
 
   @override
@@ -60,8 +59,9 @@ class _RecreditPageState extends ConsumerState<RecreditPage> {
       callback(productId, ref);
       return;
     }
-    _coordinator = RecreditPollingCoordinator(ref: ref);
-    _coordinator!.start(productId);
+    // 常驻协调器：不随本页 dispose 停止，用户返回首页后仍继续轮询
+    // （与 dali_cash 一致）。
+    ref.read(recreditPollingCoordinatorProvider).start(productId);
   }
 
   String _extractProductId(Object? arguments) {
@@ -105,7 +105,6 @@ class _RecreditPageState extends ConsumerState<RecreditPage> {
   @override
   void dispose() {
     _progressTimer?.cancel();
-    _coordinator?.stop();
     super.dispose();
   }
 

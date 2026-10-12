@@ -45,7 +45,8 @@ class ProductRepository {
   Future<ApiResponse<Map<String, dynamic>>> reCredit() async {
     return _client.get(
       '/outsmelled/terpolymers',
-      params: {'marksmanship': ObfuscationHelper.randomParam()},
+      // 重新授信的混淆参数（原值 ZENITH，混淆名 dilutors），勿沿用 dali_cash 的 marksmanship。
+      params: {'dilutors': ObfuscationHelper.randomParam()},
       parse: (json) => json as Map<String, dynamic>,
     );
   }

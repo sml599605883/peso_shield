@@ -67,7 +67,7 @@ class _PersonalInformationPageState
     super.initState();
     _sceneStartTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
     // 进入认证项时即预取地址初始化数据，避免用户点击地址选择时再等待接口。
-    if (!widget.isWork) _prefetchAddressChoices();
+    _prefetchAddressChoices();
     _load();
   }
 

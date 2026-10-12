@@ -5,6 +5,7 @@ import '../../providers/credit_orders_provider.dart';
 import '../product/product_providers.dart';
 import '../ui/toast_helper.dart';
 import 'app_deep_link.dart';
+import 'app_route_observer.dart';
 import 'app_route_generator.dart';
 import 'app_routes.dart';
 
@@ -391,6 +392,10 @@ class AppNavigator {
 
   /// 获取当前路由名称
   static String get currentRoute {
+    final observed = appRouteObserver.currentRouteName;
+    if (observed.isNotEmpty) {
+      return observed;
+    }
     final context = _context;
     if (context == null) return '';
     return ModalRoute.of(context)?.settings.name ?? '';

@@ -54,6 +54,28 @@ class ProductApplicationFlow {
 
     _isProcessing = true;
     try {
+      await _runApplyProduct(
+        context: context,
+        productId: productId,
+        apiRemind: apiRemind,
+        checkLocationAccess: checkLocationAccess,
+      );
+    } finally {
+      _isProcessing = false;
+    }
+  }
+
+  /// 准入流程实际执行体（不含重复点击保护）。
+  ///
+  /// 供 [applyProduct] 及准入下发链接递归调用（参考 dali_cash：
+  /// admission 深链直接再次执行 applyProduct，因此不能复用外层保护）。
+  Future<void> _runApplyProduct({
+    required BuildContext context,
+    required String productId,
+    int apiRemind = 0,
+    bool checkLocationAccess = true,
+  }) async {
+    try {
       // 1. 检查登录状态
       if (!userSession.isLoggedIn) {
         await AppNavigator.toLogin();
@@ -106,8 +128,6 @@ class ProductApplicationFlow {
         ToastHelper.showError('Request failed, please try again');
       }
       debugPrint('Apply product error: $e');
-    } finally {
-      _isProcessing = false;
     }
   }
 
@@ -318,9 +338,20 @@ class ProductApplicationFlow {
         break;
 
       case AppDeepLinkKind.admission:
-        // ph://peso-shield/ios/Equisetum → 准入流程
-        debugPrint('Start admission flow: productId=$resolvedProductId');
-        // 递归调用准入流程（通常不会到这里）
+        // ph://peso-shield/ios/Equisetum?bombarder=xxx → 使用下发链接里的产品继续准入
+        // 与 dali_cash 保持一致：admission 深链直接再次执行准入流程。
+        final admissionProductId = deepLink.productId;
+        if (admissionProductId.isEmpty) {
+          debugPrint('Admission link is missing bombarder: $rawTarget');
+          break;
+        }
+        debugPrint('Start admission flow: productId=$admissionProductId');
+        final admissionRemind = int.tryParse(deepLink.apiRemind) ?? 0;
+        await _runApplyProduct(
+          context: context,
+          productId: admissionProductId,
+          apiRemind: admissionRemind,
+        );
         break;
 
       case AppDeepLinkKind.unsupported:

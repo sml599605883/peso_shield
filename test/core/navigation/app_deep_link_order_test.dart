@@ -78,4 +78,34 @@ void main() {
       expect(link.segregate, '5');
     });
   });
+
+  group('AppDeepLink admission navigation', () {
+    const parser = AppDeepLinkParser();
+
+    test('parses admission deep link with product id', () {
+      const target = 'ph://peso-shield/ios/Equisetum?bombarder=42';
+      final link = parser.parse(target);
+
+      expect(link.kind, AppDeepLinkKind.admission);
+      expect(link.productId, '42');
+    });
+
+    test('parses admission deep link without product id', () {
+      const target = 'ph://peso-shield/ios/Equisetum';
+      final link = parser.parse(target);
+
+      expect(link.kind, AppDeepLinkKind.admission);
+      expect(link.productId, isEmpty);
+    });
+
+    test('parses admission source from parliament parameter', () {
+      const target =
+          'ph://peso-shield/ios/Equisetum?bombarder=42&parliament=2';
+      final link = parser.parse(target);
+
+      expect(link.kind, AppDeepLinkKind.admission);
+      expect(link.productId, '42');
+      expect(link.apiRemind, '2');
+    });
+  });
 }

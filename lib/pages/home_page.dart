@@ -89,7 +89,7 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
       final visible = widget.isActive && (_route?.isCurrent ?? true);
       final notifier = ref.read(homeDataProvider.notifier);
       notifier.setVisible(visible);
-      if (visible) unawaited(notifier.refresh());
+      if (visible && !notifier.isRefreshing) unawaited(notifier.refresh());
     });
   }
 

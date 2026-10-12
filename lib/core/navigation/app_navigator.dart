@@ -185,10 +185,26 @@ class AppNavigator {
 
   // ==================== 具体页面跳转方法 ====================
 
+  /// 正在打开（或已打开）的登录页导航，用于避免会话失效与业务跳转同时
+  /// 触发时叠加多个登录页。
+  static Future<bool?>? _activeLoginNavigation;
+
   /// 跳转到登录页
   static Future<bool?> toLogin({
     Future<void> Function()? onLoginSuccess,
-  }) async {
+  }) {
+    final active = _activeLoginNavigation;
+    if (active != null) return active;
+    final operation = _pushLogin(onLoginSuccess);
+    _activeLoginNavigation = operation;
+    return operation.whenComplete(() {
+      if (identical(_activeLoginNavigation, operation)) {
+        _activeLoginNavigation = null;
+      }
+    });
+  }
+
+  static Future<bool?> _pushLogin(Future<void> Function()? onLoginSuccess) {
     return toNamed<bool>(
       AppRoutes.login,
       arguments: LoginPageArguments(onLoginSuccess: onLoginSuccess),

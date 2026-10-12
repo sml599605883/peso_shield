@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/navigation/app_navigator.dart';
 import '../../core/ui/toast_helper.dart';
+import '../../core/device/user_session.dart';
 import '../../data/models/certification_data.dart';
 import '../../providers/repository_provider.dart';
 import '../account_list_page.dart';
@@ -601,6 +602,29 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
     await controller.loadUrl(urlRequest: URLRequest(url: WebUri.uri(uri)));
   }
 
+  /// 登录态恢复后重新加载 H5。
+  ///
+  /// H5 页面在会话失效时会停留在自身的“登录态失效”视图；用户重新登录后
+  /// 若仅 pop 回该页面会继续用旧状态请求并再次跳转登录。这里在检测到从未
+  /// 登录变为已登录时重载页面，让 H5 用新的登录态重新初始化。
+  Future<void> _reloadAfterLogin() async {
+    final controller = _controller;
+    if (!canUseWebViewController(
+      mounted: mounted,
+      activeController: _controller,
+      controller: controller,
+    )) {
+      return;
+    }
+    if (mounted) {
+      setState(() {
+        _loading = true;
+        _loadFailed = false;
+      });
+    }
+    await controller!.reload();
+  }
+
   Future<void> _navigateToAccountList({
     required String productId,
     required String orderNo,
@@ -715,6 +739,12 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(userSessionProvider, (previous, next) {
+      final wasLoggedIn = previous?.isLoggedIn ?? false;
+      if (!wasLoggedIn && next.isLoggedIn) {
+        unawaited(_reloadAfterLogin());
+      }
+    });
     final uri = _initialUri;
     return PopScope(
       canPop: false,

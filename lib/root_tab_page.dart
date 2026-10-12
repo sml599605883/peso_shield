@@ -96,6 +96,9 @@ class _RootTabPageState extends ConsumerState<RootTabPage> {
     _visitedTabs.add(0);
 
     try {
+      // 会话已失效，先移除栈上残留的 H5/认证等页面，避免登录成功后
+      // 又回退到旧的“登录态失效”页面并再次触发登录。
+      AppNavigator.popToRoot();
       await AppNavigator.toLogin();
     } finally {
       _openingLogin = false;

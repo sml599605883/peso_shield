@@ -30,6 +30,7 @@ class HomeDataNotifier extends AsyncNotifier<HomeData?>
   final VoidCallback Function() showLoading;
   final void Function(String) showError;
   int _requestId = 0;
+  bool _refreshing = false;
   bool _visible = false;
   bool _inactive = false;
   bool _background = false;
@@ -66,6 +67,7 @@ class HomeDataNotifier extends AsyncNotifier<HomeData?>
   Future<void> refresh() async {
     final requestId = ++_requestId;
     final previous = state;
+    _refreshing = true;
     _closeLoading?.call();
     final closeLoading = showLoading();
     _closeLoading = closeLoading;
@@ -87,6 +89,7 @@ class HomeDataNotifier extends AsyncNotifier<HomeData?>
       closeLoading();
       if (requestId == _requestId) _closeLoading = null;
       homeFinished.complete();
+      _refreshing = false;
     }
     if (failure != null && ref.mounted && requestId == _requestId) {
       showError(switch (failure) {
@@ -117,6 +120,10 @@ class HomeDataNotifier extends AsyncNotifier<HomeData?>
   }
 
   void setVisible(bool visible) => _visible = visible;
+
+  /// 是否有首页刷新正在进行。用于避免路由/前后台事件在短时间内重复触发刷新，
+  /// 导致首页与弹窗接口被同时调用两次。
+  bool get isRefreshing => _refreshing;
   void beginLocationPermissionRequest() => _locationRequesting = true;
   void endLocationPermissionRequest() => _locationRequesting = false;
 

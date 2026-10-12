@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/ui/toast_helper.dart';
+import '../../data/models/retention_popup_data.dart';
 import '../../providers/repository_provider.dart';
 import 'retention_popup_dialog.dart';
 
@@ -20,24 +22,26 @@ mixin RetentionPopupGuard<T extends ConsumerStatefulWidget>
   Future<bool> handleRetentionExit() async {
     if (_loadingRetentionPopup) return false;
     _loadingRetentionPopup = true;
+    // 挽留弹窗接口返回前先展示 loading，避免点击返回后页面看起来无响应。
+    final closeLoading = ToastHelper.showLoading();
+    RetentionPopupData? popupData;
     try {
       final repository = await ref.read(certificationRepositoryProvider.future);
       final response = await repository.getRetentionPopup(
         productId: retentionProductId,
         popupType: retentionPopupType,
       );
-      if (response.isSuccess && mounted) {
-        final data = response.data;
-        if (data.shouldShow) {
-          final shouldStay = await RetentionPopupDialog.show(context, data);
-          return !shouldStay;
-        }
+      if (response.isSuccess) {
+        popupData = response.data;
       }
     } catch (_) {
       // 请求失败不应阻塞返回流程。
     } finally {
       _loadingRetentionPopup = false;
+      closeLoading();
     }
-    return true;
+    if (!mounted || popupData == null || !popupData.shouldShow) return true;
+    final shouldStay = await RetentionPopupDialog.show(context, popupData);
+    return !shouldStay;
   }
 }

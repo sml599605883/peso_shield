@@ -146,6 +146,13 @@ String? webViewCallbackScript(
   return 'window.${WebViewContract.handler}.handleMessage($payload);';
 }
 
+/// 打开 H5 桥接下发的 http(s) 页面（网页 → 网页跳转）。
+///
+/// 对齐 dali_cash / kaibigan_loan：H5 跳转到新的 H5 页面时要关闭来源 H5 页面，
+/// 否则用户退出新页面（如确认用款页）时会再次回到旧 H5（推荐列表页/订单详情页）。
+Future<void> openH5WebView(String url) =>
+    AppNavigator.toWebView(url: url, removeWebViewPages: true);
+
 class WebViewBridgeGate {
   WebViewBridgeGate({required this.addHandler, required this.removeHandler});
 
@@ -257,7 +264,7 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
             );
           },
       openWebView: (url) async {
-        await AppNavigator.toWebView(url: url);
+        await openH5WebView(url);
       },
       navigateInternal: (rawTarget) async {
         await AppNavigator.navigateRawTarget(

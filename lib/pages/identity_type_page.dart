@@ -14,7 +14,7 @@ import '../theme/app_assets.dart';
 import '../theme/app_colors.dart';
 import '../theme/layout_adapter.dart';
 import '../widgets/app_back_button.dart';
-import 'widgets/retention_popup_dialog.dart';
+import 'widgets/retention_popup_guard.dart';
 
 /// Static identity document selection shown before document capture.
 class IdentityTypePage extends ConsumerStatefulWidget {
@@ -26,48 +26,23 @@ class IdentityTypePage extends ConsumerStatefulWidget {
   ConsumerState<IdentityTypePage> createState() => _IdentityTypePageState();
 }
 
-class _IdentityTypePageState extends ConsumerState<IdentityTypePage> {
+class _IdentityTypePageState extends ConsumerState<IdentityTypePage>
+    with RetentionPopupGuard<IdentityTypePage> {
   bool _showOtherOptions = false;
   IdentityTypeList? _identityTypeList;
   late final int _sceneStartTime;
-  bool _isLoadingRetention = false;
+
+  @override
+  String get retentionProductId => widget.productId;
+
+  @override
+  String get retentionPopupType => '0';
 
   @override
   void initState() {
     super.initState();
     _sceneStartTime = PesoReportService.nowSeconds();
     _loadIdentityTypes();
-  }
-
-  Future<bool> _handleWillPop() async {
-    // 如果正在加载挽留弹窗，阻止返回
-    if (_isLoadingRetention) return false;
-
-    // 每次点击返回都重新请求挽留弹窗配置，用户点“继续”后再次返回仍会请求
-    setState(() => _isLoadingRetention = true);
-    try {
-      final repository = await ref.read(certificationRepositoryProvider.future);
-      final response = await repository.getRetentionPopup(
-        productId: widget.productId,
-        popupType: '0', // 0=身份认证页面
-      );
-
-      if (response.isSuccess && mounted) {
-        final data = response.data;
-        if (data.shouldShow) {
-          final shouldStay = await RetentionPopupDialog.show(context, data);
-          return !shouldStay; // true=离开, false=留下
-        }
-      }
-    } catch (_) {
-      // 请求失败，允许返回
-    } finally {
-      if (mounted) {
-        setState(() => _isLoadingRetention = false);
-      }
-    }
-
-    return true;
   }
 
   Future<void> _loadIdentityTypes() async {
@@ -96,7 +71,7 @@ class _IdentityTypePageState extends ConsumerState<IdentityTypePage> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-        final shouldPop = await _handleWillPop();
+        final shouldPop = await handleRetentionExit();
         if (shouldPop && context.mounted) {
           Navigator.of(context).pop();
         }

@@ -24,22 +24,26 @@ class LoanTerms extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final layout = AppLayout.of(context);
+    final hasOptions = rows.isNotEmpty;
     return Container(
       height: layout.px(69),
-      padding: layout.edgeInsets(left: 17, top: 13, right: 17, bottom: 13),
+      padding: hasOptions
+          ? layout.edgeInsets(left: 17, top: 10, right: 17, bottom: 9)
+          : layout.edgeInsets(left: 17, top: 13, right: 17, bottom: 13),
       decoration: BoxDecoration(
         color: AppColors.paleBlue,
         borderRadius: layout.radius(15),
       ),
-      child: rows.isNotEmpty
+      child: hasOptions
           ? Row(
               children: [
                 for (var index = 0; index < rows.length; index++) ...[
                   if (index > 0) SizedBox(width: layout.px(12)),
                   Expanded(
-                    child: LoanTerm(
+                    child: LoanTermOption(
                       label: rows[index].label,
                       value: rows[index].value,
+                      unit: rows[index].unit,
                     ),
                   ),
                 ],

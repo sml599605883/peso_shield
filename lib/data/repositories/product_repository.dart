@@ -44,10 +44,8 @@ class ProductRepository {
 
   Future<ApiResponse<Map<String, dynamic>>> reCredit() async {
     return _client.get(
-      '/outsmelled/recredit',
-      params: {
-        'marksmanship': ObfuscationHelper.randomParam(),
-      },
+      '/outsmelled/terpolymers',
+      params: {'marksmanship': ObfuscationHelper.randomParam()},
       parse: (json) => json as Map<String, dynamic>,
     );
   }

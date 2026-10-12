@@ -43,8 +43,11 @@ class RetentionPopupData {
   /// 取消按钮文案（离开页面）
   final String cancelText;
 
-  /// 是否应该展示弹窗（有标题或正文时展示）
-  bool get shouldShow => title.isNotEmpty || message.isNotEmpty;
+  /// 是否应该展示弹窗。
+  ///
+  /// 弹窗文案由服务端下发的整幅插画承载，部分类型（如工作信息、人脸）
+  /// 的标题/正文为空但插画有效，因此以插画图片作为展示依据。
+  bool get shouldShow => imageUrl.isNotEmpty;
 
   static int _parseInt(Object? value) => int.tryParse('$value') ?? 0;
   static String _text(Object? value) => value?.toString().trim() ?? '';

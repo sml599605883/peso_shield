@@ -254,7 +254,7 @@ class _AccountDialogState extends State<_AccountDialog> {
                   Padding(
                     padding: layout.edgeInsets(left: 12),
                     child: Text(
-                      isDelete ? 'We\u2019d really miss you' : 'Before You Go',
+                      isDelete ? 'Permanently Delete Your Account?' : 'Log out?',
                       style: TextStyle(
                         color: AppColors.black,
                         fontSize: layout.px(20),
@@ -277,8 +277,8 @@ class _AccountDialogState extends State<_AccountDialog> {
                     alignment: Alignment.center,
                     child: Text(
                       isDelete
-                          ? 'Deleting your account removes all your data, history, and settings forever. This action cannot be undone.'
-                          : 'Keep your account connected for a smoother experience and quick access to your application details.',
+                          ? 'Deleting your account will forfeit your high credit limit of up to \u20b150,000. Re-applying later will start from zero!'
+                          : 'You\u2019ll need to verify again next time. Stay for quick access.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: const Color.fromRGBO(51, 51, 51, 1),
@@ -295,7 +295,7 @@ class _AccountDialogState extends State<_AccountDialog> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         _DialogAction(
-                          label: isDelete ? 'Delete' : 'Logout',
+                          label: isDelete ? 'Delete' : 'Log Out',
                           layout: layout,
                           enabled: !_submitting,
                           onPressed: () => _handleAction(
@@ -306,7 +306,7 @@ class _AccountDialogState extends State<_AccountDialog> {
                         ),
                         SizedBox(width: layout.px(10)),
                         _DialogAction(
-                          label: isDelete ? 'Stay Here' : 'Stay',
+                          label: 'Stay Quick',
                           layout: layout,
                           primary: true,
                           enabled: !_submitting,

@@ -801,6 +801,9 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
       },
       child: Scaffold(
         backgroundColor: AppColors.white,
+        // 交给 WKWebView 原生处理键盘避让：Flutter 侧再压缩一次会与
+        // WebKit 自身的输入框滚动互相打断，表现为抖动且键盘最终遮住输入框。
+        resizeToAvoidBottomInset: false,
         appBar: AppBar(
           backgroundColor: AppColors.white,
           foregroundColor: AppColors.black,

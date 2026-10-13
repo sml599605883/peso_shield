@@ -121,6 +121,11 @@ class HomeDataNotifier extends AsyncNotifier<HomeData?>
 
   void setVisible(bool visible) => _visible = visible;
 
+  /// 首页 Tab 是否正在展示：根 Tab 中选中首页，且首页路由位于栈顶。
+  /// 重新授信完成时据此判断是否需要刷新首页，不能只看当前路由名
+  /// （根路由下停留在其他 Tab 时路由名同样是根路由）。
+  bool get isVisible => _visible;
+
   /// 是否有首页刷新正在进行。用于避免路由/前后台事件在短时间内重复触发刷新，
   /// 导致首页与弹窗接口被同时调用两次。
   bool get isRefreshing => _refreshing;

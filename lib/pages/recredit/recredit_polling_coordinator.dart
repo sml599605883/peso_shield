@@ -11,6 +11,7 @@ import '../../providers/home_provider.dart';
 
 typedef RecreditRequest = Future<ApiResponse<Map<String, dynamic>>> Function();
 typedef RecreditRouteProvider = String Function();
+typedef RecreditHomeVisibility = bool Function();
 typedef RecreditHomeRefresher = Future<void> Function();
 typedef RecreditAdmissionRunner = Future<void> Function(String productId);
 typedef RecreditLogger = void Function(String message);
@@ -20,12 +21,14 @@ class RecreditPollingCoordinator {
     required Ref ref,
     RecreditRequest? request,
     RecreditRouteProvider? currentRoute,
+    RecreditHomeVisibility? isHomeVisible,
     RecreditHomeRefresher? homeRefresher,
     RecreditAdmissionRunner? admissionRunner,
     RecreditLogger? logger,
     this.interval = const Duration(seconds: 10),
   }) : _request = request ?? (() => _defaultRequest(ref)),
        _currentRoute = currentRoute ?? _defaultCurrentRoute,
+       _isHomeVisible = isHomeVisible ?? (() => _defaultHomeVisibility(ref)),
        _homeRefresher = homeRefresher ?? (() => _defaultHomeRefresher(ref)),
        _admissionRunner =
            admissionRunner ??
@@ -34,6 +37,7 @@ class RecreditPollingCoordinator {
 
   final RecreditRequest _request;
   final RecreditRouteProvider _currentRoute;
+  final RecreditHomeVisibility _isHomeVisible;
   final RecreditHomeRefresher _homeRefresher;
   final RecreditAdmissionRunner _admissionRunner;
   final RecreditLogger _logger;
@@ -99,9 +103,11 @@ class RecreditPollingCoordinator {
     }
     late final String route;
     late final String productId;
+    late final bool homeVisible;
     try {
       route = _currentRoute();
       productId = _productId;
+      homeVisible = _isHomeVisible();
     } catch (error) {
       stop();
       _logger('recredit completion failed: $error');
@@ -109,10 +115,12 @@ class RecreditPollingCoordinator {
     }
     stop();
     try {
-      if (route == AppRoutes.home || route == AppRoutes.root) {
-        await _homeRefresher();
-      } else if (route == AppRoutes.recredit) {
+      if (route == AppRoutes.recredit) {
         await _admissionRunner(productId);
+      } else if (homeVisible) {
+        // 只有首页 Tab（TabBar 第一项）真正展示时才刷新首页。根路由下停留在
+        // 其他 Tab 时当前路由同样是根路由，不能据此当作首页。
+        await _homeRefresher();
       }
     } catch (error) {
       _logger('recredit completion failed: $error');
@@ -141,6 +149,10 @@ class RecreditPollingCoordinator {
 
   static String _defaultCurrentRoute() {
     return AppNavigator.currentRoute;
+  }
+
+  static bool _defaultHomeVisibility(Ref ref) {
+    return ref.read(homeDataProvider.notifier).isVisible;
   }
 
   static Future<void> _defaultHomeRefresher(Ref ref) async {
@@ -173,7 +185,8 @@ class RecreditPollingCoordinator {
 /// 重新授信轮询协调器（常驻单例）。
 ///
 /// 与 dali_cash 一致：协调器不随重新授信页面销毁，用户返回首页后仍会继续轮询，
-/// 完成时若已回到首页/根页则刷新首页数据，仍在重新授信页则自动触发准入流程。
+/// 完成时若首页 Tab 正在展示则刷新首页数据，仍在重新授信页则自动触发准入流程；
+/// 停留在其他 Tab（如「我的」）时不做处理，回到首页 Tab 时由首页自行刷新。
 final recreditPollingCoordinatorProvider = Provider<RecreditPollingCoordinator>(
   (ref) => RecreditPollingCoordinator(ref: ref),
 );

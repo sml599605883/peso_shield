@@ -260,12 +260,12 @@ extension ClientBridgeRegistrar: FlutterStreamHandler, CLLocationManagerDelegate
   private func fullAddress(from placemark: CLPlacemark?) -> String {
     guard let placemark else { return "" }
     var parts: [String] = []
-    if let subThoroughfare = placemark.subThoroughfare { parts.append(subThoroughfare) }
-    if let thoroughfare = placemark.thoroughfare { parts.append(thoroughfare) }
-    if let locality = placemark.locality { parts.append(locality) }
-    if let administrativeArea = placemark.administrativeArea { parts.append(administrativeArea) }
-    if let postalCode = placemark.postalCode { parts.append(postalCode) }
     if let country = placemark.country { parts.append(country) }
+    if let administrativeArea = placemark.administrativeArea { parts.append(administrativeArea) }
+    if let locality = placemark.locality { parts.append(locality) }
+    if let thoroughfare = placemark.thoroughfare { parts.append(thoroughfare) }
+    if let subThoroughfare = placemark.subThoroughfare { parts.append(subThoroughfare) }
+    if let postalCode = placemark.postalCode { parts.append(postalCode) }
     return parts.joined(separator: ", ")
   }
   

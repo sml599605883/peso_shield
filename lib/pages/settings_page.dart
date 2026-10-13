@@ -455,8 +455,10 @@ Future<bool> _handleAccountAction(
       authRepository: authRepository,
     ).execute(action);
 
-    // 接口返回业务失败时不能清登录态：保留会话并提示，用户可重试
+    // 接口返回业务失败时不能清登录态：只提示错误并关闭弹窗，停留在当前页
     if (!response.isSuccess) {
+      if (!context.mounted) return false;
+      Navigator.of(context).pop();
       ToastHelper.showError(
         response.message.isEmpty
             ? 'Unexpected error occurred'

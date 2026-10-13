@@ -87,7 +87,7 @@ void main() {
     return container;
   }
 
-  testWidgets('注销接口返回失败时不清登录态、不跳首页，并提示错误', (tester) async {
+  testWidgets('注销接口返回失败时关闭弹窗、不清登录态、不跳首页，并提示错误', (tester) async {
     _ignoreRenderOverflow();
     final client = _StubClient(code: 10001, message: 'Deletion failed');
     final container = await pumpSettings(tester, client);
@@ -100,18 +100,18 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
 
     expect(client.paths, ['/outsmelled/closets']);
-    // 登录态必须保留，弹窗保持打开以便重试，并给出失败提示。
+    // 登录态必须保留，仅关闭弹窗并给出失败提示。
     expect(container.read(userSessionProvider).isLoggedIn, isTrue);
     expect(container.read(userSessionProvider).accessToken, 'token-1');
+    expect(find.text('Permanently Delete Your Account?'), findsNothing);
     expect(find.byType(SettingsPage), findsOneWidget);
-    expect(find.text('Permanently Delete Your Account?'), findsOneWidget);
     expect(find.text('Deletion failed'), findsOneWidget);
 
     ToastHelper.cancel();
     await tester.pump(const Duration(seconds: 3));
   });
 
-  testWidgets('退出接口返回失败时同样保留登录态并提示错误', (tester) async {
+  testWidgets('退出接口返回失败时同样关闭弹窗、保留登录态并提示错误', (tester) async {
     _ignoreRenderOverflow();
     final client = _StubClient(code: 10002, message: 'Logout failed');
     final container = await pumpSettings(tester, client);
@@ -125,7 +125,8 @@ void main() {
 
     expect(client.paths, ['/outsmelled/coffees']);
     expect(container.read(userSessionProvider).isLoggedIn, isTrue);
-    expect(find.text('Log out?'), findsOneWidget);
+    expect(find.text('Log out?'), findsNothing);
+    expect(find.byType(SettingsPage), findsOneWidget);
     expect(find.text('Logout failed'), findsOneWidget);
 
     ToastHelper.cancel();

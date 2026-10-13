@@ -5,11 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/device/user_session.dart';
 import 'core/navigation/app_navigator.dart';
+import 'core/push/push_route_coordinator.dart';
 import 'pages/credit_page.dart';
 import 'pages/home/home_popup.dart';
 import 'pages/home_page.dart';
 import 'pages/mine_page.dart';
 import 'providers/network_provider.dart';
+import 'providers/push_provider.dart';
 import 'providers/repository_provider.dart';
 import 'widgets/tab_bar/home_tab_bar.dart';
 
@@ -30,6 +32,7 @@ class _RootTabPageState extends ConsumerState<RootTabPage> {
   bool _openingLogin = false;
 
   StreamSubscription<void>? _sessionExpirySubscription;
+  PushRouteCoordinator? _pushRouteCoordinator;
 
   /// 首页可游客浏览，其余 Tab 需要登录
   static bool _requiresLogin(int index) => index != 0;
@@ -41,12 +44,28 @@ class _RootTabPageState extends ConsumerState<RootTabPage> {
         .read(sessionExpiryCoordinatorProvider)
         .events
         .listen((_) => _openLoginAfterSessionExpiry());
+
+    _pushRouteCoordinator = ref.read(pushRouteCoordinatorProvider);
+    _pushRouteCoordinator!.start();
+    _pushRouteCoordinator!.attach(_openPushRoute);
   }
 
   @override
   void dispose() {
     _sessionExpirySubscription?.cancel();
+    _pushRouteCoordinator?.attach(null);
     super.dispose();
+  }
+
+  /// 通知点击跳转：交给统一的 DeepLink 分发，保持与 H5 桥接一致的行为。
+  Future<void> _openPushRoute(String route) async {
+    final context = AppNavigator.navigatorKey.currentContext;
+    if (context == null || !context.mounted) return;
+    await AppNavigator.navigateRawTarget(
+      context: context,
+      ref: ref,
+      target: route,
+    );
   }
 
   Future<void> _selectTab(int index) async {

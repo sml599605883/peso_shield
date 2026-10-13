@@ -451,9 +451,19 @@ Future<bool> _handleAccountAction(
   try {
     final authRepository = await ref.read(authRepositoryProvider.future);
 
-    await AccountActionCoordinator(
+    final response = await AccountActionCoordinator(
       authRepository: authRepository,
     ).execute(action);
+
+    // 接口返回业务失败时不能清登录态：保留会话并提示，用户可重试
+    if (!response.isSuccess) {
+      ToastHelper.showError(
+        response.message.isEmpty
+            ? 'Unexpected error occurred'
+            : response.message,
+      );
+      return false;
+    }
 
     // 清除会话，手机号保留供下次登录预填
     await ref.read(userSessionProvider.notifier).clearSession();

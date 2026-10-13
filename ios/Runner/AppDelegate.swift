@@ -1,6 +1,7 @@
 import Flutter
 import UIKit
 import CFNetwork
+import UserNotifications
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
@@ -9,7 +10,15 @@ import CFNetwork
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     ClientBridgeRegistrar.shared.activateTrustDecision()
-    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    UNUserNotificationCenter.current().delegate = self
+    let launched = super.application(
+      application,
+      didFinishLaunchingWithOptions: launchOptions
+    )
+    if let payload = launchOptions?[.remoteNotification] as? [AnyHashable: Any] {
+      ClientBridgeRegistrar.shared.acceptNotificationPayload(payload)
+    }
+    return launched
   }
   
   override func application(
@@ -34,6 +43,31 @@ import CFNetwork
     )
   }
   
+  /// 前台收到通知：带跳转地址时不展示系统横幅，直接交给 App 内路由，
+  /// 其余通知保持系统默认展示。
+  override func userNotificationCenter(
+    _ center: UNUserNotificationCenter,
+    willPresent notification: UNNotification,
+    withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+  ) {
+    let routed = ClientBridgeRegistrar.shared.acceptNotificationPayload(
+      notification.request.content.userInfo
+    )
+    completionHandler(routed ? [] : [.banner, .badge, .sound])
+  }
+
+  /// 用户点击通知（App 已运行或在后台）。
+  override func userNotificationCenter(
+    _ center: UNUserNotificationCenter,
+    didReceive response: UNNotificationResponse,
+    withCompletionHandler completionHandler: @escaping () -> Void
+  ) {
+    ClientBridgeRegistrar.shared.acceptNotificationPayload(
+      response.notification.request.content.userInfo
+    )
+    completionHandler()
+  }
+
   override func applicationDidBecomeActive(_ application: UIApplication) {
     super.applicationDidBecomeActive(application)
     ClientBridgeRegistrar.shared.publishTrackingStatus()

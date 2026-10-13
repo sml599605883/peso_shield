@@ -18,6 +18,21 @@ extension ClientBridgeRegistrar: FlutterStreamHandler, CLLocationManagerDelegate
     set { objc_setAssociatedObject(self, &AssociatedKeys.pushToken, newValue, .OBJC_ASSOCIATION_COPY) }
   }
   
+  /// Flutter 尚未开始监听事件通道时到达的通知路由，按到达顺序缓存。
+  var pendingNotificationRoutes: [String] {
+    get {
+      (objc_getAssociatedObject(self, &AssociatedKeys.pendingNotificationRoutes) as? [String]) ?? []
+    }
+    set {
+      objc_setAssociatedObject(
+        self,
+        &AssociatedKeys.pendingNotificationRoutes,
+        newValue,
+        .OBJC_ASSOCIATION_RETAIN
+      )
+    }
+  }
+
   private var deviceSnapshotCollector: PesoDeviceSnapshotCollector {
     get {
       if let collector = objc_getAssociatedObject(self, &AssociatedKeys.collector) as? PesoDeviceSnapshotCollector {
@@ -52,6 +67,7 @@ extension ClientBridgeRegistrar: FlutterStreamHandler, CLLocationManagerDelegate
   private struct AssociatedKeys {
     static var eventSink: UInt8 = 0
     static var pushToken: UInt8 = 0
+    static var pendingNotificationRoutes: UInt8 = 0
     static var collector: UInt8 = 0
     static var locationManager: UInt8 = 0
     static var locationResult: UInt8 = 0
@@ -105,6 +121,10 @@ extension ClientBridgeRegistrar: FlutterStreamHandler, CLLocationManagerDelegate
     if !pushToken.isEmpty {
       events(["type": "push_token", "token": pushToken])
     }
+    while !pendingNotificationRoutes.isEmpty {
+      let route = pendingNotificationRoutes.removeFirst()
+      events(["type": "push_route", "url": route])
+    }
     return nil
   }
   
@@ -119,6 +139,52 @@ extension ClientBridgeRegistrar: FlutterStreamHandler, CLLocationManagerDelegate
     eventSink?(["type": "push_token", "token": token])
   }
   
+  // MARK: - Push route
+
+  /// 解析通知点击/冷启动 payload 里的跳转地址。
+  ///
+  /// 兼容三种下发形式：顶层 `url`、`params.url` 字典、`params` 为 JSON 字符串。
+  /// 命中地址时返回 true；此时前台通知不再展示系统横幅，避免和 App 内跳转重复。
+  @discardableResult
+  func acceptNotificationPayload(_ userInfo: [AnyHashable: Any]) -> Bool {
+    guard let route = notificationRoute(from: userInfo) else {
+      return false
+    }
+    guard let eventSink else {
+      // Flutter 侧还没开始监听，先缓存，等 onListen 时补发。
+      pendingNotificationRoutes.append(route)
+      return true
+    }
+    eventSink(["type": "push_route", "url": route])
+    return true
+  }
+
+  private func notificationRoute(from userInfo: [AnyHashable: Any]) -> String? {
+    if let route = normalizedNotificationRoute(userInfo["url"]) {
+      return route
+    }
+    if let params = userInfo["params"] as? [AnyHashable: Any] {
+      return normalizedNotificationRoute(params["url"])
+    }
+    guard
+      let paramsText = userInfo["params"] as? String,
+      let paramsData = paramsText.data(using: .utf8),
+      let decoded = try? JSONSerialization.jsonObject(with: paramsData),
+      let params = decoded as? [String: Any]
+    else {
+      return nil
+    }
+    return normalizedNotificationRoute(params["url"])
+  }
+
+  private func normalizedNotificationRoute(_ value: Any?) -> String? {
+    guard let value = value as? String else {
+      return nil
+    }
+    let route = value.trimmingCharacters(in: .whitespacesAndNewlines)
+    return route.isEmpty ? nil : route
+  }
+
   func publishTrackingStatus() {
     eventSink?([
       "type": "tracking_status_changed",

@@ -10,6 +10,7 @@ import 'package:peso_shield/core/device/user_session.dart';
 import 'package:peso_shield/core/network/device_params.dart';
 import 'package:peso_shield/pages/network_error_page.dart';
 import 'package:peso_shield/providers/network_provider.dart';
+import 'package:peso_shield/providers/push_provider.dart';
 import 'package:peso_shield/providers/report_provider.dart';
 
 class StartupNetworkGate extends StatefulWidget {
@@ -105,6 +106,14 @@ class _StartupNetworkGateState extends State<StartupNetworkGate>
           await widget.ref.read(httpClientProvider.future);
         } catch (_) {
           // Ignore device name sync errors, continue to app
+        }
+
+        // 监听通知点击跳转。要和上报服务在同一批订阅同一事件通道，
+        // 否则原生在 onListen 时补发的 push_route 会被丢掉。
+        try {
+          widget.ref.read(pushRouteCoordinatorProvider).start();
+        } catch (_) {
+          // 通知路由初始化失败不影响应用启动
         }
 
         // 初始化数据上报服务

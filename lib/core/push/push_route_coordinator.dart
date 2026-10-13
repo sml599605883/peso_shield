@@ -1,13 +1,20 @@
 import 'dart:async';
 
-import 'package:flutter/widgets.dart';
-
 import '../client/client_bridge.dart';
 import '../json/json.dart';
 
 typedef PushRouteEvents = Stream<Json> Function();
 typedef PushRouteOpener = Future<void> Function(String route);
 typedef PushRouteDeferrer = void Function(void Function() callback);
+
+/// 默认派发方式：微任务，不依赖新帧。
+///
+/// 不能用 addPostFrameCallback：它只登记回调、不请求新帧，App 空闲（无动画、
+/// 无定时刷新）时不会有新帧，回调要等到用户操作等无关的帧才执行，表现就是
+/// “收到推送没反应、点一下通知才跳”。原生事件在构建之外到达，微任务派发即可。
+void dispatchPendingPushRoute(void Function() callback) {
+  scheduleMicrotask(callback);
+}
 
 /// 消费 iOS 通知点击下发的 `push_route` 事件，按到达顺序交给导航层。
 ///
@@ -16,7 +23,7 @@ typedef PushRouteDeferrer = void Function(void Function() callback);
 class PushRouteCoordinator {
   PushRouteCoordinator({PushRouteEvents? events, PushRouteDeferrer? defer})
     : _events = events ?? ClientBridge.shared.reportEvents,
-      _defer = defer ?? _deferUntilNextFrame;
+      _defer = defer ?? dispatchPendingPushRoute;
 
   static const String eventType = 'push_route';
   static const String _routeKey = 'url';
@@ -79,9 +86,5 @@ class PushRouteCoordinator {
     } catch (_) {
       // 单条路由失败不能影响后续通知跳转。
     }
-  }
-
-  static void _deferUntilNextFrame(void Function() callback) {
-    WidgetsBinding.instance.addPostFrameCallback((_) => callback());
   }
 }

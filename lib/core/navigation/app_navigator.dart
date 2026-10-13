@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/credit_orders_provider.dart';
+import '../../providers/network_provider.dart';
 import '../product/product_providers.dart';
 import '../ui/toast_helper.dart';
 import 'app_deep_link.dart';
@@ -142,8 +143,13 @@ class AppNavigator {
 
   /// 认证流程相关的路由集合
   ///
-  /// 当跳转到新的顶层认证页面时，会清除路由栈中所有这些页面
+  /// 当跳转到新的顶层认证页面时，会清除路由栈中所有这些页面。
+  ///
+  /// 重新授信 loading 页（[AppRoutes.recredit]）是授信流程的中间页：轮询到授信
+  /// 成功后由准入流程接管后续页面，用户从确认用款页等后续页面返回时不应再回到
+  /// 该 loading 页，因此与认证页一起清除（对齐 dali_cash）。
   static const Set<String> _certificationRoutes = {
+    AppRoutes.recredit,
     AppRoutes.identityType,
     AppRoutes.identityUpload,
     AppRoutes.identityConfirmation,
@@ -467,7 +473,10 @@ class AppNavigator {
       case AppDeepLinkKind.settings:
         await toNamed<void>(AppRoutes.settings);
       case AppDeepLinkKind.login:
-        await toLogin();
+        // H5 判定登录态失效后下发的 login 深链：清理本地会话并通知根 Tab 回到
+        // 首页，再由根 Tab 弹出登录页（对齐 dali_cash 的
+        // redirectToLoginAfterSessionExpiry），保证重新登录成功后停留在首页。
+        await ref.read(sessionExpiryCoordinatorProvider).handleLoginRequired();
       case AppDeepLinkKind.order:
         // 根据 segregate 参数跳转到对应的订单状态
         final segregate = link.segregate;

@@ -19,10 +19,21 @@ class SessionExpiryCoordinator {
   /// 处理会话过期：清除会话并广播事件
   ///
   /// 使用去重机制，确保同时多个请求失败时只处理一次
-  Future<void> handleExpiredSession() {
+  Future<void> handleExpiredSession() => _handle();
+
+  /// 处理 H5 下发的 login 深链（H5 判定登录态失效）
+  ///
+  /// 与 [handleExpiredSession] 一样清理会话并广播事件，但即使本地已无会话
+  /// 也会广播：H5 的 sessionId 可能先于本地 token 失效，此时同样需要回到
+  /// 首页 Tab 并弹出登录页。
+  Future<void> handleLoginRequired() => _handle(force: true);
+
+  Future<void> _handle({bool force = false}) {
     final active = _handling;
     if (active != null) return active;
-    if (!ref.read(userSessionProvider).isLoggedIn) return Future.value();
+    if (!force && !ref.read(userSessionProvider).isLoggedIn) {
+      return Future.value();
+    }
 
     final operation = _clearAndNotify();
     _handling = operation;

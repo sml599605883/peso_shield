@@ -41,4 +41,45 @@ void main() {
     expect(find.text('confirm'), findsOneWidget);
     expect(find.text('order-detail'), findsNothing);
   });
+
+  testWidgets('removeCertificationPages closes the recredit loading route', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorKey: AppNavigator.navigatorKey,
+        onGenerateRoute: (settings) {
+          final label = settings.name == AppRoutes.webView
+              ? (settings.arguments as WebViewPageArguments?)?.url ?? 'webview'
+              : (settings.name ?? 'home');
+          return MaterialPageRoute<void>(
+            settings: settings,
+            builder: (_) => Scaffold(body: Text(label)),
+          );
+        },
+        home: const Scaffold(body: Text('home')),
+      ),
+    );
+
+    // 确认用款页之前的授信 loading 页。
+    unawaited(AppNavigator.toRecredit(productId: 'p1'));
+    await tester.pumpAndSettle();
+    expect(find.text(AppRoutes.recredit), findsOneWidget);
+
+    // 授信成功后准入跳转确认用款页时清除重新授信 loading 页。
+    unawaited(
+      AppNavigator.toWebView(
+        url: 'confirm',
+        removeCertificationPages: true,
+        removeWebViewPages: true,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('confirm'), findsOneWidget);
+    expect(find.text(AppRoutes.recredit), findsNothing);
+    AppNavigator.pop<void>();
+    await tester.pumpAndSettle();
+    expect(find.text('home'), findsOneWidget);
+  });
 }

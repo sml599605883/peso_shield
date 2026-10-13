@@ -218,6 +218,9 @@ class ProductApplicationFlow {
         productId,
         jumpType: result.jumpType,
         removeWebViewPages: true,
+        // 准入成功即代表授信/认证流程结束：跳转确认用款页等后续页面时清除
+        // 认证页与重新授信 loading 页，避免用户退出后续页面又回到它们。
+        removeCertificationPages: true,
       );
       return;
     }
@@ -277,6 +280,7 @@ class ProductApplicationFlow {
       target,
       productId,
       removeWebViewPages: true,
+      removeCertificationPages: true,
     );
   }
 
@@ -287,6 +291,7 @@ class ProductApplicationFlow {
     String productId, {
     int jumpType = 0,
     bool removeWebViewPages = false,
+    bool removeCertificationPages = false,
   }) async {
     ToastHelper.hideLoading();
 
@@ -304,6 +309,7 @@ class ProductApplicationFlow {
         AppNavigator.toWebView(
           url: rawTarget,
           removeWebViewPages: removeWebViewPages,
+          removeCertificationPages: removeCertificationPages,
         ),
       );
       return;
@@ -317,6 +323,7 @@ class ProductApplicationFlow {
           AppNavigator.toWebView(
             url: rawTarget,
             removeWebViewPages: removeWebViewPages,
+            removeCertificationPages: removeCertificationPages,
           ),
         );
         break;

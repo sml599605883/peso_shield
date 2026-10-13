@@ -219,14 +219,12 @@ class LoanProcessStep {
 }
 
 class LoanTermRow {
-  const LoanTermRow({required this.label, required this.value, this.unit = ''});
+  const LoanTermRow({required this.label, required this.value});
   factory LoanTermRow.fromJson(Map<String, dynamic> json) => LoanTermRow(
     label: json['strove']?.toString() ?? '',
     value: json['discommoding']?.toString() ?? '',
-    unit: json['amoebaean']?.toString() ?? '',
   );
 
   final String label;
   final String value;
-  final String unit;
 }

@@ -25,6 +25,37 @@ class LoanTerms extends StatelessWidget {
   Widget build(BuildContext context) {
     final layout = AppLayout.of(context);
     final hasOptions = rows.isNotEmpty;
+    final content = hasOptions
+        ? Row(
+            children: [
+              for (var index = 0; index < rows.length; index++) ...[
+                if (index > 0) SizedBox(width: layout.px(12)),
+                Expanded(
+                  child: LoanTermOption(
+                    label: rows[index].label,
+                    value: rows[index].value,
+                  ),
+                ),
+              ],
+            ],
+          )
+        : Row(
+            children: [
+              Expanded(
+                child: LoanTerm(
+                  label: termLabel.isEmpty ? 'Loan Term' : termLabel,
+                  value: loanTerm,
+                ),
+              ),
+              SizedBox(width: layout.px(12)),
+              Expanded(
+                child: LoanTerm(
+                  label: rateLabel.isEmpty ? 'Low Interest' : rateLabel,
+                  value: interestRate,
+                ),
+              ),
+            ],
+          );
     return Container(
       height: layout.px(69),
       padding: hasOptions
@@ -34,38 +65,12 @@ class LoanTerms extends StatelessWidget {
         color: AppColors.paleBlue,
         borderRadius: layout.radius(15),
       ),
-      child: hasOptions
-          ? Row(
-              children: [
-                for (var index = 0; index < rows.length; index++) ...[
-                  if (index > 0) SizedBox(width: layout.px(12)),
-                  Expanded(
-                    child: LoanTermOption(
-                      label: rows[index].label,
-                      value: rows[index].value,
-                      unit: rows[index].unit,
-                    ),
-                  ),
-                ],
-              ],
-            )
-          : Row(
-              children: [
-                Expanded(
-                  child: LoanTerm(
-                    label: termLabel.isEmpty ? 'Loan Term' : termLabel,
-                    value: loanTerm,
-                  ),
-                ),
-                SizedBox(width: layout.px(12)),
-                Expanded(
-                  child: LoanTerm(
-                    label: rateLabel.isEmpty ? 'Low Interest' : rateLabel,
-                    value: interestRate,
-                  ),
-                ),
-              ],
-            ),
+      // The row keeps the height fixed by the design, so oversized system text
+      // scaling is clamped instead of overflowing the badge row.
+      child: MediaQuery.withClampedTextScaling(
+        maxScaleFactor: 1,
+        child: content,
+      ),
     );
   }
 }

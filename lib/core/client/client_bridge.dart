@@ -102,6 +102,9 @@ class ClientBridge {
 
   Future<String> getPushToken() => _safeInvokeString('getPushToken');
 
+  /// 原生 Keychain 中持久化的稳定设备标识，未取到（如非 iOS）时返回空串。
+  Future<String> getStableDeviceId() => _safeInvokeString('getStableDeviceId');
+
   Future<void> registerForRemoteNotifications() async {
     if (!supportsNativeBridge) return;
     try {

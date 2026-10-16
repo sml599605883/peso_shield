@@ -179,4 +179,32 @@ void main() {
       },
     );
   });
+
+  group('PluginIosMetadataSource.resolveVendorId', () {
+    test('prefers the native keychain identifier over the plugin IDFV', () {
+      expect(
+        PluginIosMetadataSource.resolveVendorId(
+          'keychain-device-id',
+          'plugin-idfv',
+        ),
+        'keychain-device-id',
+      );
+    });
+
+    test('falls back to the plugin IDFV when the native value is missing', () {
+      expect(
+        PluginIosMetadataSource.resolveVendorId('', 'plugin-idfv'),
+        'plugin-idfv',
+      );
+      expect(
+        PluginIosMetadataSource.resolveVendorId('   ', 'plugin-idfv'),
+        'plugin-idfv',
+      );
+    });
+
+    test('returns an empty identifier when both sources are empty', () {
+      expect(PluginIosMetadataSource.resolveVendorId('', ''), '');
+      expect(PluginIosMetadataSource.resolveVendorId('  ', '  '), '');
+    });
+  });
 }

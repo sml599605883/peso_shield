@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:peso_shield/core/client/client_bridge.dart';
 import 'package:peso_shield/core/device/device_metadata_store.dart';
 
 abstract interface class DeviceParamsProvider {
@@ -13,10 +14,15 @@ abstract interface class IosMetadataSource {
 }
 
 class PluginIosMetadataSource implements IosMetadataSource {
-  PluginIosMetadataSource({DeviceInfoPlugin? deviceInfo})
-      : _deviceInfo = deviceInfo ?? DeviceInfoPlugin();
+  PluginIosMetadataSource({
+    DeviceInfoPlugin? deviceInfo,
+    Future<String> Function()? stableDeviceId,
+  }) : _deviceInfo = deviceInfo ?? DeviceInfoPlugin(),
+       _stableDeviceId =
+           stableDeviceId ?? ClientBridge.shared.getStableDeviceId;
 
   final DeviceInfoPlugin _deviceInfo;
+  final Future<String> Function() _stableDeviceId;
 
   @override
   Future<IosMetadata> fetch() async {
@@ -27,6 +33,7 @@ class PluginIosMetadataSource implements IosMetadataSource {
     final futures = await Future.wait<Object>([
       _deviceInfo.iosInfo,
       PackageInfo.fromPlatform(),
+      _stableDeviceId(),
     ]);
     final iosInfo = futures[0] as IosDeviceInfo;
     final pkgInfo = futures[1] as PackageInfo;
@@ -37,9 +44,20 @@ class PluginIosMetadataSource implements IosMetadataSource {
     return IosMetadata(
       version: pkgInfo.version.trim(),
       model: model,
-      vendorId: iosInfo.identifierForVendor?.trim() ?? '',
+      // IDFV 卸载重装后会变，原生侧已把首次取值持久化到 Keychain；
+      // 公共参数与设备上报必须取同一来源，避免两个标识对不上。
+      vendorId: resolveVendorId(
+        futures[2] as String,
+        iosInfo.identifierForVendor ?? '',
+      ),
       systemVersion: iosInfo.systemVersion.trim(),
     );
+  }
+
+  /// 原生稳定标识优先，缺失时回落到插件读取到的 IDFV。
+  static String resolveVendorId(String stableDeviceId, String pluginVendorId) {
+    final stable = stableDeviceId.trim();
+    return stable.isNotEmpty ? stable : pluginVendorId.trim();
   }
 }
 

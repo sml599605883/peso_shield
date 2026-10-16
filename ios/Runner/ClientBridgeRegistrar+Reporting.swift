@@ -3,10 +3,12 @@ import AppTrackingTransparency
 import CoreLocation
 import Darwin
 import Flutter
+import Security
 import UIKit
 
 extension ClientBridgeRegistrar: FlutterStreamHandler, CLLocationManagerDelegate {
   private static let eventChannelName = "peso_shield/client_events"
+  private static let vendorIdentifierAccount = "peso_shield_device_identifier"
   
   private var eventSink: FlutterEventSink? {
     get { objc_getAssociatedObject(self, &AssociatedKeys.eventSink) as? FlutterEventSink }
@@ -93,6 +95,9 @@ extension ClientBridgeRegistrar: FlutterStreamHandler, CLLocationManagerDelegate
       return true
     case "getReportDeviceSnapshot":
       getReportDeviceSnapshot(result)
+      return true
+    case "getStableDeviceId":
+      result(stableVendorIdentifier())
       return true
     case "getPushToken":
       result(pushToken)
@@ -372,8 +377,57 @@ extension ClientBridgeRegistrar: FlutterStreamHandler, CLLocationManagerDelegate
   
   // MARK: - Device Info
   
+  /// 设备标识：优先返回 Keychain 中持久化的值。
+  ///
+  /// IDFV 在同一 vendor 的应用被全部卸载后会重新生成，因此卸载重装即会变化。
+  /// 首次取得 IDFV 后写入 Keychain（卸载不掉），即可保证重装后标识不变。
   private func stableVendorIdentifier() -> String {
-    return UIDevice.current.identifierForVendor?.uuidString ?? ""
+    if let stored = Self.storedVendorIdentifier(), !stored.isEmpty {
+      return stored
+    }
+
+    let vendorIdentifier = UIDevice.current.identifierForVendor?.uuidString ?? ""
+    guard !vendorIdentifier.isEmpty else { return "" }
+
+    Self.persistVendorIdentifier(vendorIdentifier)
+    return vendorIdentifier
+  }
+
+  private static var vendorIdentifierService: String {
+    Bundle.main.bundleIdentifier ?? "com.pesoshield.app"
+  }
+
+  private static func storedVendorIdentifier() -> String? {
+    let query: [String: Any] = [
+      kSecClass as String: kSecClassGenericPassword,
+      kSecAttrService as String: vendorIdentifierService,
+      kSecAttrAccount as String: vendorIdentifierAccount,
+      kSecReturnData as String: true,
+      kSecMatchLimit as String: kSecMatchLimitOne,
+    ]
+    var item: CFTypeRef?
+    guard SecItemCopyMatching(query as CFDictionary, &item) == errSecSuccess,
+      let data = item as? Data,
+      let value = String(data: data, encoding: .utf8)
+    else {
+      return nil
+    }
+    return value
+  }
+
+  private static func persistVendorIdentifier(_ value: String) {
+    guard let data = value.data(using: .utf8) else { return }
+    let baseQuery: [String: Any] = [
+      kSecClass as String: kSecClassGenericPassword,
+      kSecAttrService as String: vendorIdentifierService,
+      kSecAttrAccount as String: vendorIdentifierAccount,
+    ]
+    SecItemDelete(baseQuery as CFDictionary)
+
+    var query = baseQuery
+    query[kSecValueData as String] = data
+    query[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
+    SecItemAdd(query as CFDictionary, nil)
   }
 
   private func isUsingHttpProxy() -> Bool {
